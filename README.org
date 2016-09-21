@@ -48,13 +48,20 @@ Use ~toggle-parinfer-mode~, default bind to ~C-9~.
 #+BEGIN_SRC emacs-lisp
   (define-key map (kbd "C-9") 'toggle-parinfer-mode)
 #+END_SRC
-Whenver you swith to Indent Mode, if your code will be modified by parinfer,
-You will see a confirm message in minibuffer. 
+Whenever you switch to Indent Mode, if your code will be modified by parinfer,
+You will see a confirm message in minibuffer. Type ~y~ for continue, ~n~ to stay in paren mode.
 
 Notice! this modification may change the struct of code.
 
 * Work with Evil?
 Not yet, some work is needed. Will come soon.
+
+* Performance.
+Very slow on large file. (more than 500 lines)
+Currently, for each text modification, it will compute the text of whole buffer.
+
+If we compute only the current top level expression and the previous top level expression(if exists), 
+it will be much faster in large file I think.
 
 * Hooks?
 ~parinfer-mode-enable-hook~ and ~parinfer-mode-disable-hook~.
