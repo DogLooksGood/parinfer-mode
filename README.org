@@ -4,9 +4,10 @@
 * Screenshots
 [[file:screenshots/simple_demo.gif]]
 
-* WIP
+* WIP, use with your own risk.
 Work in progress, may not satble. 
 I use this for my Clojure code and it just works.
+
 But there's some bugs for compute the indentation for Emacs Lisp code.
 So Seriously, *DO NOT USE THIS IN emacs-lisp-mode*.
 
@@ -16,7 +17,6 @@ So Seriously, *DO NOT USE THIS IN emacs-lisp-mode*.
 * Installation
 Currently not available on melpa now, so if you want try this, 
 you have install it manually.
-** This rely on 
 ** Clone this repo.
 #+BEGIN_SRC shell
   cd /some/path/parinfer-mode
@@ -25,10 +25,17 @@ you have install it manually.
 ** Emacs configurations.
 This plugin rely on [[https://github.com/Malabarba/aggressive-indent-mode][aggressive-indent-mode]]. So you have to install it and do *NOT* enable it.
 #+BEGIN_SRC emacs-lisp
+  ;; Install aggressive with the way you prefer.
+  (use-package aggressive-indent)
+
+  ;; Add parinfer-mode to load-path.
   (add-to-list 'load-path "~/some/path/parinfer-mode")
+
+  ;; Require it!
   (require 'parinfer)
 #+END_SRC
 ** Enable parinfer-mode for Clojure.
+~M-x parinfer-mode~
 #+BEGIN_SRC emacs-lisp
   (add-hook 'clojure-mode-hook 'parinfer-mode)
 #+END_SRC
@@ -39,9 +46,13 @@ Use ~toggle-parinfer-mode~, default bind to ~C-9~.
 #+BEGIN_SRC emacs-lisp
   (define-key map (kbd "C-9") 'toggle-parinfer-mode)
 #+END_SRC
+Whenver you swith to Indent Mode, if your code will be modified by parinfer,
+You will see a confirm message in minibuffer. 
+
+Notice! this modification may change the struct of code.
 
 * Work with Evil?
-Not yet, some work is needed.
+Not yet, some work is needed. Will come soon.
 
 * Hooks?
 ~parinfer-mode-enable-hook~ and ~parinfer-mode-disable-hook~.
