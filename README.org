@@ -1,0 +1,50 @@
+#+TITLE: Parinfer Mode
+#+AUTHOR: DogLooksGood
+
+* Screenshots
+[[file:screenshots/simple_demo.gif]]
+
+* WIP
+Work in progress, may not satble. 
+I use this for my Clojure code and it just works.
+But there's some bugs for compute the indentation for Emacs Lisp code.
+So Seriously, *DO NOT USE THIS IN emacs-lisp-mode*.
+
+* What's parinfer?
+[[https://github.com/shaunlebron/parinfer][Take a look at this]]
+
+* Installation
+Currently not available on melpa now, so if you want try this, 
+you have install it manually.
+** This rely on 
+** Clone this repo.
+#+BEGIN_SRC shell
+  cd /some/path/parinfer-mode
+  git clone https://github.com/DogLooksGood/parinfer-mode.git
+#+END_SRC
+** Emacs configurations.
+This plugin rely on [[https://github.com/Malabarba/aggressive-indent-mode][aggressive-indent-mode]]. So you have to install it and do *NOT* enable it.
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'load-path "~/some/path/parinfer-mode")
+  (require 'parinfer)
+#+END_SRC
+** Enable parinfer-mode for Clojure.
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'clojure-mode-hook 'parinfer-mode)
+#+END_SRC
+Not work in Cider REPL now.
+
+* Toggle Indent and Paren mode.
+Use ~toggle-parinfer-mode~, default bind to ~C-9~.
+#+BEGIN_SRC emacs-lisp
+  (define-key map (kbd "C-9") 'toggle-parinfer-mode)
+#+END_SRC
+
+* Work with Evil?
+Not yet, some work is needed.
+
+* Hooks?
+~parinfer-mode-enable-hook~ and ~parinfer-mode-disable-hook~.
+
+* Preview cursor scope?
+Not support yet.
