@@ -6,12 +6,9 @@
 
 * WIP, use with your own risk.
 Work in progress, may not satble. 
-I use this for my Clojure code and it just works.
+I use this for my Clojure and Emacs Lisp code.
 
-But there's some bugs for compute the indentation for Emacs Lisp code.
-So Seriously, *DO NOT USE THIS IN emacs-lisp-mode*.
-
-* What's parinfer?
+* What is Parinfer?
 [[https://github.com/shaunlebron/parinfer][Take a look at this]]
 
 * Installation
@@ -48,7 +45,7 @@ Use ~toggle-parinfer-mode~, default bind to ~C-9~.
 #+BEGIN_SRC emacs-lisp
   (define-key map (kbd "C-9") 'toggle-parinfer-mode)
 #+END_SRC
-Whenever you switch to Indent Mode, if your code will be modified by parinfer,
+When the first time, you switch to Indent Mode, if your code will be modified by parinfer,
 You will see a confirm message in minibuffer. Type ~y~ for continue, ~n~ to stay in paren mode.
 
 Notice! this modification may change the struct of code.
@@ -57,11 +54,9 @@ Notice! this modification may change the struct of code.
 Not yet, some work is needed. Will come soon.
 
 * Performance.
-Very slow on large file. (more than 500 lines)
-Currently, for each text modification, it will compute the text of whole buffer.
-
-If we compute only the current top level expression and the previous top level expression(if exists), 
-it will be much faster in large file I think.
+On each text modification, the current top-level form will be computed. 
+When swith to Indent mode, whole buffer will be computed. 
+No performance issue now.
 
 * Hooks?
 ~parinfer-mode-enable-hook~ and ~parinfer-mode-disable-hook~.
