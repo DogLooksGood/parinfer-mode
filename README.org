@@ -12,7 +12,7 @@ I use this for my Clojure and Emacs Lisp code.
 [[https://github.com/shaunlebron/parinfer][Take a look at this]]
 
 * Installation
-Currently not available on melpa now, so if you want try this, 
+Currently not available on melpa, so if you want try this, 
 you have install it manually.
 ** Clone this repo.
 #+BEGIN_SRC shell

@@ -1,3 +1,12 @@
+;;; parinfer.el --- Parinfer on Emacs
+;; v0.0.1
+;; Homepage: https://github.com/DogLooksGood/parinfer-mode
+;; Package-Requires: ((aggressive-indent "1.8.1"))
+;; Author: Shi Tianshu
+;; Keywords: Parinfer
+
+;; Copyright (C) 2016 Shi Tianshu
+
 (require 'parinferlib)
 (require 'aggressive-indent)
 (require 'cl-lib)
@@ -81,12 +90,6 @@
   (kill-line 1)
   (setq kill-ring (cdr kill-ring)))
 
-(defun create-scratch-buffer nil
-  "create a scratch buffer"
-  (interactive)
-  (switch-to-buffer (get-buffer-create "*scratch*"))
-  (lisp-interaction-mode))
-
 (defun delete-current-line ()
   (interactive)
   (delete-region (line-beginning-position) (line-end-position)))
@@ -121,20 +124,9 @@
     (search-backward-regexp defun-regex nil t)))
 
 (defun goto-previous-defun* ()
+  "for test"
   (interactive)
   (goto-previous-defun))
-
-(defun point-cursor-line (pt)
-  "Zero-based line number for point."
-  (save-excursion
-    (goto-char pt)
-    (1- (line-number-at-pos))))
-
-(defun point-cursor-x (pt)
-  "Zero-based column number for point"
-  (save-excursion
-    (goto-char pt)
-    (current-column)))
 
 ;; -----------------------------------------------------------------------------
 ;; Parinfer functions
