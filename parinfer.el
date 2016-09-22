@@ -101,6 +101,7 @@
 ;; Requires
 ;; -----------------------------------------------------------------------------
 (require 'parinferlib)
+(require 'mode-local)
 (require 'paredit)
 (require 'aggressive-indent)
 (require 'cl-lib)
@@ -268,9 +269,16 @@
          (cursor-line (- line-number (line-number-at-pos start)))
          (cursor-x (current-column))
          (opts (list :cursor-x cursor-x :cursor-line cursor-line))
-         (result (parinferlib-indent-mode text opts)))
-    (when (plist-get result :success)
-      (parinfer-aggressive-indent nil))))
+         (result (parinferlib-paren-mode text opts)))
+    (if (and (plist-get result :success)
+             (string= text (plist-get result :text)))
+        (parinfer-aggressive-indent nil)
+      (progn
+        (delete-region start end)
+        (insert (plist-get result :text))
+        (goto-line line-number)
+        (beginning-of-line 1)
+        (forward-char (plist-get result :cursor-x))))))
 
 (defun parinfer-aggressive-indent (ignored)
   (when (not (parinfer-in-comment-or-string-p))
