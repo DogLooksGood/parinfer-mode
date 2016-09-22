@@ -51,7 +51,7 @@ You will see a confirm message in minibuffer. Type ~y~ for continue, ~n~ to stay
 Notice! this modification may change the struct of code.
 
 * Work with Evil?
-Not yet, some work is needed. Will come soon.
+Not yet, some works are needed. Will come soon.
 
 * Performance.
 On each text modification, the current top-level form will be computed. 
