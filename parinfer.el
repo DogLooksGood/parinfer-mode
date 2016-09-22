@@ -378,3 +378,4 @@
     (parinfer-disable)))
 
 (provide 'parinfer)
+;;; parinfer.el ends here
