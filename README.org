@@ -49,14 +49,18 @@ Use ~toggle-parinfer-mode~, default bind to ~C-9~.
 When the first time, you switch to Indent Mode, if your code will be modified by parinfer,
 You will see a confirm message in minibuffer. Type ~y~ for continue, ~n~ to stay in paren mode.
 
-Notice! this modification may change the struct of code.
+Use ~parinfer-diff~ to see how parinfer will change the buffer.
+
+[[file:screenshots/diff_demo.gif]]
+
+Normally, after indenting the whole buffer with ~C-x h~ ~C-M-\~, you can switch to Indent Mode safely.
 
 * Work with Evil?
 Not yet, some works are needed. Will come soon.
 
 * Performance.
 On each text modification, the current top-level form will be computed. 
-When swith to Indent mode, whole buffer will be computed. 
+When switching to Indent mode, whole buffer will be computed. 
 No performance issue now.
 
 * Hooks?
