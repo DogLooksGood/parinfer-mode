@@ -31,12 +31,13 @@ This plugin rely on [[https://github.com/Malabarba/aggressive-indent-mode][aggre
   ;; Require it!
   (require 'parinfer)
 #+END_SRC
-** Enable parinfer-mode for Clojure.
+** Enable parinfer-mode.
 ~M-x parinfer-mode~
 
 or
 #+BEGIN_SRC emacs-lisp
-  (add-hook 'clojure-mode-hook 'parinfer-mode)
+  (add-hook 'clojure-mode-hook #'parinfer-mode)
+  (add-hook 'emacs-lisp-mode-hook #'parinfer-mode)
 #+END_SRC
 Not work in Cider REPL now.
 
