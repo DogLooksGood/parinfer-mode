@@ -64,3 +64,6 @@ No performance issue now.
 
 * Preview cursor scope?
 Not support yet.
+
+* License
+Licensed under the GPLv3.
