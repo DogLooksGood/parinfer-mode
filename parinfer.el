@@ -1,11 +1,13 @@
 ;;; parinfer.el --- Parinfer on Emacs
-;; v0.0.1
-;; Homepage: https://github.com/DogLooksGood/parinfer-mode
-;; Package-Requires: ((aggressive-indent "1.8.1"))
-;; Author: Shi Tianshu
-;; Keywords: Parinfer
 
-;; Copyright (C) 2016 Shi Tianshu
+;; * Header
+;; Copyright (c) 2016, Shi Tianshu
+
+;; Author: Shi Tianshu
+;; Homepage: https://github.com/DogLooksGood/parinfer-mode
+;; Version: 0.0.2
+;; Package-Requires: ((aggressive-indent "1.8.1"))
+;; Keywords: Parinfer
 
 (require 'parinferlib)
 (require 'aggressive-indent)
