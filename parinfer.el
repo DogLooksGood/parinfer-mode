@@ -16,7 +16,7 @@
 ;; -----------------------------------------------------------------------------
 ;; Constants
 ;; -----------------------------------------------------------------------------
-(defconst defun-regex "^[^ \n\t\"]")
+(defconst parinfer-defun-regex "^[^ \n\t\"]")
 
 (defvar parinfer-style 'paren)
 (make-variable-buffer-local 'parinfer-style)
@@ -33,7 +33,7 @@
   (with-current-buffer "*Parinfer Result*"
     (kill-buffer-and-window)))
 
-(defun company-aggressive-indent-hook-fn (ignored)
+(defun parinfer-company-aggressive-indent-hook-fn (ignored)
   (when (not (in-comment-or-string-p))
     (call-interactively 'aggressive-indent-indent-defun)))
 
@@ -44,23 +44,23 @@
         (setq parinfer-style 'indent)
         (message "Parinfer: Indent Mode")
         (when (bound-and-true-p company-mode)
-          (remove-hook 'company-completion-finished-hook 'company-aggressive-indent-hook-fn t))
+          (remove-hook 'company-completion-finished-hook 'parinfer-company-aggressive-indent-hook-fn t))
         (force-mode-line-update))
     (when (parinfer-indent-with-confirm)
       (setq parinfer-style 'indent)
       (message "Parinfer: Indent Mode")
       (when (bound-and-true-p company-mode)
-        (remove-hook 'company-completion-finished-hook 'company-aggressive-indent-hook-fn t))
+        (remove-hook 'company-completion-finished-hook 'parinfer-company-aggressive-indent-hook-fn t))
       (force-mode-line-update))))
 
 (defun parinfer-swith-to-paren-mode ()
   (setq parinfer-style 'paren)
   (message "Parinfer: Paren Mode")
   (when (bound-and-true-p company-mode)
-    (add-hook 'company-completion-finished-hook 'company-aggressive-indent-hook-fn t t))
+    (add-hook 'company-completion-finished-hook 'parinfer-company-aggressive-indent-hook-fn t t))
   (force-mode-line-update))
 
-(defun toggle-parinfer-mode ()
+(defun parinfer-toggle-mode ()
   (interactive)
   (if (eq 'paren parinfer-style)
       (parinfer-swith-to-indent-mode)
@@ -69,66 +69,45 @@
 ;; -----------------------------------------------------------------------------
 ;; Helpers
 ;; -----------------------------------------------------------------------------
-(defun in-comment-or-string-p ()
+(defun parinfer-in-comment-or-string-p ()
   "http://ergoemacs.org/emacs/elisp_determine_cursor_inside_string_or_comment.html"
   (or (nth 3 (syntax-ppss))
       (nth 4 (syntax-ppss))))
 
-(defun in-comment ()
-  (interactive)
-  (print (in-comment-or-string-p)))
-
-(defun get-col-number ()
-  (interactive)
-  (current-column))
-
-(defun buffer-string-no-properties ()
+(defun parinfer-buffer-string-no-properties ()
   (buffer-substring-no-properties
    (point-min)
    (point-max)))
 
-(defun ruthlessly-kill-line ()
-  (move-beginning-of-line 1)
-  (kill-line 1)
-  (setq kill-ring (cdr kill-ring)))
-
-(defun delete-current-line ()
-  (interactive)
-  (delete-region (line-beginning-position) (line-end-position)))
-
-(defun current-line-empty ()
-  (string= (thing-at-point 'line t)
-           "\n"))
-
-(defun goto-next-defun ()
+(defun parinfer-goto-next-defun ()
   "goto next defun, skip comment or string."
   (let ((pt (point)))
     (when (not (eq (point-max) pt))
-      (if (search-forward-regexp defun-regex nil t)
+      (if (search-forward-regexp parinfer-defun-regex nil t)
           (if (= (1+ pt) (point))
-              (goto-next-defun)
-            (while (and (in-comment-or-string-p)
+              (parinfer-goto-next-defun)
+            (while (and (parinfer-in-comment-or-string-p)
                         (not (eq (point-max) (point))))
-              (search-forward-regexp defun-regex nil t))
+              (search-forward-regexp parinfer-defun-regex nil t))
             (backward-char))
         (end-of-buffer)))))
 
-(defun goto-next-defun* ()
+(defun parinfer-goto-next-defun* ()
   "fortest"
   (interactive)
-  (goto-next-defun))
+  (parinfer-goto-next-defun))
 
-(defun goto-previous-defun ()
+(defun parinfer-goto-previous-defun ()
   "goto previous defun, skip comment or string"
-  (search-backward-regexp defun-regex nil t)
-  (while (and (in-comment-or-string-p)
+  (search-backward-regexp parinfer-defun-regex nil t)
+  (while (and (parinfer-in-comment-or-string-p)
               (not (eq (point-min) (point))))
-    (search-backward-regexp defun-regex nil t)))
+    (search-backward-regexp parinfer-defun-regex nil t)))
 
-(defun goto-previous-defun* ()
+(defun parinfer-goto-previous-defun* ()
   "for test"
   (interactive)
-  (goto-previous-defun))
+  (parinfer-goto-previous-defun))
 
 ;; -----------------------------------------------------------------------------
 ;; Parinfer functions
@@ -152,8 +131,8 @@
 
 (defun parinfer-indent ()
   (interactive)
-  (let* ((start (save-excursion (goto-previous-defun) (point)))
-         (end (save-excursion (goto-next-defun) (point)))
+  (let* ((start (save-excursion (parinfer-goto-previous-defun) (point)))
+         (end (save-excursion (parinfer-goto-next-defun) (point)))
          (text (buffer-substring-no-properties start end))
          (line-number (line-number-at-pos))
          (cursor-line (- line-number (line-number-at-pos start)))
@@ -173,7 +152,7 @@
   (let* ((cursor-line (1- (line-number-at-pos)))
          (cursor-x (current-column))
          (opts (list :cursor-line cursor-line :cursor-x cursor-x))
-         (text (buffer-string-no-properties))
+         (text (parinfer-buffer-string-no-properties))
          (result (parinferlib-indent-mode text opts))
          (changed-lines (plist-get result :changed-lines)))
     (when (and (plist-get result :success)
@@ -192,7 +171,7 @@
   (let* ((cursor-line (1- (line-number-at-pos)))
          (cursor-x (current-column))
          (opts (list :cursor-line cursor-line :cursor-x cursor-x))
-         (text (buffer-string-no-properties))
+         (text (parinfer-buffer-string-no-properties))
          (result (parinferlib-indent-mode text opts))
          (success (plist-get result :success))
          (changed-lines (plist-get result :changed-lines)))
@@ -218,8 +197,8 @@
 
 (defun parinfer-paren ()
   (interactive)
-  (let* ((start (save-excursion (goto-previous-defun) (point)))
-         (end (save-excursion (goto-next-defun) (point)))
+  (let* ((start (save-excursion (parinfer-goto-previous-defun) (point)))
+         (end (save-excursion (parinfer-goto-next-defun) (point)))
          (text (buffer-substring-no-properties start end))
          (line-number (line-number-at-pos))
          (cursor-line (- line-number (line-number-at-pos start)))
@@ -267,7 +246,7 @@
 
 (defvar parinfer-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-9") 'toggle-parinfer-mode)
+    (define-key map (kbd "C-9") 'parinfer-toggle-mode)
     (define-key map (kbd "<backspace>") 'parinfer-backward-delete-char)
     (define-key map (kbd "M-<backspace>") 'parinfer-backward-kill-word)
     (define-key map (kbd "C-k") 'parinfer-kill-line)
@@ -275,18 +254,18 @@
     (define-key map (kbd "M-d") 'parinfer-backward-delete-char)
     map))
 
-(defun enable-parinfer ()
+(defun parinfer-enable ()
   (run-hooks 'parinfer-mode-enable-hook)
   (add-hook 'post-self-insert-hook 'parinfer-hook-fn t t)
   ;; Always use whitespace for indentation.
   (setq-mode-local parinfer-mode indent-tabs-mode nil)
   (parinfer-swith-to-indent-mode))
 
-(defun disable-parinfer ()
+(defun parinfer-disable ()
   (run-hooks 'parinfer-mode-disable-hook)
   (remove-hook 'post-self-insert-hook 'parinfer-hook-fn t))
 
-(defun current-lighter ()
+(defun parinfer-lighter ()
   (if (eq 'paren parinfer-style)
       parinfer-paren-lighter
     parinfer-indent-lighter))
@@ -294,9 +273,9 @@
 ;;;###autoload
 (define-minor-mode parinfer-mode
   "Parinfer mode."
-  nil (:eval (current-lighter)) parinfer-mode-map
+  nil (:eval (parinfer-lighter)) parinfer-mode-map
   (if parinfer-mode
-      (enable-parinfer)
-    (disable-parinfer)))
+      (parinfer-enable)
+    (parinfer-disable)))
 
 (provide 'parinfer)
