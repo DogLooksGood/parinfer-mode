@@ -111,6 +111,8 @@
 ;; -----------------------------------------------------------------------------
 (defconst parinfer-defun-regex "^[^ \n\t\"]")
 
+(defconst parinfer-form-char-regex "^[0-9a-z!@#$%^&*,~\\\\({\\[]")
+
 (defvar parinfer-style 'paren
   "Parinfer mode style, 'paren or 'indent.")
 (make-variable-buffer-local 'parinfer-style)
@@ -158,29 +160,48 @@
   (force-mode-line-update))
 
 (defun parinfer-in-comment-or-string-p ()
-  "http://ergoemacs.org/emacs/elisp_determine_cursor_inside_string_or_comment.html"
-  (or (nth 3 (syntax-ppss))
-      (nth 4 (syntax-ppss))))
+  (let ((f (get-text-property (point) 'face)))
+    (or (eq f 'font-lock-comment-face)
+        (eq f 'font-lock-comment-delimiter-face)
+        (string= ";" (string (char-after)))
+        (nth 3 (syntax-ppss))
+        (nth 4 (syntax-ppss)))))
 
 (defun parinfer-goto-next-defun ()
   "goto next defun, skip comment or string."
+  (interactive)
   (let ((pt (point)))
     (when (not (eq (point-max) pt))
       (if (search-forward-regexp parinfer-defun-regex nil t)
           (if (= (1+ pt) (point))
               (parinfer-goto-next-defun)
-            (while (and (parinfer-in-comment-or-string-p)
-                        (not (eq (point-max) (point))))
-              (search-forward-regexp parinfer-defun-regex nil t))
+            (let ((last-pos (point)))
+              (while (and last-pos
+                          (parinfer-in-comment-or-string-p)
+                          (not (eq (point-max) (point))))
+                (search-forward-regexp parinfer-defun-regex nil t)
+                (if (eq (point) last-pos)
+                    (setq last-pos nil)
+                  (setq last-pos (point)))))
             (backward-char))
         (end-of-buffer)))))
 
+(defun parinfer-goto-previous-defun-aux ()
+  (search-backward-regexp parinfer-defun-regex nil t)
+  (let ((last-pos (point)))
+    (while (and last-pos
+                (parinfer-in-comment-or-string-p)
+                (not (eq (point-min) (point))))
+      (search-backward-regexp parinfer-defun-regex nil t)
+      (if (eq (point) last-pos)
+          (setq last-pos nil)
+        (setq last-pos (point))))))
+
 (defun parinfer-goto-previous-defun ()
   "goto previous defun, skip comment or string"
-  (search-backward-regexp parinfer-defun-regex nil t)
-  (while (and (parinfer-in-comment-or-string-p)
-              (not (eq (point-min) (point))))
-    (search-backward-regexp parinfer-defun-regex nil t)))
+  (interactive)
+  (parinfer-goto-previous-defun-aux)
+  (parinfer-goto-previous-defun-aux))
 
 (defun parinfer-lighter ()
   (if (eq 'paren parinfer-style)
