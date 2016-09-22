@@ -16,6 +16,12 @@
 (defvar parinfer-indent-lighter " Parinfer:Indent")
 (defvar parinfer-paren-lighter  " Parinfer:Paren")
 
+(defun parinfer-ediff-quit ()
+  (interactive)
+  (ediff-really-quit nil)
+  (with-current-buffer "*Parinfer Result*"
+    (kill-buffer-and-window)))
+
 (defun company-aggressive-indent-hook-fn (ignored)
   (when (not (in-comment-or-string-p))
     (call-interactively 'aggressive-indent-indent-defun)))
@@ -134,16 +140,21 @@
 ;; Parinfer functions
 ;; -----------------------------------------------------------------------------
 
+(defun parinfer-ediff-startup-hook ()
+  (local-set-key (kbd "q") 'parinfer-ediff-quit))
+
 (defun parinfer-diff ()
   (interactive)
   (let* ((orig-text (buffer-substring-no-properties (point-min) (point-max)))
          (new-buffer (generate-new-buffer "*Parinfer Result*"))
          (orig-buffer (current-buffer))
+         (m major-mode)
          (result (parinferlib-indent-mode orig-text nil)))
     (with-current-buffer new-buffer
       (erase-buffer)
       (insert (plist-get result :text))
-      (ediff-buffers orig-buffer new-buffer))))
+      (funcall m)
+      (ediff-buffers orig-buffer new-buffer '(parinfer-ediff-startup-hook)))))
 
 (defun parinfer-indent ()
   (interactive)
