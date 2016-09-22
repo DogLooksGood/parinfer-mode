@@ -1,6 +1,5 @@
 ;;; parinfer.el --- Parinfer on Emacs
 
-;; * Header
 ;; Copyright (c) 2016, Shi Tianshu
 
 ;; Author: Shi Tianshu
@@ -9,12 +8,104 @@
 ;; Package-Requires: ((aggressive-indent "1.8.1"))
 ;; Keywords: Parinfer
 
+;; This file is not part of GNU Emacs.
+
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License
+;; as published by the Free Software Foundation; either version 3
+;; of the License, or (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
+
+;;; Commentary:
+;; 
+;; * WIP, use with your own risk.
+;; Work in progress, may not satble. 
+;; I use this for my Clojure and Emacs Lisp code.
+
+;; * What is Parinfer?
+;; [[https://github.com/shaunlebron/parinfer][Take a look at this]]
+
+;; * Installation
+;; Currently not available on melpa, so if you want try this, 
+;; you have install it manually.
+;; ** Clone this repo.
+;; #+BEGIN_SRC shell
+;;   cd /some/path/parinfer-mode
+;;   git clone https://github.com/DogLooksGood/parinfer-mode.git
+;; #+END_SRC
+;; ** Emacs configurations.
+;; This plugin rely on [[https://github.com/Malabarba/aggressive-indent-mode][aggressive-indent-mode]]. So you have to install it and do *NOT* enable it.
+;; #+BEGIN_SRC emacs-lisp
+;;   ;; Install aggressive with the way you prefer.
+;;   (use-package aggressive-indent)
+
+;;   ;; Add parinfer-mode to load-path.
+;;   (add-to-list 'load-path "~/some/path/parinfer-mode")
+
+;;   ;; Require it!
+;;   (require 'parinfer)
+;; #+END_SRC
+;; ** Enable parinfer-mode.
+;; ~M-x parinfer-mode~
+
+;; or
+;; #+BEGIN_SRC emacs-lisp
+;;   (add-hook 'clojure-mode-hook #'parinfer-mode)
+;;   (add-hook 'emacs-lisp-mode-hook #'parinfer-mode)
+;; #+END_SRC
+;; Not work in Cider REPL now.
+
+;; * Toggle Indent and Paren mode.
+;; Use ~toggle-parinfer-mode~, default bind to ~C-9~.
+;; #+BEGIN_SRC emacs-lisp
+;;   (define-key map (kbd "C-9") 'toggle-parinfer-mode)
+;; #+END_SRC
+;; When the first time, you switch to Indent Mode, if your code will be modified by parinfer,
+;; You will see a confirm message in minibuffer. Type ~y~ for continue, ~n~ to stay in paren mode.
+
+;; Use ~parinfer-diff~ to see how parinfer will change the buffer.
+
+;; [[file:screenshots/diff_demo.gif]]
+
+;; Normally, after indenting the whole buffer with ~C-x h~ ~C-M-\~, you can switch to Indent Mode safely.
+
+;; * Work with Evil?
+;; Not yet, some works are needed. Will come soon.
+
+;; * Performance.
+;; On each text modification, the current top-level form will be computed. 
+;; When switching to Indent mode, whole buffer will be computed. 
+;; No performance issue now.
+
+;; * Hooks?
+;; ~parinfer-mode-enable-hook~ and ~parinfer-mode-disable-hook~.
+
+;; * Preview cursor scope?
+;; Not support yet.
+
+;; * License
+;; Licensed under the GPLv3.
+
+;;; Code:
+
+;; -----------------------------------------------------------------------------
+;; Requires
+;; -----------------------------------------------------------------------------
 (require 'parinferlib)
 (require 'aggressive-indent)
 (require 'cl-lib)
 
 ;; -----------------------------------------------------------------------------
-;; Constants
+;; Constants & Variables
 ;; -----------------------------------------------------------------------------
 (defconst parinfer-defun-regex "^[^ \n\t\"]")
 
@@ -27,15 +118,9 @@
 (defvar parinfer-indent-lighter " Parinfer:Indent")
 (defvar parinfer-paren-lighter  " Parinfer:Paren")
 
-(defun parinfer-ediff-quit ()
-  (interactive)
-  (ediff-really-quit nil)
-  (with-current-buffer "*Parinfer Result*"
-    (kill-buffer-and-window)))
-
-(defun parinfer-company-aggressive-indent-hook-fn (ignored)
-  (when (not (in-comment-or-string-p))
-    (call-interactively 'aggressive-indent-indent-defun)))
+;; -----------------------------------------------------------------------------
+;; Helpers
+;; -----------------------------------------------------------------------------
 
 (defun parinfer-swith-to-indent-mode ()
   (if (not parinfer-first-load)
@@ -60,19 +145,11 @@
     (add-hook 'company-completion-finished-hook 'parinfer-company-aggressive-indent-hook-fn t t))
   (force-mode-line-update))
 
-(defun parinfer-toggle-mode ()
-  (interactive)
-  (if (eq 'paren parinfer-style)
-      (parinfer-swith-to-indent-mode)
-    (parinfer-swith-to-paren-mode)))
-
-;; -----------------------------------------------------------------------------
-;; Helpers
-;; -----------------------------------------------------------------------------
 (defun parinfer-in-comment-or-string-p ()
   "http://ergoemacs.org/emacs/elisp_determine_cursor_inside_string_or_comment.html"
   (or (nth 3 (syntax-ppss))
       (nth 4 (syntax-ppss))))
+
 
 (defun parinfer-buffer-string-no-properties ()
   (buffer-substring-no-properties
@@ -92,11 +169,6 @@
             (backward-char))
         (end-of-buffer)))))
 
-(defun parinfer-goto-next-defun* ()
-  "fortest"
-  (interactive)
-  (parinfer-goto-next-defun))
-
 (defun parinfer-goto-previous-defun ()
   "goto previous defun, skip comment or string"
   (search-backward-regexp parinfer-defun-regex nil t)
@@ -104,30 +176,17 @@
               (not (eq (point-min) (point))))
     (search-backward-regexp parinfer-defun-regex nil t)))
 
-(defun parinfer-goto-previous-defun* ()
-  "for test"
-  (interactive)
-  (parinfer-goto-previous-defun))
-
-;; -----------------------------------------------------------------------------
-;; Parinfer functions
-;; -----------------------------------------------------------------------------
+(defun parinfer-lighter ()
+  (if (eq 'paren parinfer-style)
+      parinfer-paren-lighter
+    parinfer-indent-lighter))
 
 (defun parinfer-ediff-startup-hook ()
   (local-set-key (kbd "q") 'parinfer-ediff-quit))
 
-(defun parinfer-diff ()
-  (interactive)
-  (let* ((orig-text (buffer-substring-no-properties (point-min) (point-max)))
-         (new-buffer (generate-new-buffer "*Parinfer Result*"))
-         (orig-buffer (current-buffer))
-         (m major-mode)
-         (result (parinferlib-indent-mode orig-text nil)))
-    (with-current-buffer new-buffer
-      (erase-buffer)
-      (insert (plist-get result :text))
-      (funcall m)
-      (ediff-buffers orig-buffer new-buffer '(parinfer-ediff-startup-hook)))))
+;; -----------------------------------------------------------------------------
+;; Parinfer functions
+;; -----------------------------------------------------------------------------
 
 (defun parinfer-indent ()
   (interactive)
@@ -145,7 +204,7 @@
       (insert (plist-get result :text))
       (goto-line line-number)
       (beginning-of-line 1)
-      (forward-char (plist-get result :cursor-x))))) 
+      (forward-char (plist-get result :cursor-x)))))
 
 (defun parinfer-indent-all ()
   (interactive)
@@ -164,7 +223,7 @@
                (insert (plist-get l :line)))
       (goto-line (1+ cursor-line))
       (beginning-of-line 1)
-      (forward-char (plist-get result :cursor-x)))))
+      (forward-char (plist-get result :cursor-x))))) 
 
 (defun parinfer-indent-with-confirm ()
   (interactive)
@@ -208,11 +267,29 @@
     (when (not (plist-get result :changed-lines))
       (call-interactively 'aggressive-indent-indent-defun))))
 
+;; -----------------------------------------------------------------------------
+;; Hook functions
+;; -----------------------------------------------------------------------------
+
+(defun parinfer-company-aggressive-indent-hook-fn (ignored)
+  (when (not (in-comment-or-string-p))
+    (call-interactively 'aggressive-indent-indent-defun)))
+
 (defun parinfer-hook-fn ()
   (cond
    ((eq 'paren parinfer-style) (parinfer-paren))
    ((eq 'indent parinfer-style) (parinfer-indent))
    (t "nothing")))
+
+;; -----------------------------------------------------------------------------
+;; Commands
+;; -----------------------------------------------------------------------------
+
+(defun parinfer-ediff-quit ()
+  (interactive)
+  (ediff-really-quit nil)
+  (with-current-buffer "*Parinfer Result*"
+    (kill-buffer-and-window)))
 
 (defun parinfer-newline ()
   (interactive)
@@ -244,16 +321,6 @@
   (call-interactively 'kill-line)
   (parinfer-hook-fn))
 
-(defvar parinfer-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-9") 'parinfer-toggle-mode)
-    (define-key map (kbd "<backspace>") 'parinfer-backward-delete-char)
-    (define-key map (kbd "M-<backspace>") 'parinfer-backward-kill-word)
-    (define-key map (kbd "C-k") 'parinfer-kill-line)
-    (define-key map (kbd "C-d") 'parinfer-backward-delete-char)
-    (define-key map (kbd "M-d") 'parinfer-backward-delete-char)
-    map))
-
 (defun parinfer-enable ()
   (run-hooks 'parinfer-mode-enable-hook)
   (add-hook 'post-self-insert-hook 'parinfer-hook-fn t t)
@@ -265,10 +332,42 @@
   (run-hooks 'parinfer-mode-disable-hook)
   (remove-hook 'post-self-insert-hook 'parinfer-hook-fn t))
 
-(defun parinfer-lighter ()
+(defun parinfer-toggle-mode ()
+  (interactive)
   (if (eq 'paren parinfer-style)
-      parinfer-paren-lighter
-    parinfer-indent-lighter))
+      (parinfer-swith-to-indent-mode)
+    (parinfer-swith-to-paren-mode)))
+
+(defun parinfer-diff ()
+  (interactive)
+  (let* ((orig-text (buffer-substring-no-properties (point-min) (point-max)))
+         (new-buffer (generate-new-buffer "*Parinfer Result*"))
+         (orig-buffer (current-buffer))
+         (m major-mode)
+         (result (parinferlib-indent-mode orig-text nil)))
+    (with-current-buffer new-buffer
+      (erase-buffer)
+      (insert (plist-get result :text))
+      (funcall m)
+      (ediff-buffers orig-buffer new-buffer '(parinfer-ediff-startup-hook)))))
+
+;; -----------------------------------------------------------------------------
+;; Keymaps
+;; -----------------------------------------------------------------------------
+
+(defvar parinfer-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-9") 'parinfer-toggle-mode)
+    (define-key map (kbd "<backspace>") 'parinfer-backward-delete-char)
+    (define-key map (kbd "M-<backspace>") 'parinfer-backward-kill-word)
+    (define-key map (kbd "C-k") 'parinfer-kill-line)
+    (define-key map (kbd "C-d") 'parinfer-backward-delete-char)
+    (define-key map (kbd "M-d") 'parinfer-backward-delete-char)
+    map))
+
+;; -----------------------------------------------------------------------------
+;; Mode
+;; -----------------------------------------------------------------------------
 
 ;;;###autoload
 (define-minor-mode parinfer-mode
