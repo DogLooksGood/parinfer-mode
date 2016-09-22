@@ -777,4 +777,4 @@
 
 (provide 'parinferlib)
 
-;;; parinfer-lib.el ends here
+;;; parinferlib.el ends here

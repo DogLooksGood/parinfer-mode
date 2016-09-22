@@ -5,7 +5,7 @@
 ;; Author: Shi Tianshu
 ;; Homepage: https://github.com/DogLooksGood/parinfer-mode
 ;; Version: 0.0.2
-;; Package-Requires: ((aggressive-indent "1.8.1"))
+;; Package-Requires: ((aggressive-indent "1.8.1") (cl-lib "0.5"))
 ;; Keywords: Parinfer
 
 ;; This file is not part of GNU Emacs.
@@ -101,6 +101,7 @@
 ;; Requires
 ;; -----------------------------------------------------------------------------
 (require 'parinferlib)
+(require 'paredit)
 (require 'aggressive-indent)
 (require 'cl-lib)
 
@@ -109,52 +110,56 @@
 ;; -----------------------------------------------------------------------------
 (defconst parinfer-defun-regex "^[^ \n\t\"]")
 
-(defvar parinfer-style 'paren)
+(defvar parinfer-style 'paren
+  "Parinfer mode style, 'paren or 'indent.")
 (make-variable-buffer-local 'parinfer-style)
 
-(defvar parinfer-first-load t)
+(defvar parinfer-first-load t
+  "NOT MODIFY THIS, If haven't switch to indent mode yet.")
 (make-variable-buffer-local 'parinfer-first-load)
 
-(defvar parinfer-indent-lighter " Parinfer:Indent")
-(defvar parinfer-paren-lighter  " Parinfer:Paren")
+(defvar parinfer-indent-lighter " Parinfer:Indent"
+  "Lighter for indent mode in mode line.")
+
+(defvar parinfer-paren-lighter  " Parinfer:Paren"
+  "Lighter for paren mode in mode line.")
+
+(defvar parinfer-mode-enable-hook nil
+  "Call after parinfer mode is enabled.")
+
+(defvar parinfer-mode-disable-hook nil
+  "Call after parinfer mode is disabled.")
 
 ;; -----------------------------------------------------------------------------
 ;; Helpers
 ;; -----------------------------------------------------------------------------
 
-(defun parinfer-swith-to-indent-mode ()
+(defun parinfer-switch-to-indent-mode-aux ()
+  (setq parinfer-style 'indent)
+  (message "Parinfer: Indent Mode")
+  (when (bound-and-true-p company-mode)
+    (remove-hook 'company-completion-finished-hook 'parinfer-aggressive-indent t))
+  (force-mode-line-update))
+
+(defun parinfer-switch-to-indent-mode ()
   (if (not parinfer-first-load)
       (progn
-        (parinfer-indent-all)
-        (setq parinfer-style 'indent)
-        (message "Parinfer: Indent Mode")
-        (when (bound-and-true-p company-mode)
-          (remove-hook 'company-completion-finished-hook 'parinfer-company-aggressive-indent-hook-fn t))
-        (force-mode-line-update))
+        (parinfer-indent-buffer)
+        (parinfer-switch-to-indent-mode-aux))
     (when (parinfer-indent-with-confirm)
-      (setq parinfer-style 'indent)
-      (message "Parinfer: Indent Mode")
-      (when (bound-and-true-p company-mode)
-        (remove-hook 'company-completion-finished-hook 'parinfer-company-aggressive-indent-hook-fn t))
-      (force-mode-line-update))))
+      (parinfer-switch-to-indent-mode-aux))))
 
-(defun parinfer-swith-to-paren-mode ()
+(defun parinfer-switch-to-paren-mode ()
   (setq parinfer-style 'paren)
   (message "Parinfer: Paren Mode")
   (when (bound-and-true-p company-mode)
-    (add-hook 'company-completion-finished-hook 'parinfer-company-aggressive-indent-hook-fn t t))
+    (add-hook 'company-completion-finished-hook 'parinfer-aggressive-indent t t))
   (force-mode-line-update))
 
 (defun parinfer-in-comment-or-string-p ()
   "http://ergoemacs.org/emacs/elisp_determine_cursor_inside_string_or_comment.html"
   (or (nth 3 (syntax-ppss))
       (nth 4 (syntax-ppss))))
-
-
-(defun parinfer-buffer-string-no-properties ()
-  (buffer-substring-no-properties
-   (point-min)
-   (point-max)))
 
 (defun parinfer-goto-next-defun ()
   "goto next defun, skip comment or string."
@@ -206,12 +211,12 @@
       (beginning-of-line 1)
       (forward-char (plist-get result :cursor-x)))))
 
-(defun parinfer-indent-all ()
+(defun parinfer-indent-buffer ()
   (interactive)
   (let* ((cursor-line (1- (line-number-at-pos)))
          (cursor-x (current-column))
          (opts (list :cursor-line cursor-line :cursor-x cursor-x))
-         (text (parinfer-buffer-string-no-properties))
+         (text (buffer-substring-no-properties (point-min) (point-max)))
          (result (parinferlib-indent-mode text opts))
          (changed-lines (plist-get result :changed-lines)))
     (when (and (plist-get result :success)
@@ -230,7 +235,7 @@
   (let* ((cursor-line (1- (line-number-at-pos)))
          (cursor-x (current-column))
          (opts (list :cursor-line cursor-line :cursor-x cursor-x))
-         (text (parinfer-buffer-string-no-properties))
+         (text (buffer-substring-no-properties (point-min) (point-max)))
          (result (parinferlib-indent-mode text opts))
          (success (plist-get result :success))
          (changed-lines (plist-get result :changed-lines)))
@@ -264,15 +269,11 @@
          (cursor-x (current-column))
          (opts (list :cursor-x cursor-x :cursor-line cursor-line))
          (result (parinferlib-indent-mode text opts)))
-    (when (not (plist-get result :changed-lines))
-      (call-interactively 'aggressive-indent-indent-defun))))
+    (when (plist-get result :success)
+      (parinfer-aggressive-indent nil))))
 
-;; -----------------------------------------------------------------------------
-;; Hook functions
-;; -----------------------------------------------------------------------------
-
-(defun parinfer-company-aggressive-indent-hook-fn (ignored)
-  (when (not (in-comment-or-string-p))
+(defun parinfer-aggressive-indent (ignored)
+  (when (not (parinfer-in-comment-or-string-p))
     (call-interactively 'aggressive-indent-indent-defun)))
 
 (defun parinfer-hook-fn ()
@@ -326,7 +327,7 @@
   (add-hook 'post-self-insert-hook 'parinfer-hook-fn t t)
   ;; Always use whitespace for indentation.
   (setq-mode-local parinfer-mode indent-tabs-mode nil)
-  (parinfer-swith-to-indent-mode))
+  (parinfer-switch-to-indent-mode))
 
 (defun parinfer-disable ()
   (run-hooks 'parinfer-mode-disable-hook)
@@ -335,8 +336,8 @@
 (defun parinfer-toggle-mode ()
   (interactive)
   (if (eq 'paren parinfer-style)
-      (parinfer-swith-to-indent-mode)
-    (parinfer-swith-to-paren-mode)))
+      (parinfer-switch-to-indent-mode)
+    (parinfer-switch-to-paren-mode)))
 
 (defun parinfer-diff ()
   (interactive)
@@ -376,6 +377,54 @@
   (if parinfer-mode
       (parinfer-enable)
     (parinfer-disable)))
+
+;; -----------------------------------------------------------------------------
+;; Macros
+;; -----------------------------------------------------------------------------
+
+(defmacro parinfer-paren-run (&rest body)
+  "Run command in paren mode,"
+  `(progn
+     (let* ((current-style parinfer-style)
+            (toggle (eq current-style 'indent)))
+       (when toggle
+         (parinfer-switch-to-paren-mode))
+       ,@body
+       (when toggle
+         (parinfer-switch-to-indent-mode)))))
+
+;; -----------------------------------------------------------------------------
+;; Paredit
+;; -----------------------------------------------------------------------------
+(defun parinfer-forward-slurp-sexp ()
+  (interactive)
+  (parinfer-paren-run
+   (paredit-forward-slurp-sexp)))
+
+(defun parinfer-backward-slurp-sexp ()
+  (interactive)
+  (parinfer-paren-run
+   (paredit-backward-slurp-sexp)))
+
+(defun parinfer-forward-barf-sexp ()
+  (interactive)
+  (parinfer-paren-run
+   (paredit-forward-barf-sexp)))
+
+(defun parinfer-backward-barf-sexp ()
+  (interactive)
+  (parinfer-paren-run
+   (paredit-backward-barf-sexp)))
+
+(defun parinfer-raise-sexp ()
+  (interactive)
+  (parinfer-paren-run
+   (paredit-raise-sexp)))
+
+(defun parinfer-convolute-sexp ()
+  (interactive)
+  (parinfer-paren-run
+   (paredit-convolute-sexp)))
 
 (provide 'parinfer)
 ;;; parinfer.el ends here
