@@ -56,7 +56,7 @@
 ;; * Toggle Indent and Paren mode.
 ;; Use ~parinfer-toggle-mode~.
 
-;; I recommanded to add a keybinding for ~parinfer-toggle-mode~, since it will be used frequently.
+;; I recommand to add a keybinding for ~parinfer-toggle-mode~, since it will be used frequently.
 ;; #+BEGIN_SRC emacs-lisp
 ;;   (define-key parinfer-mode-map (kbd "C-,") 'parinfer-toggle-mode)
 ;; #+END_SRC
