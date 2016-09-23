@@ -239,7 +239,8 @@ Buffer text, we should see a confirm message."
 (defun parinfer-indent ()
   "Call parinfer indent on current & previous top level S-exp."
   (interactive)
-  (let* ((start (save-excursion (parinfer-goto-previous-defun) (point)))
+  (let* ((window-start-pos (window-start))
+         (start (save-excursion (parinfer-goto-previous-defun) (point)))
          (end (save-excursion (parinfer-goto-next-defun) (point)))
          (text (buffer-substring-no-properties start end))
          (line-number (line-number-at-pos))
@@ -252,12 +253,14 @@ Buffer text, we should see a confirm message."
       (delete-region start end)
       (insert (plist-get result :text))
       (parinfer-goto-line line-number)
-      (forward-char (plist-get result :cursor-x)))))
+      (forward-char (plist-get result :cursor-x))
+      (set-window-start (selected-window) window-start-pos))))
 
 (defun parinfer-indent-buffer ()
   "Call parinfer indent on whole buffer."
   (interactive)
-  (let* ((cursor-line (1- (line-number-at-pos)))
+  (let* ((window-start-pos (window-start))
+         (cursor-line (1- (line-number-at-pos)))
          (cursor-x (parinfer-cursor-x))
          (opts (list :cursor-line cursor-line :cursor-x cursor-x))
          (text (buffer-substring-no-properties (point-min) (point-max)))
@@ -271,13 +274,15 @@ Buffer text, we should see a confirm message."
                               (line-end-position))
                (insert (plist-get l :line)))
       (parinfer-goto-line (1+ cursor-line))
-      (forward-char (plist-get result :cursor-x)))))
+      (forward-char (plist-get result :cursor-x))
+      (set-window-start (selected-window) window-start-pos))))
 
 (defun parinfer-indent-with-confirm ()
   "Call parinfer indent on whole buffer.
 if there's any change, display a confirm message in minibuffer."
   (interactive)
-  (let* ((cursor-line (1- (line-number-at-pos)))
+  (let* ((window-start-pos (window-start))
+         (cursor-line (1- (line-number-at-pos)))
          (cursor-x (parinfer-cursor-x))
          (opts (list :cursor-line cursor-line :cursor-x cursor-x))
          (text (buffer-substring-no-properties (point-min) (point-max)))
@@ -298,6 +303,7 @@ if there's any change, display a confirm message in minibuffer."
                               (insert (plist-get l :line)))
                      (parinfer-goto-line (1+ cursor-line))
                      (forward-char (plist-get result :cursor-x))
+                     (set-window-start (selected-window) window-start-pos)
                      (setq parinfer-first-load nil)
                      t)
             nil)
@@ -307,10 +313,10 @@ if there's any change, display a confirm message in minibuffer."
   "Do parinfer paren  on current & previous top level S-exp.
 Set `parinfer-paren-modify-parentheses` to t let paren mode modify content."
   (interactive)
-  (message "paren")
   (when (and (not (ignore-errors (parinfer-reindent-sexp nil)))
              parinfer-paren-modify-parentheses)
-    (let* ((start (save-excursion (parinfer-goto-previous-defun) (point)))
+    (let* ((window-start-pos (window-start))
+           (start (save-excursion (parinfer-goto-previous-defun) (point)))
            (end (save-excursion (parinfer-goto-next-defun) (point)))
            (text (buffer-substring-no-properties start end))
            (line-number (line-number-at-pos))
@@ -322,7 +328,8 @@ Set `parinfer-paren-modify-parentheses` to t let paren mode modify content."
         (delete-region start end)
         (insert (plist-get result :text))
         (parinfer-goto-line line-number)
-        (forward-char (plist-get result :cursor-x))))))
+        (forward-char (plist-get result :cursor-x))
+        (set-window-start (selected-window) window-start-pos)))))
 
 (defun parinfer-reindent-sexp (&optional ignored)
   "Call aggressive-indent.))
@@ -402,7 +409,6 @@ IGNORED is for compatible with hook."
   (add-hook 'post-self-insert-hook 'parinfer-hook-fn t t)
   (add-hook 'activate-mark-hook 'parinfer-region-mode-enable t t)
   (add-hook 'deactivate-mark-hook 'parinfer-region-mode-disable t t)
-
   (parinfer-switch-to-indent-mode))
 
 (defun parinfer-disable ()
@@ -542,8 +548,22 @@ Use this to browse and apply the changes."
          (parinfer-switch-to-indent-mode)))))
 
 ;; -----------------------------------------------------------------------------
-;; Paredit
+;; Additional commands port from Paredit, etc. WIP
 ;; -----------------------------------------------------------------------------
+(defun parinfer-reverse-transpose-sexps ()
+  "Reverse transpose."
+  (interactive)
+  (when (not (ignore-errors (transpose-sexps -1)))
+    (forward-sexp)
+    (ignore-errors (transpose-sexps -1))))
+
+(defun parinfer-transpose-sexps ()
+  "Transpose."
+  (interactive)
+  (when (not (ignore-errors (transpose-sexps 1)))
+    (forward-sexp)
+    (ignore-errors (transpose-sexps 1))))
+
 (defun parinfer-forward-slurp-sexp ()
   "Useless now."
   (interactive)
@@ -582,3 +602,7 @@ Use this to browse and apply the changes."
 
 (provide 'parinfer)
 ;;; parinfer.el ends here
+
+
+
+
