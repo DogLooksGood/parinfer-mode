@@ -20,11 +20,7 @@ you have install it manually.
   git clone https://github.com/DogLooksGood/parinfer-mode.git
 #+END_SRC
 ** Emacs configurations.
-This plugin rely on [[https://github.com/Malabarba/aggressive-indent-mode][aggressive-indent-mode]]. So you have to install it and do *NOT* enable it.
 #+BEGIN_SRC emacs-lisp
-  ;; Install aggressive with the way you prefer.
-  (use-package aggressive-indent)
-
   ;; Add parinfer-mode to load-path.
   (add-to-list 'load-path "~/some/path/parinfer-mode")
 
@@ -68,6 +64,10 @@ No performance issue now.
 
 * Preview cursor scope?
 Not support yet.
+
+* Credits
+- [[https://github.com/oakmac][oakmac]] :: Bring Parinfer to Emacs.
+- [[https://github.com/tumashu][tumashu]] :: Help me a lot in writing this plugin.
 
 * License
 Licensed under the GPLv3.
