@@ -43,10 +43,8 @@
 ;;   git clone https://github.com/DogLooksGood/parinfer-mode.git
 ;; #+END_SRC
 ;; ** Emacs configurations.
-;; This plugin rely on [[https://github.com/Malabarba/aggressive-indent-mode][aggressive-indent-mode]]. So you have to install it and do *NOT* enable it.
+
 ;; #+BEGIN_SRC emacs-lisp
-;;   ;; Install aggressive with the way you prefer.
-;;   (use-package aggressive-indent)
 
 ;;   ;; Add parinfer-mode to load-path.
 ;;   (add-to-list 'load-path "~/some/path/parinfer-mode")
@@ -103,7 +101,6 @@
 (require 'parinferlib)
 (require 'mode-local)
 (require 'paredit)
-(require 'aggressive-indent)
 (require 'cl-lib)
 
 ;; -----------------------------------------------------------------------------
@@ -133,6 +130,9 @@
 (defvar parinfer-mode-disable-hook nil
   "Call after parinfer mode is disabled.")
 
+(defvar parinfer-paren-modify-parentheses nil
+  "If paren style can modify parentheses?")
+
 ;; -----------------------------------------------------------------------------
 ;; Helpers
 ;; -----------------------------------------------------------------------------
@@ -141,7 +141,7 @@
   (setq parinfer-style 'indent)
   (message "Parinfer: Indent Mode")
   (when (bound-and-true-p company-mode)
-    (remove-hook 'company-completion-finished-hook 'parinfer-aggressive-indent t))
+    (remove-hook 'company-completion-finished-hook 'parinfer-reindent-sexp t))
   (force-mode-line-update))
 
 (defun parinfer-switch-to-indent-mode ()
@@ -156,7 +156,7 @@
   (setq parinfer-style 'paren)
   (message "Parinfer: Paren Mode")
   (when (bound-and-true-p company-mode)
-    (add-hook 'company-completion-finished-hook 'parinfer-aggressive-indent t t))
+    (add-hook 'company-completion-finished-hook 'parinfer-reindent-sexp t t))
   (force-mode-line-update))
 
 (defun parinfer-in-comment-or-string-p ()
@@ -283,17 +283,16 @@
 
 (defun parinfer-paren ()
   (interactive)
-  (let* ((start (save-excursion (parinfer-goto-previous-defun) (point)))
-         (end (save-excursion (parinfer-goto-next-defun) (point)))
-         (text (buffer-substring-no-properties start end))
-         (line-number (line-number-at-pos))
-         (cursor-line (- line-number (line-number-at-pos start)))
-         (cursor-x (current-column))
-         (opts (list :cursor-x cursor-x :cursor-line cursor-line))
-         (result (parinferlib-paren-mode text opts)))
-    (if (and (plist-get result :success)
-             (string= text (plist-get result :text)))
-        (parinfer-aggressive-indent nil)
+  (when (and (not (ignore-errors (parinfer-reindent-sexp nil)))
+             parinfer-paren-modify-parentheses)
+    (let* ((start (save-excursion (parinfer-goto-previous-defun) (point)))
+           (end (save-excursion (parinfer-goto-next-defun) (point)))
+           (text (buffer-substring-no-properties start end))
+           (line-number (line-number-at-pos))
+           (cursor-line (- line-number (line-number-at-pos start)))
+           (cursor-x (current-column))
+           (opts (list :cursor-x cursor-x :cursor-line cursor-line))
+           (result (parinferlib-paren-mode text opts)))
       (progn
         (delete-region start end)
         (insert (plist-get result :text))
@@ -301,9 +300,9 @@
         (beginning-of-line 1)
         (forward-char (plist-get result :cursor-x))))))
 
-(defun parinfer-aggressive-indent (ignored)
+(defun parinfer-reindent-sexp (ignored)
   (when (not (parinfer-in-comment-or-string-p))
-    (call-interactively 'aggressive-indent-indent-defun)))
+    (call-interactively 'paredit-reindent-defun)))
 
 (defun parinfer-hook-fn ()
   (cond
@@ -328,7 +327,14 @@
 
 (defun parinfer-backward-delete-char ()
   (interactive)
-  (backward-delete-char 1)
+  (if (eq 'paren parinfer-style)
+      (if (string-match-p "^[[:space:]]+$"
+                          (buffer-substring-no-properties
+                           (line-beginning-position)
+                           (point)))
+          (delete-indentation)
+        (backward-delete-char 1))
+    (backward-delete-char 1)) 
   (parinfer-hook-fn))
 
 (defun parinfer-backward-kill-word ()
