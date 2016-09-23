@@ -5,7 +5,7 @@
 ;; Author: Shi Tianshu
 ;; Homepage: https://github.com/DogLooksGood/parinfer-mode
 ;; Version: 0.0.2
-;; Package-Requires: ((paredit "24") (cl-lib "0.5"))
+;; Package-Requires: ((paredit "24") (aggressive-indent "1.8.1") (cl-lib "0.5"))
 ;; Keywords: Parinfer
 
 ;; This file is not part of GNU Emacs.
@@ -93,6 +93,7 @@
 ;; Requires
 ;; -----------------------------------------------------------------------------
 (require 'parinferlib)
+(require 'aggressive-indent)
 (require 'mode-local)
 (require 'paredit)
 (require 'cl-lib)
@@ -304,7 +305,7 @@
 
 (defun parinfer-reindent-sexp (ignored)
   (when (not (parinfer-in-comment-or-string-p))
-    (call-interactively 'paredit-reindent-defun)))
+    (call-interactively 'aggressive-indent-indent-defun)))
 
 (defun parinfer-hook-fn ()
   (cond
