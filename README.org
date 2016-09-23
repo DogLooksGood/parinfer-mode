@@ -70,6 +70,6 @@ Not support yet.
 * Credits
 - [[https://github.com/oakmac][oakmac]] :: Bring Parinfer to Emacs.
 - [[https://github.com/tumashu][tumashu]] :: Help me a lot in writing this plugin.
-
+- [[https://github.com/purcell][purcell]] & [[https://github.com/syohex][syohex]] :: Advice and Tips for writing emacs plugin.
 * License
 Licensed under the GPLv3.
