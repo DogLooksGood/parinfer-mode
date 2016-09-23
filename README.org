@@ -5,7 +5,7 @@
 [[file:screenshots/simple_demo.gif]]
 
 * WIP, use with your own risk.
-Work in progress, may not satble. 
+Work in progress, may not stable. 
 I use this for my Clojure and Emacs Lisp code.
 
 * What is Parinfer?
@@ -13,7 +13,7 @@ I use this for my Clojure and Emacs Lisp code.
 
 * Installation
 Currently not available on melpa, so if you want try this, 
-you have install it manually.
+you have to install it manually.
 ** Clone this repo.
 #+BEGIN_SRC shell
   cd /some/path/parinfer-mode
