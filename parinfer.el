@@ -27,7 +27,6 @@
 
 ;;; Commentary:
 
-[[https://github.com/shaunlebron/parinfer][;; * Installation
 ;; Currently not available on melpa, so if you want try this, 
 ;; you have to install it manually.
 ;; ** Clone this repo.
@@ -65,7 +64,7 @@
 
 ;; Use ~parinfer-diff~ to see how parinfer will change the buffer with Ediff.
 
-[[;; Normally, after indenting the whole buffer with ~C-x h~ ~C-M-\~, you can switch to Indent Mode safely.
+;; Normally, after indenting the whole buffer with ~C-x h~ ~C-M-\~, you can switch to Indent Mode safely.
 
 ;; * Work with Evil?
 ;; Not yet, some works are needed. Will come soon.
