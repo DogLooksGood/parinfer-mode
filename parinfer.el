@@ -5,7 +5,7 @@
 ;; Author: Shi Tianshu
 ;; Homepage: https://github.com/DogLooksGood/parinfer-mode
 ;; Version: 0.0.2
-;; Package-Requires: ((paredit "24") (aggressive-indent "1.8.1") (cl-lib "0.5"))
+;; Package-Requires: ((paredit "24") (cl-lib "0.5"))
 ;; Keywords: Parinfer
 
 ;; This file is not part of GNU Emacs.
@@ -102,6 +102,7 @@
 (require 'mode-local)
 (require 'paredit)
 (require 'cl-lib)
+(require 'ediff)
 
 ;; -----------------------------------------------------------------------------
 ;; Constants & Variables
@@ -167,6 +168,11 @@
         (nth 3 (syntax-ppss))
         (nth 4 (syntax-ppss)))))
 
+(defun parinfer-goto-line (n)
+  (goto-char (point-min))
+  (forward-line (1- n))
+  (beginning-of-line))
+
 (defun parinfer-goto-next-defun ()
   "goto next defun, skip comment or string."
   (interactive)
@@ -184,7 +190,7 @@
                     (setq last-pos nil)
                   (setq last-pos (point)))))
             (backward-char))
-        (end-of-buffer)))))
+        (goto-char (point-max))))))
 
 (defun parinfer-goto-previous-defun-aux ()
   (search-backward-regexp parinfer-defun-regex nil t)
@@ -229,8 +235,7 @@
                (plist-get result :changed-lines))
       (delete-region start end)
       (insert (plist-get result :text))
-      (goto-line line-number)
-      (beginning-of-line 1)
+      (parinfer-goto-line line-number)
       (forward-char (plist-get result :cursor-x)))))
 
 (defun parinfer-indent-buffer ()
@@ -244,12 +249,11 @@
     (when (and (plist-get result :success)
                changed-lines)
       (cl-loop for l in changed-lines do
-               (goto-line (1+ (plist-get l :line-no)))
+               (parinfer-goto-line (1+ (plist-get l :line-no)))
                (delete-region (line-beginning-position)
                               (line-end-position))
                (insert (plist-get l :line)))
-      (goto-line (1+ cursor-line))
-      (beginning-of-line 1)
+      (parinfer-goto-line (1+ cursor-line))
       (forward-char (plist-get result :cursor-x))))) 
 
 (defun parinfer-indent-with-confirm ()
@@ -269,12 +273,11 @@
                (not (string= text (plist-get result :text))))
           (if (y-or-n-p "Caution! Buffer will be modified if you swith to Indent mode, continue? Y for indent mode, N for paren mode.")
               (progn (cl-loop for l in changed-lines do
-                              (goto-line (1+ (plist-get l :line-no)))
+                              (parinfer-goto-line (1+ (plist-get l :line-no)))
                               (delete-region (line-beginning-position)
                                              (line-end-position))
                               (insert (plist-get l :line)))
-                     (goto-line (1+ cursor-line))
-                     (beginning-of-line 1)
+                     (parinfer-goto-line (1+ cursor-line))
                      (forward-char (plist-get result :cursor-x))
                      (setq parinfer-first-load nil)
                      t)
@@ -296,8 +299,7 @@
       (progn
         (delete-region start end)
         (insert (plist-get result :text))
-        (goto-line line-number)
-        (beginning-of-line 1)
+        (parinfer-goto-line line-number)
         (forward-char (plist-get result :cursor-x))))))
 
 (defun parinfer-reindent-sexp (ignored)
