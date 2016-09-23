@@ -217,6 +217,12 @@
 (defun parinfer-ediff-startup-hook ()
   (local-set-key (kbd "q") 'parinfer-ediff-quit))
 
+(defun parinfer-cursor-x ()
+  (length
+   (buffer-substring-no-properties
+    (line-beginning-position)
+    (point))))
+
 ;; -----------------------------------------------------------------------------
 ;; Parinfer functions
 ;; -----------------------------------------------------------------------------
@@ -228,7 +234,7 @@
          (text (buffer-substring-no-properties start end))
          (line-number (line-number-at-pos))
          (cursor-line (- line-number (line-number-at-pos start)))
-         (cursor-x (current-column))
+         (cursor-x (parinfer-cursor-x))
          (opts (list :cursor-x cursor-x :cursor-line cursor-line))
          (result (parinferlib-indent-mode text opts)))
     (when (and (plist-get result :success)
@@ -241,7 +247,7 @@
 (defun parinfer-indent-buffer ()
   (interactive)
   (let* ((cursor-line (1- (line-number-at-pos)))
-         (cursor-x (current-column))
+         (cursor-x (parinfer-cursor-x))
          (opts (list :cursor-line cursor-line :cursor-x cursor-x))
          (text (buffer-substring-no-properties (point-min) (point-max)))
          (result (parinferlib-indent-mode text opts))
@@ -259,7 +265,7 @@
 (defun parinfer-indent-with-confirm ()
   (interactive)
   (let* ((cursor-line (1- (line-number-at-pos)))
-         (cursor-x (current-column))
+         (cursor-x (parinfer-cursor-x))
          (opts (list :cursor-line cursor-line :cursor-x cursor-x))
          (text (buffer-substring-no-properties (point-min) (point-max)))
          (result (parinferlib-indent-mode text opts))
@@ -293,7 +299,7 @@
            (text (buffer-substring-no-properties start end))
            (line-number (line-number-at-pos))
            (cursor-line (- line-number (line-number-at-pos start)))
-           (cursor-x (current-column))
+           (cursor-x (parinfer-cursor-x))
            (opts (list :cursor-x cursor-x :cursor-line cursor-line))
            (result (parinferlib-paren-mode text opts)))
       (progn
