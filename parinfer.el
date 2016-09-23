@@ -26,26 +26,17 @@
 ;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
-;; 
-;; * WIP, use with your own risk.
-;; Work in progress, may not satble. 
-;; I use this for my Clojure and Emacs Lisp code.
 
-;; * What is Parinfer?
-;; [[https://github.com/shaunlebron/parinfer][Take a look at this]]
-
-;; * Installation
+[[https://github.com/shaunlebron/parinfer][;; * Installation
 ;; Currently not available on melpa, so if you want try this, 
-;; you have install it manually.
+;; you have to install it manually.
 ;; ** Clone this repo.
 ;; #+BEGIN_SRC shell
 ;;   cd /some/path/parinfer-mode
 ;;   git clone https://github.com/DogLooksGood/parinfer-mode.git
 ;; #+END_SRC
 ;; ** Emacs configurations.
-
 ;; #+BEGIN_SRC emacs-lisp
-
 ;;   ;; Add parinfer-mode to load-path.
 ;;   (add-to-list 'load-path "~/some/path/parinfer-mode")
 
@@ -63,18 +54,18 @@
 ;; Not work in Cider REPL now.
 
 ;; * Toggle Indent and Paren mode.
-;; Use ~toggle-parinfer-mode~, default bind to ~C-9~.
+;; Use ~parinfer-toggle-mode~.
+
+;; I recommanded to add a keybinding for ~parinfer-toggle-mode~, since it will be used frequently.
 ;; #+BEGIN_SRC emacs-lisp
-;;   (define-key map (kbd "C-9") 'toggle-parinfer-mode)
+;;   (define-key parinfer-mode-map (kbd "C-,") 'parinfer-toggle-mode)
 ;; #+END_SRC
 ;; When the first time, you switch to Indent Mode, if your code will be modified by parinfer,
 ;; You will see a confirm message in minibuffer. Type ~y~ for continue, ~n~ to stay in paren mode.
 
-;; Use ~parinfer-diff~ to see how parinfer will change the buffer.
+;; Use ~parinfer-diff~ to see how parinfer will change the buffer with Ediff.
 
-;; [[file:screenshots/diff_demo.gif]]
-
-;; Normally, after indenting the whole buffer with ~C-x h~ ~C-M-\~, you can switch to Indent Mode safely.
+[[;; Normally, after indenting the whole buffer with ~C-x h~ ~C-M-\~, you can switch to Indent Mode safely.
 
 ;; * Work with Evil?
 ;; Not yet, some works are needed. Will come soon.
@@ -89,6 +80,10 @@
 
 ;; * Preview cursor scope?
 ;; Not support yet.
+
+;; * Credits
+;; - [[https://github.com/oakmac][oakmac]] :: Bring Parinfer to Emacs.
+;; - [[https://github.com/tumashu][tumashu]] :: Help me a lot in writing this plugin.
 
 ;; * License
 ;; Licensed under the GPLv3.

@@ -38,14 +38,16 @@ or
 Not work in Cider REPL now.
 
 * Toggle Indent and Paren mode.
-Use ~toggle-parinfer-mode~, default bind to ~C-9~.
+Use ~parinfer-toggle-mode~.
+
+I recommanded to add a keybinding for ~parinfer-toggle-mode~, since it will be used frequently.
 #+BEGIN_SRC emacs-lisp
-  (define-key map (kbd "C-9") 'toggle-parinfer-mode)
+  (define-key parinfer-mode-map (kbd "C-,") 'parinfer-toggle-mode)
 #+END_SRC
 When the first time, you switch to Indent Mode, if your code will be modified by parinfer,
 You will see a confirm message in minibuffer. Type ~y~ for continue, ~n~ to stay in paren mode.
 
-Use ~parinfer-diff~ to see how parinfer will change the buffer.
+Use ~parinfer-diff~ to see how parinfer will change the buffer with Ediff.
 
 [[file:screenshots/diff_demo.gif]]
 
