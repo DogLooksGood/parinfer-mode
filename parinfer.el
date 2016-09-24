@@ -236,6 +236,11 @@ Buffer text, we should see a confirm message."
 ;; Parinfer functions
 ;; -----------------------------------------------------------------------------
 
+(defun parinfer-utabify-buffer ()
+  "We can not handle indentation with tab, so untabify the whole buffer."
+  (interactive)
+  (untabify (point-min) (point-max)))
+
 (defun parinfer-indent ()
   "Call parinfer indent on current & previous top level S-exp."
   (interactive)
@@ -278,7 +283,7 @@ Buffer text, we should see a confirm message."
       (set-window-start (selected-window) window-start-pos))))
 
 (defun parinfer-indent-with-confirm ()
-  "Call parinfer indent on whole buffer.
+  "Call parinfer indent on whole buffer.)
 if there's any change, display a confirm message in minibuffer."
   (interactive)
   (let* ((window-start-pos (window-start))

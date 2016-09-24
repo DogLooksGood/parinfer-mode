@@ -51,28 +51,34 @@ Some keybindings in Ediff:
 
 Normally, after indenting the whole buffer with ~C-x h~ ~C-M-\~, you can switch to Indent Mode safely.
 
-* Use with Evil?
+* FAQ
+** Parinfer-mode toggle indent mode is changing the indentation.
+The indentation of code should not be changed by indent mode. When you meet this, your code probably have indentation with *TAB*.
+
+Currently Parinfer can not handle tab indentation, you can change all tab indentation to whitespace for current buffer with ~M-x parinfer-untabify-buffer~.
+
+** Use with Evil?
 Parinfer mode only works in insert-state.
 
 But there's already a plugin called [[https://github.com/luxbock/evil-cleverparens][evil-cleverparens]] , that handles parentheses nicely for evil normal or visual states.
 
 If you are using evil, try using ~evil-cleverparens~ + ~parinfer-mode~ .
 
-* Use in Cider REPL?
+** Use in Cider REPL?
 Not yet, I simply use ~electric-pair-mode~ for auto pairs.
 #+BEGIN_SRC emacs-lisp
   (add-hook 'cider-repl-mode-hook #'electric-pair-mode)
 #+END_SRC
 
-* Performance.
+** Performance.
 On each text modification, the current & previous top-level form will be computed. 
 When switching to Indent mode, whole buffer will be computed. 
 No performance issue now.
 
-* Hooks?
+** Hooks?
 ~parinfer-mode-enable-hook~ and ~parinfer-mode-disable-hook~.
 
-* Preview cursor scope?
+** Preview cursor scope?
 Not support yet.
 
 * Credits
