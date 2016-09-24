@@ -28,9 +28,6 @@ Available on Melpa(and Melpa Stable) now, I recommand to install with [[https://
       (add-hook 'emacs-lisp-mode-hook #'parinfer-mode)))
 #+END_SRC
 
-* Work on Cider REPL?
-Not yet.
-
 * Toggle Indent and Paren mode.
 Use ~parinfer-toggle-mode~.
 
@@ -45,17 +42,29 @@ Use ~parinfer-diff~ to see how parinfer will change the buffer with Ediff.
 
 [[file:screenshots/diff_demo.gif]]
 
+Some keybindings in Ediff:
+| Key | Description                                               |
+|-----+-----------------------------------------------------------|
+| ~q~ | Quit diff                                                 |
+| ~b~ | B->A in Ediff, this can apply change to your origin code. |
+
 Normally, after indenting the whole buffer with ~C-x h~ ~C-M-\~, you can switch to Indent Mode safely.
 
-* Work with Evil?
+* Use with Evil?
 Parinfer mode only works in insert-state.
 
 But there's already a plugin called [[https://github.com/luxbock/evil-cleverparens][evil-cleverparens]] , that handles parentheses nicely for evil normal or visual states.
 
 If you are using evil, try using ~evil-cleverparens~ + ~parinfer-mode~ .
 
+* Use in Cider REPL?
+Not yet, I simply use ~electric-pair-mode~ for auto pairs.
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'cider-repl-mode-hook #'electric-pair-mode)
+#+END_SRC
+
 * Performance.
-On each text modification, the current top-level form will be computed. 
+On each text modification, the current & previous top-level form will be computed. 
 When switching to Indent mode, whole buffer will be computed. 
 No performance issue now.
 
