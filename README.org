@@ -8,11 +8,8 @@
 [[https://github.com/shaunlebron/parinfer][Take a look at this]]
 
 * Installation
-Available on Melpa Stable now, I recommand to install with [[https://github.com/jwiegley/use-package][use-package]] .
+Available on Melpa(and Melpa Stable) now, I recommand to install with [[https://github.com/jwiegley/use-package][use-package]] .
 #+BEGIN_SRC emacs-lisp
-  ;; Put this to where you modify the package-archieves.
-  (add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
-
   ;; Require parinfer with use-package.
   (use-package parinfer
     :ensure t
@@ -51,7 +48,11 @@ Use ~parinfer-diff~ to see how parinfer will change the buffer with Ediff.
 Normally, after indenting the whole buffer with ~C-x h~ ~C-M-\~, you can switch to Indent Mode safely.
 
 * Work with Evil?
-Not yet, some works are needed. Will come soon.
+Parinfer mode only works in insert-state.
+
+But there's already a plugin called [[https://github.com/luxbock/evil-cleverparens][evil-cleverparenjs]] , that handles parentheses nicely for evil normal or visual states.
+
+If you are using evil, try using ~evil-cleverparens~ + ~parinfer-mode~ .
 
 * Performance.
 On each text modification, the current top-level form will be computed. 
