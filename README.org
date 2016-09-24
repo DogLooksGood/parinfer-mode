@@ -4,10 +4,6 @@
 * Screenshots
 [[file:screenshots/simple_demo.gif]]
 
-* WIP, use with your own risk.
-Work in progress, may not stable. 
-I use this for my Clojure and Emacs Lisp code.
-
 * What is Parinfer?
 [[https://github.com/shaunlebron/parinfer][Take a look at this]]
 
