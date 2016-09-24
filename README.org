@@ -43,10 +43,11 @@ Use ~parinfer-diff~ to see how parinfer will change the buffer with Ediff.
 [[file:screenshots/diff_demo.gif]]
 
 Some keybindings in Ediff:
-| Key | Description                                               |
-|-----+-----------------------------------------------------------|
-| ~q~ | Quit diff                                                 |
-| ~b~ | B->A in Ediff, this can apply change to your origin code. |
+| Key  | Description                                               |
+|------+-----------------------------------------------------------|
+| ~q~  | Quit diff                                                 |
+| ~b~  | B->A in Ediff, this can apply change to your origin code. |
+| ~ra~ | Restore A in Ediff, this can revert change.               |
 
 Normally, after indenting the whole buffer with ~C-x h~ ~C-M-\~, you can switch to Indent Mode safely.
 
