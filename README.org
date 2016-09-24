@@ -50,7 +50,7 @@ Normally, after indenting the whole buffer with ~C-x h~ ~C-M-\~, you can switch 
 * Work with Evil?
 Parinfer mode only works in insert-state.
 
-But there's already a plugin called [[https://github.com/luxbock/evil-cleverparens][evil-cleverparenjs]] , that handles parentheses nicely for evil normal or visual states.
+But there's already a plugin called [[https://github.com/luxbock/evil-cleverparens][evil-cleverparens]] , that handles parentheses nicely for evil normal or visual states.
 
 If you are using evil, try using ~evil-cleverparens~ + ~parinfer-mode~ .
 
