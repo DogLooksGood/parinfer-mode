@@ -12,30 +12,31 @@ I use this for my Clojure and Emacs Lisp code.
 [[https://github.com/shaunlebron/parinfer][Take a look at this]]
 
 * Installation
-Currently not available on melpa, so if you want try this, 
-you have to install it manually.
-** Clone this repo.
-#+BEGIN_SRC shell
-  cd /some/path/parinfer-mode
-  git clone https://github.com/DogLooksGood/parinfer-mode.git
-#+END_SRC
-** Emacs configurations.
+Available on Melpa Stable now, I recommand to install with [[https://github.com/jwiegley/use-package][use-package]] .
 #+BEGIN_SRC emacs-lisp
-  ;; Add parinfer-mode to load-path.
-  (add-to-list 'load-path "~/some/path/parinfer-mode")
+  ;; Put this to where you modify the package-archieves.
+  (add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
 
-  ;; Require it!
-  (require 'parinfer)
+  ;; Require parinfer with use-package.
+  (use-package parinfer
+    :ensure t
+    :bind
+    (;; Use this to toggle Indent/Paren Mode.
+     ("C-," . parinfer-toggle-mode)
+     ;; Some other commands you may want.
+     ("M-r" . parinfer-raise-sexp)
+     ("M-m" . mark-sexp)
+     ("M-j" . parinfer-transpose-sexps)
+     ("M-k" . parinfer-reverse-transpose-sexps))
+    :init
+    ;; Enable Parinfer for Emacs Lisp and Clojure.
+    (progn
+      (add-hook 'clojure-mode-hook #'parinfer-mode)
+      (add-hook 'emacs-lisp-mode-hook #'parinfer-mode)))
 #+END_SRC
-** Enable parinfer-mode.
-~M-x parinfer-mode~
 
-or
-#+BEGIN_SRC emacs-lisp
-  (add-hook 'clojure-mode-hook #'parinfer-mode)
-  (add-hook 'emacs-lisp-mode-hook #'parinfer-mode)
-#+END_SRC
-Not work in Cider REPL now.
+* Work on Cider REPL?
+Not yet.
 
 * Toggle Indent and Paren mode.
 Use ~parinfer-toggle-mode~.
