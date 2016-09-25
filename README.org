@@ -1,8 +1,10 @@
 #+TITLE: Parinfer Mode
 #+AUTHOR: DogLooksGood
 
+[[file:images/logo.png]]
+
 * Screenshots
-[[file:screenshots/simple_demo.gif]]
+[[file:images/simple_demo.gif]]
 
 * What is Parinfer?
 [[https://github.com/shaunlebron/parinfer][Take a look at this]]
@@ -40,7 +42,7 @@ You will see a confirm message in minibuffer. Type ~y~ for continue, ~n~ to stay
 
 Use ~parinfer-diff~ to see how parinfer will change the buffer with Ediff.
 
-[[file:screenshots/diff_demo.gif]]
+[[file:images/diff_demo.gif]]
 
 Some keybindings in Ediff:
 | Key  | Description                                               |
@@ -82,6 +84,7 @@ No performance issue now.
 Not support yet.
 
 * Credits
+- [[https://github.com/shaunlebron][shaunlebron]] :: Create Parinfer.
 - [[https://github.com/oakmac][oakmac]] :: Bring Parinfer to Emacs.
 - [[https://github.com/tumashu][tumashu]] :: Help me a lot in writing this plugin.
 - [[https://github.com/purcell][purcell]] & [[https://github.com/syohex][syohex]] :: Advice and Tips for writing emacs plugin.
