@@ -10,6 +10,9 @@
 [[https://github.com/shaunlebron/parinfer][Take a look at this]]
 
 * Installation
+*NOTICE*: parinfer-mode will not work properly if there's another minor mode for auto parens(Such as ~electric-pair-mode~, ~lispy~, ~smartparens~, etc). But if you use ~evil~, [[https://github.com/luxbock/evil-cleverparens][evil-cleverparens]] is okay.
+Because it will not change the behaviour for insert-state, and parinfer-mode only works in insert-state.
+
 Available on Melpa(and Melpa Stable) now, I recommand to install with [[https://github.com/jwiegley/use-package][use-package]] .
 #+BEGIN_SRC emacs-lisp
   ;; Require parinfer with use-package.

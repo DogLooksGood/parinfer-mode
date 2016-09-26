@@ -237,7 +237,8 @@ Buffer text, we should see a confirm message."
 ;; -----------------------------------------------------------------------------
 
 (defun parinfer-utabify-buffer ()
-  "We can not handle indentation with tab, so untabify the whole buffer."
+  "Untabify whole buffer. 
+   Currently parinfer can not handle indentation with tab.  Use this to remove tab indentation of your code."
   (interactive)
   (untabify (point-min) (point-max)))
 
