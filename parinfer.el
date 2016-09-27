@@ -508,8 +508,8 @@ Use this to browse and apply the changes."
     (define-key map (kbd "<backspace>") 'parinfer-backward-delete-char)
     (define-key map (kbd "M-<backspace>") 'parinfer-backward-kill-word)
     (define-key map (kbd "C-k") 'parinfer-kill-line)
-    (define-key map (kbd "C-d") 'parinfer-backward-delete-char)
-    (define-key map (kbd "M-d") 'parinfer-backward-delete-char)
+    (define-key map (kbd "C-d") 'parinfer-delete-char)
+    (define-key map (kbd "M-d") 'parinfer-kill-word)
     map))
 
 (defvar parinfer-region-mode-map
