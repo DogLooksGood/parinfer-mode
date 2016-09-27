@@ -74,9 +74,9 @@ I'm already using parinfer-mode for Clojure And Elisp. It should be stable and s
 If there's any bug or uncomfortable stuff, open an issue please.
 
 ** I found command XXX break matched parens!
-If XXX is a built-in or wild used command, please open a issue, I'll do a fix.
+If XXX is a built-in or been used wildly command, please open an issue, I'll have a fix.
 
-Alternatively, you can fix it too. There're two macros.
+Alternatively, you can do it yourself. There're two macros.
 
 *** parinfer-run
 This macro will run the BODY code, then invoke parinfer to fix parentheses(if we are in indent-mode).
