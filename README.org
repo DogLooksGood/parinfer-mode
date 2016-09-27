@@ -50,13 +50,19 @@ Use ~parinfer-diff~ to see how parinfer will change the buffer with Ediff.
 Some keybindings in Ediff:
 | Key  | Description                                               |
 |------+-----------------------------------------------------------|
-| ~q~  | Quit diff                                                 |
+| ~q~  | Quit diff.                                                |
 | ~b~  | B->A in Ediff, this can apply change to your origin code. |
 | ~ra~ | Restore A in Ediff, this can revert change.               |
+| ~n~  | Move to next difference.                                  |
+| ~p~  | Move to previous difference.                              |
 
 Normally, after indenting the whole buffer with ~C-x h~ ~C-M-\~, you can switch to Indent Mode safely.
 
 * FAQ
+** Project status.
+I'm already using parinfer-mode for Clojure And Elisp. It should be stable and should work as expected.
+If there's any bug or uncomfortable stuff, open an issue please.
+
 ** Parinfer-mode toggle indent mode is changing the indentation.
 The indentation of code should not be changed by indent mode. When you meet this, your code probably have indentation with *TAB*.
 
