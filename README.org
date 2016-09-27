@@ -10,20 +10,30 @@
 [[https://github.com/shaunlebron/parinfer][Take a look at this]]
 
 * Installation
-*NOTICE*: parinfer-mode will not work properly if there's another minor mode for auto parens(Such as ~electric-pair-mode~, ~lispy~, ~smartparens~, etc). But if you use ~evil~, [[https://github.com/luxbock/evil-cleverparens][evil-cleverparens]] is okay.
+*NOTICE*: parinfer-mode will not work properly if there's another minor mode *enabled* for auto parens(Such as ~paredit~, ~electric-pair-mode~, ~lispy~, ~smartparens~, etc). 
+
+But you can still *require* these plugins and use their commands.
+
+If you are using ~evil~, [[https://github.com/luxbock/evil-cleverparens][evil-cleverparens]] is okay.
 Because it will not change the behaviour for insert-state, and parinfer-mode only works in insert-state.
 
 Available on Melpa(and Melpa Stable) now, I recommand to install with [[https://github.com/jwiegley/use-package][use-package]] .
 #+BEGIN_SRC emacs-lisp
-  ;; Require parinfer with use-package.
   (use-package parinfer
     :ensure t
     :bind
-    (;; Use this to toggle Indent/Paren Mode.
-     ("C-," . parinfer-toggle-mode)
-     ;; Some other commands you may want.
-     ("M-r" . parinfer-raise-sexp)
-     ("M-m" . mark-sexp)
+    (("C-," . parinfer-toggle-mode)
+     ;; You can use paredit with parinfer.
+     ;; To avoid the conflicts, just bind commands those you want. 
+     ;; do NOT enable paredit-mode.
+     ("M-r" . paredit-raise-sexp)
+     ("M-S" . paredit-split-sexp)
+     ("M-J" . paredit-join-sexp)
+     ("C-)" . paredit-forward-slurp-sexp)
+     ("C-(" . paredit-backward-slurp-sexp)
+     ("C-\}" . paredit-forward-barf-sexp)
+     ("C-{" . paredit-backward-barf-sexp)
+     ;; Other command you may want.
      ("M-j" . parinfer-transpose-sexps)
      ("M-k" . parinfer-reverse-transpose-sexps))
     :init
@@ -62,6 +72,39 @@ Normally, after indenting the whole buffer with ~C-x h~ ~C-M-\~, you can switch 
 ** Project status.
 I'm already using parinfer-mode for Clojure And Elisp. It should be stable and should work as expected.
 If there's any bug or uncomfortable stuff, open an issue please.
+
+** I found command XXX break matched parens!
+If XXX is a built-in or wild used command, please open a issue, I'll do a fix.
+
+Alternatively, you can fix it too. There're two macros.
+
+*** parinfer-run
+This macro will run the BODY code, then invoke parinfer to fix parentheses(if we are in indent-mode).
+#+BEGIN_SRC emacs-lisp
+  ;; This is a sample, parinfer-mode have already remap yank with parinfer-yank.
+
+  (defun parinfer-yank ()
+    (interactive)
+    (parinfer-run
+     (call-interactively 'yank)))
+
+  ;; Replace yank to parinfer-yank.
+  (define-key parinfer-mode-map [remap yank] 'parinfer-yank)
+#+END_SRC
+
+*** parinfer-paren-run
+This macro will always run BODY in paren-mode, avoid changing the S-exp struct. 
+#+BEGIN_SRC emacs-lisp
+  ;; This is a sample, parinfer-mode already remap delete-indentation with parinfer-delete-indentation.
+
+  (defun parinfer-delete-indentation ()
+    (interactive)
+    (parinfer-paren-run
+     (call-interactively 'delete-indentation)))
+
+  ;; Replace delete-indentation to parinfer-indentation.
+  (define-key parinfer-mode-map [remap delete-indentation] 'parinfer-delete-indentation)
+#+END_SRC
 
 ** Parinfer-mode toggle indent mode is changing the indentation.
 The indentation of code should not be changed by indent mode. When you meet this, your code probably have indentation with *TAB*.

@@ -4,7 +4,7 @@
 
 ;; Author: Shi Tianshu
 ;; Homepage: https://github.com/DogLooksGood/parinfer-mode
-;; Version: 0.0.6
+;; Version: 0.0.9
 ;; Package-Requires: ((paredit "24") (aggressive-indent "1.8.1") (cl-lib "0.5"))
 ;; Keywords: Parinfer
 
@@ -42,48 +42,101 @@
 
 ;;; Commentary:
 
-;; * Enable parinfer-mode.
-;; ~M-x parinfer-mode~
-;;
-;; or
-;; #+BEGIN_SRC emacs-lisp
-;;   (add-hook 'clojure-mode-hook #'parinfer-mode)
-;;   (add-hook 'emacs-lisp-mode-hook #'parinfer-mode)
-;; #+END_SRC
-;; Not work in Cider REPL now.
-;;
 ;; * Toggle Indent and Paren mode.
 ;; Use ~parinfer-toggle-mode~.
-;;
+
 ;; I recommand to add a keybinding for ~parinfer-toggle-mode~, since it will be used frequently.
 ;; #+BEGIN_SRC emacs-lisp
 ;;   (define-key parinfer-mode-map (kbd "C-,") 'parinfer-toggle-mode)
 ;; #+END_SRC
 ;; When the first time, you switch to Indent Mode, if your code will be modified by parinfer,
-;; You will see a confirm message in minibuffer.  Type ~y~ for continue, ~n~ to stay in paren mode.
-;;
+;; You will see a confirm message in minibuffer. Type ~y~ for continue, ~n~ to stay in paren mode.
+
 ;; Use ~parinfer-diff~ to see how parinfer will change the buffer with Ediff.
-;;
+
+;; Some keybindings in Ediff:
+;; | Key  | Description                                               |
+;; |------+-----------------------------------------------------------|
+;; | ~q~  | Quit diff.                                                |
+;; | ~b~  | B->A in Ediff, this can apply change to your origin code. |
+;; | ~ra~ | Restore A in Ediff, this can revert change.               |
+;; | ~n~  | Move to next difference.                                  |
+;; | ~p~  | Move to previous difference.                              |
+
 ;; Normally, after indenting the whole buffer with ~C-x h~ ~C-M-\~, you can switch to Indent Mode safely.
-;;
-;; * Work with Evil?
-;; Not yet, some works are needed.  Will come soon.
-;;
-;; * Performance.
-;; On each text modification, the current top-level form will be computed.
-;; When switching to Indent mode, whole buffer will be computed.
+
+;; * FAQ
+;; ** Project status.
+;; I'm already using parinfer-mode for Clojure And Elisp. It should be stable and should work as expected.
+;; If there's any bug or uncomfortable stuff, open an issue please.
+
+;; ** I found command XXX break matched parens!
+;; If XXX is a built-in or wild used command, please open a issue, I'll do a fix.
+
+;; Alternatively, you can fix it too. There're two macros.
+
+;; *** parinfer-run
+;; This macro will run the BODY code, then invoke parinfer to fix parentheses(if we are in indent-mode).
+;; #+BEGIN_SRC emacs-lisp
+;;   ;; This is a sample, parinfer-mode have already remap yank with parinfer-yank.
+
+;;   (defun parinfer-yank ()
+;;     (interactive)
+;;     (parinfer-run
+;;      (call-interactively 'yank)))
+
+;;   ;; Replace yank to parinfer-yank.
+;;   (define-key parinfer-mode-map [remap yank] 'parinfer-yank)
+;; #+END_SRC
+
+;; *** parinfer-paren-run
+;; This macro will always run BODY in paren-mode, avoid changing the S-exp struct. 
+;; #+BEGIN_SRC emacs-lisp
+;;   ;; This is a sample, parinfer-mode already remap delete-indentation with parinfer-delete-indentation.
+
+;;   (defun parinfer-delete-indentation ()
+;;     (interactive)
+;;     (parinfer-paren-run
+;;      (call-interactively 'delete-indentation)))
+
+;;   ;; Replace delete-indentation to parinfer-indentation.
+;;   (define-key parinfer-mode-map [remap delete-indentation] 'parinfer-delete-indentation)
+;; #+END_SRC
+
+;; ** Parinfer-mode toggle indent mode is changing the indentation.
+;; The indentation of code should not be changed by indent mode. When you meet this, your code probably have indentation with *TAB*.
+
+;; Currently Parinfer can not handle tab indentation, you can change all tab indentation to whitespace for current buffer with ~M-x parinfer-untabify-buffer~.
+
+;; ** Use with Evil?
+;; Parinfer mode only works in insert-state.
+
+;; But there's already a plugin called [[https://github.com/luxbock/evil-cleverparens][evil-cleverparens]] , that handles parentheses nicely for evil normal or visual states.
+
+;; If you are using evil, try using ~evil-cleverparens~ + ~parinfer-mode~ .
+
+;; ** Use in Cider REPL?
+;; Not yet, I simply use ~electric-pair-mode~ for auto pairs.
+;; #+BEGIN_SRC emacs-lisp
+;;   (add-hook 'cider-repl-mode-hook #'electric-pair-mode)
+;; #+END_SRC
+
+;; ** Performance.
+;; On each text modification, the current & previous top-level form will be computed. 
+;; When switching to Indent mode, whole buffer will be computed. 
 ;; No performance issue now.
-;;
-;; * Hooks?
+
+;; ** Hooks?
 ;; ~parinfer-mode-enable-hook~ and ~parinfer-mode-disable-hook~.
-;;
-;; * Preview cursor scope?
+
+;; ** Preview cursor scope?
 ;; Not support yet.
-;;
+
 ;; * Credits
+;; - [[https://github.com/shaunlebron][shaunlebron]] :: Create Parinfer.
 ;; - [[https://github.com/oakmac][oakmac]] :: Bring Parinfer to Emacs.
 ;; - [[https://github.com/tumashu][tumashu]] :: Help me a lot in writing this plugin.
-;;
+;; - [[https://github.com/purcell][purcell]] & [[https://github.com/syohex][syohex]] :: Advice and Tips for writing emacs plugin.
 ;; * License
 ;; Licensed under the GPLv3.
 
@@ -133,6 +186,28 @@
   "If paren style can modify parentheses?")
 
 ;; -----------------------------------------------------------------------------
+;; Macros
+;; -----------------------------------------------------------------------------
+
+(defmacro parinfer-paren-run (&rest body)
+  "Run BODY in paren mode.  Keep S-sexp in correct indentation."
+  `(progn
+     (let* ((current-style parinfer-style)
+            (toggle (eq current-style 'indent)))
+       (when toggle
+         (parinfer-switch-to-paren-mode))
+       ,@body
+       (when toggle
+         (parinfer-reindent-sexp)
+         (parinfer-switch-to-indent-mode)))))
+
+(defmacro parinfer-run (&rest body)
+  "Run BODY, then invode parinfer(depend on current parinfermode) immediately."
+  `(progn
+     ,@body
+     (invoke-parinfer)))
+
+;; -----------------------------------------------------------------------------
 ;; Helpers
 ;; -----------------------------------------------------------------------------
 
@@ -141,6 +216,7 @@
   (setq parinfer-style 'indent)
   (message "Parinfer: Indent Mode")
   (when (bound-and-true-p company-mode)
+    (add-hook 'company-completion-cancelled-hook 'parinfer-indent t t)
     (remove-hook 'company-completion-finished-hook 'parinfer-reindent-sexp t))
   (force-mode-line-update))
 
@@ -160,6 +236,7 @@ Buffer text, we should see a confirm message."
   (setq parinfer-style 'paren)
   (message "Parinfer: Paren Mode")
   (when (bound-and-true-p company-mode)
+    (remove-hook 'company-completion-cancelled-hook 'parinfer-indent t)
     (add-hook 'company-completion-finished-hook 'parinfer-reindent-sexp t t))
   (force-mode-line-update))
 
@@ -237,8 +314,8 @@ Buffer text, we should see a confirm message."
 ;; -----------------------------------------------------------------------------
 
 (defun parinfer-utabify-buffer ()
-  "Untabify whole buffer. 
-   Currently parinfer can not handle indentation with tab.  Use this to remove tab indentation of your code."
+  "Untabify whole buffer.
+Currently parinfer can not handle indentation with tab.  Use this to remove tab indentation of your code."
   (interactive)
   (untabify (point-min) (point-max)))
 
@@ -343,7 +420,7 @@ IGNORED is for compatible with hook."
   (when (not (parinfer-in-comment-or-string-p))
     (call-interactively 'aggressive-indent-indent-defun)))
 
-(defun parinfer-hook-fn ()
+(defun invoke-parinfer ()
   "Supposed to be called after each content change."
   (cl-letf (((symbol-function 'message) #'format))
     (cond
@@ -361,64 +438,78 @@ IGNORED is for compatible with hook."
 (defun parinfer-newline ()
   "Replacement in variable ‘parinfer-mode’ for newline command."
   (interactive)
-  (newline-and-indent)
-  (parinfer-hook-fn))
+  (parinfer-run
+   (newline-and-indent)))
 
 (defun parinfer-backward-delete-char ()
   "Replacement in command ‘parinfer-mode’ for ‘backward-delete-char’ command."
   (interactive)
-  (if (eq 'paren parinfer-style)
-      (if (string-match-p "^[[:space:]]+$"
-                          (buffer-substring-no-properties
-                           (line-beginning-position)
-                           (point)))
-          (delete-indentation)
-        (backward-delete-char 1))
-    (backward-delete-char 1))
-  (parinfer-hook-fn))
+  (parinfer-run
+   (if (eq 'paren parinfer-style)
+       (if (string-match-p "^[[:space:]]+$"
+                           (buffer-substring-no-properties
+                            (line-beginning-position)
+                            (point)))
+           (delete-indentation)
+         (backward-delete-char 1))
+     (backward-delete-char 1))))
 
 (defun parinfer-backward-kill-word ()
   "Replacement in symbol 'parinfer-mode' for 'backward-kill-word' command."
   (interactive)
-  (call-interactively 'backward-kill-word)
-  (parinfer-hook-fn))
+  (parinfer-run
+   (call-interactively 'backward-kill-word)))
+
 
 (defun parinfer-delete-char ()
   "Replacement in 'parinfer-mode' for 'delete-char' command."
   (interactive)
-  (delete-char 1)
-  (parinfer-hook-fn))
+  (parinfer-run
+   (delete-char 1)))
+
 
 (defun parinfer-kill-word ()
   "Replacement in 'parinfer-mode' for 'kill-word' command."
   (interactive)
-  (call-interactively 'kill-word)
-  (parinfer-hook-fn))
+  (parinfer-run
+   (call-interactively 'kill-word)))
 
 (defun parinfer-kill-line ()
   "Replacement in 'parinfer-mode' for 'kill-line' command."
   (interactive)
-  (call-interactively 'kill-line)
-  (parinfer-hook-fn))
+  (parinfer-run
+    (call-interactively 'kill-line)))
 
 (defun parinfer-yank ()
   "Replacement in 'parinfer-mode' for 'yank' command."
   (interactive)
-  (call-interactively 'yank)
-  (parinfer-hook-fn))
+  (parinfer-run
+   (call-interactively 'yank)))
 
 (defun parinfer-kill-region ()
   "Replacement in 'parinfer-mode' for 'kill-region' command."
   (interactive)
-  (call-interactively 'kill-region)
-  (parinfer-hook-fn))
+  (parinfer-run
+   (call-interactively 'kill-region)))
+
+(defun parinfer-comment-dwim ()
+  "Replacement in 'parinfer-mode' for 'comment-dwim' command."
+  (interactive)
+  (parinfer-run
+   (call-interactively 'comment-dwim)))
+
+(defun parinfer-delete-indentation ()
+  "Replacement in 'parinfer-mode' for 'delete-indentation' command."
+  (interactive)
+  (parinfer-paren-run
+   (call-interactively 'delete-indentation)))
 
 (defun parinfer-enable ()
   "Enable 'parinfer-mode'."
    ;; Always use whitespace for indentation.
   (setq-mode-local parinfer-mode indent-tabs-mode nil)
   (run-hooks 'parinfer-mode-enable-hook)
-  (add-hook 'post-self-insert-hook 'parinfer-hook-fn t t)
+  (add-hook 'post-self-insert-hook 'invoke-parinfer t t)
   (add-hook 'activate-mark-hook 'parinfer-region-mode-enable t t)
   (add-hook 'deactivate-mark-hook 'parinfer-region-mode-disable t t)
   (parinfer-switch-to-indent-mode))
@@ -428,7 +519,7 @@ IGNORED is for compatible with hook."
   (run-hooks 'parinfer-mode-disable-hook)
   (remove-hook 'activate-mark-hook 'parinfer-region-mode-enable t)
   (remove-hook 'deactivate-mark-hook 'parinfer-region-mode-disable t)
-  (remove-hook 'post-self-insert-hook 'parinfer-hook-fn t)
+  (remove-hook 'post-self-insert-hook 'invoke-parinfer t)
   (parinfer-region-mode-disable))
 
 (defun parinfer-region-mode-enable ()
@@ -503,20 +594,22 @@ Use this to browse and apply the changes."
   (when (eq 'indent parinfer-style)
     (parinfer-shift -1)))
 
-
 ;; -----------------------------------------------------------------------------
 ;; Keymaps
 ;; -----------------------------------------------------------------------------
 
 (defvar parinfer-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-y") 'parinfer-yank)
-    (define-key map (kbd "<backspace>") 'parinfer-backward-delete-char)
-    (define-key map (kbd "M-<backspace>") 'parinfer-backward-kill-word)
-    (define-key map (kbd "C-k") 'parinfer-kill-line)
-    (define-key map (kbd "C-d") 'parinfer-delete-char)
-    (define-key map (kbd "C-w") 'parinfer-kill-region)
-    (define-key map (kbd "M-d") 'parinfer-kill-word)
+    (define-key map [remap yank] 'parinfer-yank)
+    (define-key map [remap comment-dwim] 'parinfer-comment-dwim)
+    (define-key map [remap backward-delete-char] 'parinfer-backward-delete-char)
+    (define-key map [remap backward-delete-char-untabify] 'parinfer-backward-delete-char)
+    (define-key map [remap backward-kill-word] 'parinfer-backward-kill-word)
+    (define-key map [remap kill-line] 'parinfer-kill-line)
+    (define-key map [remap delete-char] 'parinfer-delete-char)
+    (define-key map [remap kill-region] 'parinfer-kill-region)
+    (define-key map [remap kill-word] 'parinfer-kill-word)
+    (define-key map [remap delete-indentation] 'parinfer-delete-indentation)
     map))
 
 (defvar parinfer-region-mode-map
@@ -544,21 +637,6 @@ Use this to browse and apply the changes."
   "Available when region is active."
   :init-value nil
   :keymap parinfer-region-mode-map)
-
-;; -----------------------------------------------------------------------------
-;; Macros
-;; -----------------------------------------------------------------------------
-
-(defmacro parinfer-paren-run (&rest body)
-  "Run BODY in paren mode."
-  `(progn
-     (let* ((current-style parinfer-style)
-            (toggle (eq current-style 'indent)))
-       (when toggle
-         (parinfer-switch-to-paren-mode))
-       ,@body
-       (when toggle
-         (parinfer-switch-to-indent-mode)))))
 
 ;; -----------------------------------------------------------------------------
 ;; Additional commands port from Paredit, etc. WIP
