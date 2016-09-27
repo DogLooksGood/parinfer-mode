@@ -407,6 +407,12 @@ IGNORED is for compatible with hook."
   (call-interactively 'yank)
   (parinfer-hook-fn))
 
+(defun parinfer-kill-region ()
+  "Replacement in 'parinfer-mode' for 'kill-region' command."
+  (interactive)
+  (call-interactively 'kill-region)
+  (parinfer-hook-fn))
+
 (defun parinfer-enable ()
   "Enable 'parinfer-mode'."
    ;; Always use whitespace for indentation.
@@ -509,6 +515,7 @@ Use this to browse and apply the changes."
     (define-key map (kbd "M-<backspace>") 'parinfer-backward-kill-word)
     (define-key map (kbd "C-k") 'parinfer-kill-line)
     (define-key map (kbd "C-d") 'parinfer-delete-char)
+    (define-key map (kbd "C-w") 'parinfer-kill-region)
     (define-key map (kbd "M-d") 'parinfer-kill-word)
     map))
 
