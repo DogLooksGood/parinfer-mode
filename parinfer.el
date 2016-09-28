@@ -4,7 +4,7 @@
 
 ;; Author: Shi Tianshu
 ;; Homepage: https://github.com/DogLooksGood/parinfer-mode
-;; Version: 0.0.9
+;; Version: 0.1.0
 ;; Package-Requires: ((paredit "24") (aggressive-indent "1.8.1") (cl-lib "0.5"))
 ;; Keywords: Parinfer
 
