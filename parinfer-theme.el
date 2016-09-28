@@ -3,25 +3,22 @@
 
 ;;; Code
 
-(defgroup parinfer-face
-  nil
-  "Parinfer face group"
-  :group 'faces)
 
 (defface parinfer-dim-paren-face
    '((((class color) (background dark))
       (:foreground "grey40"))
      (((class color) (background light))
       (:foreground "grey60")))
-   "Parinfer dim paren face."
-   :group 'parinfer-face)
+   "Parinfer dim paren face.")
 
 (defun parinfer--enable-dim-parens ()
+  "Indent Mode dim close parens."
   (font-lock-add-keywords nil
                           '((")\\|}\\|]" . 'parinfer-dim-paren-face)))
   (font-lock-flush))
 
 (defun parinfer--disable-dim-parens ()
+  "Indent Mode not dim close parens."
   (font-lock-remove-keywords nil
                           '((")\\|}\\|]" . 'parinfer-dim-paren-face)))
   (font-lock-flush))
