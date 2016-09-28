@@ -68,7 +68,32 @@ Some keybindings in Ediff:
 
 Normally, after indenting the whole buffer with ~C-x h~ ~C-M-\~, you can switch to Indent Mode safely.
 
+* Pretty parens.
+Use parinfer dim style for Indent Mode, and rainbow-delimiters for Paren Mode.
+#+BEGIN_SRC emacs-lisp
+  ;; Install rainbow-delimiters.
+  ;; Do not enable rainbow-delimiters directly, parinfer-mode will handle this.
+  (use-package rainbow-delimiters)
+
+  ;; Dim parens for Indent Mode.
+  (setq parinfer-indent-mode-dim-close-parens t)  ;; this is enabled by default
+#+END_SRC
+
 * FAQ
+** Preview cursor scope?
+#+BEGIN_SRC emacs-lisp
+  (setq parinfer-preview-cursor-scope t)  ; default nil
+#+END_SRC
+
+** Indent region.
+In *Indent* Mode, Mark the lines those you want to shift. Press ~TAB~ or ~>~ to shift rgiht, and ~Shift-TAB~ or ~<~ to shift left.
+When you deactive region, parinfer will compute the parens and adjust the indentation.
+#+BEGIN_SRC emacs-lisp
+  ;; default keybindings.
+  (define-key parinfer-region-mode-map (kbd ">") 'parinfer-shift-right)
+  (define-key parinfer-region-mode-map (kbd "<") 'parinfer-shift-left)
+#+END_SRC
+
 ** Project status.
 I'm already using parinfer-mode for Clojure And Elisp. It should be stable and should work as expected.
 If there's any bug or uncomfortable stuff, open an issue please.
@@ -131,9 +156,6 @@ No performance issue now.
 
 ** Hooks?
 ~parinfer-mode-enable-hook~ and ~parinfer-mode-disable-hook~.
-
-** Preview cursor scope?
-Not support yet.
 
 * Credits
 - [[https://github.com/shaunlebron][shaunlebron]] :: Create Parinfer.
