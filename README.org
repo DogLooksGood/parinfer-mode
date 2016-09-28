@@ -157,6 +157,13 @@ No performance issue now.
 ** Hooks?
 ~parinfer-mode-enable-hook~ and ~parinfer-mode-disable-hook~.
 
+** Aggressive-indent, the difference between parinfer-mode and standard Parinfer.
+Parinfer-mode use [[https://github.com/Malabarba/aggressive-indent-mode][aggressive-indent-mode]] for Paren Mode. 
+
+This means in Paren Mode, the indentation of your code will be handled automatically instead of 'parinfer preserve indentations'.
+Because we already have great indentation rules in Emacs.
+In the future, maybe an option for using *aggressive-indent* or *original parinfer Paren Mode*.
+
 * Credits
 - [[https://github.com/shaunlebron][shaunlebron]] :: Create Parinfer.
 - [[https://github.com/oakmac][oakmac]] :: Bring Parinfer to Emacs.
