@@ -492,7 +492,8 @@ POS is the position we want to call parinfer."
      ;; Disable in multiple-cursor-mode.
      ((bound-and-true-p multiple-cursors-mode) nil)
 
-     ((not (equal parinfer-last-line-number (line-number-at-pos)))
+     ((and (eq 'indent parinfer-style)
+           (not (equal parinfer-last-line-number (line-number-at-pos))))
       (save-excursion
         (parinfer-goto-line parinfer-last-line-number)
         (line-beginning-position)))
