@@ -3,12 +3,18 @@
 
 ;;; Code
 
+(defgroup parinfer-face
+  nil
+  "Parinfer face group"
+  :group 'faces)
+
 (defface parinfer-dim-paren-face
    '((((class color) (background dark))
       (:foreground "grey40"))
      (((class color) (background light))
       (:foreground "grey60")))
-   "Parinfer dim paren face.")
+   "Parinfer dim paren face."
+   :group 'parinfer-face)
 
 (defun parinfer--enable-dim-parens ()
   (font-lock-add-keywords nil
