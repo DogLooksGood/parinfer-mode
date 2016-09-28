@@ -694,6 +694,7 @@ Use this to browse and apply the changes."
     (define-key map [remap delete-char] 'parinfer-delete-char)
     (define-key map [remap newline] 'parinfer-newline)
     (define-key map ";" 'parinfer-semicolon)
+    (define-key map [remap delete-backward-char] 'parinfer-backward-delete-char)    
     (define-key map [remap backward-delete-char-untabify] 'parinfer-backward-delete-char)
     map))
 
