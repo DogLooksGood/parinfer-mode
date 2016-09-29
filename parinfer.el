@@ -5,7 +5,7 @@
 ;; Author: Shi Tianshu
 ;; Homepage: https://github.com/DogLooksGood/parinfer-mode
 ;; Version: 0.1.4
-;; Package-Requires: ((dash "2.13.0") (aggressive-indent "1.8.1") (cl-lib "0.5")
+;; Package-Requires: ((dash "2.13.0") (aggressive-indent "1.8.1") (cl-lib "0.5"))
 ;; Keywords: Parinfer
 
 ;; This file is not part of GNU Emacs.
@@ -58,7 +58,7 @@
 ;; | Key  | Description                                               |
 ;; |------+-----------------------------------------------------------|
 ;; | ~q~  | Quit diff.                                                |
-;; | ~b~  | B->A in Ediff, this can apply change to your origin code.  |
+;; | ~b~  | B->A in Ediff, this can apply change to your origin code. |
 ;; | ~ra~ | Restore A in Ediff, this can revert change.               |
 ;; | ~n~  | Move to next difference.                                  |
 ;; | ~p~  | Move to previous difference.                              |
