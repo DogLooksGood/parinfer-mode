@@ -479,7 +479,7 @@ POS is the position we want to call parinfer."
   "Run when region deactivated, indent code if ‘parinfer--mode’ is 'indent."
   (when (and (eq 'indent parinfer--mode)
              parinfer--region-shifted)
-    (parinfer-indent)
+    (parinfer-indent-buffer)
     (when (not (ignore-errors (parinfer--reindent-sexp nil)))
       (parinfer-indent-buffer))
     (setq parinfer--region-shifted nil))
