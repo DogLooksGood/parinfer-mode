@@ -9,7 +9,7 @@
 [[file:images/simple_demo.gif]]
 
 * What is Parinfer?
-[[https://github.com/shaunlebron/parinfer][Take a look at this]]
+[[http://shaunlebron.github.io/parinfer][Take a look at this]]
 
 * Compatibility
 *NOTIC*:A list of modes thoses should *NOT* be enabled with parinfer-mode at the same time.
