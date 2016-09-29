@@ -4,7 +4,7 @@
 
 ;; Author: Shi Tianshu
 ;; Homepage: https://github.com/DogLooksGood/parinfer-mode
-;; Version: 0.1.0
+;; Version: 0.1.2
 ;; Package-Requires: ((paredit "24") (aggressive-indent "1.8.1") (cl-lib "0.5"))
 ;; Keywords: Parinfer
 
@@ -171,6 +171,10 @@
   "If shift the region after mark activate.")
 (make-variable-buffer-local 'parinfer-region-shifted)
 
+(defvar parinfer--text-modified nil
+  "If last command modified text")
+(make-variable-buffer-local 'parinfer--text-modified)
+
 (defvar parinfer-indent-lighter " Parinfer:Indent"
   "Lighter for indent mode in mode line.")
 
@@ -217,17 +221,24 @@
   "Run BODY, then invode parinfer(depend on current parinfermode) immediately."
   `(progn
      ,@body
-     (parinfer-invoke-parinfer)))
+     (parinfer-invoke-parinfer)
+     (parinfer--set-text-modified)))
 
 ;; -----------------------------------------------------------------------------
 ;; Helpers
 ;; -----------------------------------------------------------------------------
 
+(defun parinfer--set-text-modified ()
+  "Set parinfer--text-modified to t."
+  (setq parinfer--text-modified t))
+
 (defun parinfer--disable-rainbow-delimiters ()
+  "Disable rainbow delimiters if it's enabled."
   (when (bound-and-true-p rainbow-delimiters-mode)
     (rainbow-delimiters-mode-disable)))
 
 (defun parinfer--enable-rainbow-delimiters ()
+  "Enable rainbow delimiters if it's been installed."
   (when (fboundp 'rainbow-delimiters-mode)
     (rainbow-delimiters-mode-enable)))
 
@@ -477,7 +488,6 @@ POS is the position we want to call parinfer."
 
 (defun parinfer-invoke-pos ()
   "Return where pariner should be invoked."
-  ;; (message (symbol-name this-command))
   (when this-command
     (cond
      ((and (symbolp this-command)
@@ -493,6 +503,7 @@ POS is the position we want to call parinfer."
      ((bound-and-true-p multiple-cursors-mode) nil)
 
      ((and (eq 'indent parinfer-style)
+           parinfer--text-modified
            (not (equal parinfer-last-line-number (line-number-at-pos))))
       (save-excursion
         (parinfer-goto-line parinfer-last-line-number)
@@ -506,7 +517,8 @@ POS is the position we want to call parinfer."
   "Invoke parinfer when necessary."
   (let ((pos (parinfer-invoke-pos)))
     (when pos
-      (parinfer-invoke-parinfer pos)))
+      (parinfer-invoke-parinfer pos)
+      (setq parinfer--text-modified nil)))
   (setq parinfer-last-line-number (line-number-at-pos (point))))
 
 (defun parinfer-ediff-quit ()
@@ -596,6 +608,7 @@ POS is the position we want to call parinfer."
   (setq parinfer-last-line-number (line-number-at-pos (point)))
   (run-hooks 'parinfer-mode-enable-hook)
   (add-hook 'post-command-hook 'parinfer-invoke-parinfer-when-necessary t t)
+  (add-hook 'self-insert-command 'parinfer--set-text-modified t t)
   (add-hook 'activate-mark-hook 'parinfer-region-mode-enable t t)
   (add-hook 'deactivate-mark-hook 'parinfer-region-mode-disable t t)
   (parinfer-switch-to-indent-mode))
@@ -604,6 +617,7 @@ POS is the position we want to call parinfer."
   "Disable 'parinfer-mode'."
   (run-hooks 'parinfer-mode-disable-hook)
   (remove-hook 'activate-mark-hook 'parinfer-region-mode-enable t)
+  (remove-hook 'self-insert-command 'parinfer--set-text-modified t)
   (remove-hook 'deactivate-mark-hook 'parinfer-region-mode-disable t)
   (remove-hook 'post-command-hook 'parinfer-invoke-parinfer-when-necessary t)
   (parinfer-region-mode-disable))
