@@ -4,8 +4,8 @@
 
 ;; Author: Shi Tianshu
 ;; Homepage: https://github.com/DogLooksGood/parinfer-mode
-;; Version: 0.1.2
-;; Package-Requires: ((paredit "24") (aggressive-indent "1.8.1") (cl-lib "0.5"))
+;; Version: 0.1.3
+;; Package-Requires: ((aggressive-indent "1.8.1") (cl-lib "0.5")
 ;; Keywords: Parinfer
 
 ;; This file is not part of GNU Emacs.
@@ -156,20 +156,20 @@
 ;; -----------------------------------------------------------------------------
 ;; Constants & Variables
 ;; -----------------------------------------------------------------------------
-(defconst parinfer-defun-regex "^[^ \n\t\";]"
+(defconst parinfer--defun-regex "^[^ \n\t\";]"
   "Regex for finding the beginning of S-exp.")
 
-(defvar parinfer-style 'paren
+(defvar parinfer--mode 'paren
   "Parinfer mode style, 'paren or 'indent.")
-(make-variable-buffer-local 'parinfer-style)
+(make-variable-buffer-local 'parinfer--mode)
 
-(defvar parinfer-first-load t
+(defvar parinfer--first-load t
   "NOT MODIFY THIS, If haven't switch to indent mode yet.")
-(make-variable-buffer-local 'parinfer-first-load)
+(make-variable-buffer-local 'parinfer--first-load)
 
-(defvar parinfer-region-shifted nil
+(defvar parinfer--region-shifted nil
   "If shift the region after mark activate.")
-(make-variable-buffer-local 'parinfer-region-shifted)
+(make-variable-buffer-local 'parinfer--region-shifted)
 
 (defvar parinfer--text-modified nil
   "If last command modified text")
@@ -190,9 +190,9 @@
 (defvar parinfer-paren-modify-parentheses nil
   "If paren style can modify parentheses?")
 
-(defvar parinfer-last-line-number -1
+(defvar parinfer--last-line-number -1
   "Holds the last line number after invoke-parinfer-when-necessary.")
-(make-variable-buffer-local 'parinfer-last-line-number)
+(make-variable-buffer-local 'parinfer--last-line-number)
 
 (defvar parinfer-preview-cursor-scope nil
   "In Indent Mode, if show the cursor's scope on an empty line by inserting close-parens after it.")
@@ -207,21 +207,21 @@
 (defmacro parinfer-paren-run (&rest body)
   "Run BODY in paren mode.  Keep S-sexp in correct indentation."
   `(progn
-     (let* ((current-style parinfer-style)
+     (let* ((current-style parinfer--mode)
             (toggle (eq current-style 'indent)))
        (cl-letf (((symbol-function 'message) #'format))
          (when toggle
-           (parinfer-switch-to-paren-mode))
+           (parinfer--switch-to-paren-mode))
          ,@body
          (when toggle
-           (parinfer-reindent-sexp)
-           (parinfer-indent-and-switch-to-indent-mode))))))
+           (parinfer--reindent-sexp)
+           (parinfer--indent-and-switch-to-indent-mode))))))
 
 (defmacro parinfer-run (&rest body)
   "Run BODY, then invode parinfer(depend on current parinfermode) immediately."
   `(progn
      ,@body
-     (parinfer-invoke-parinfer)
+     (parinfer--invoke-parinfer)
      (parinfer--set-text-modified)))
 
 ;; -----------------------------------------------------------------------------
@@ -242,49 +242,49 @@
   (when (fboundp 'rainbow-delimiters-mode)
     (rainbow-delimiters-mode-enable)))
 
-(defun parinfer-switch-to-indent-mode-aux ()
+(defun parinfer--switch-to-indent-mode-aux ()
   "Swith to indent mode aux function."
-  (setq parinfer-style 'indent)
-  (setq parinfer-first-load nil)
+  (setq parinfer--mode 'indent)
+  (setq parinfer--first-load nil)
   (message "Parinfer: Indent Mode")
   (when (bound-and-true-p company-mode)
     (add-hook 'company-completion-cancelled-hook 'parinfer-indent t t)
-    (remove-hook 'company-completion-finished-hook 'parinfer-reindent-sexp t))
+    (remove-hook 'company-completion-finished-hook 'parinfer--reindent-sexp t))
   (when parinfer-indent-mode-dim-close-parens
     (parinfer--disable-rainbow-delimiters)
     (parinfer--enable-dim-parens))
   (force-mode-line-update))
 
-(defun parinfer-switch-to-indent-mode ()
+(defun parinfer--switch-to-indent-mode ()
   "Switch to Indent Mode, this will apply indent fix on whole buffer.)
 If this is the first switching for current buffer and indent mode will change
 Buffer text, we should see a confirm message."
-  (if (not parinfer-first-load)
+  (if (not parinfer--first-load)
       (progn
         (parinfer-indent-buffer)
-        (parinfer-switch-to-indent-mode-aux))
+        (parinfer--switch-to-indent-mode-aux))
     (when (parinfer-indent-with-confirm)
-      (parinfer-switch-to-indent-mode-aux))))
+      (parinfer--switch-to-indent-mode-aux))))
 
-(defun parinfer-indent-and-switch-to-indent-mode ()
+(defun parinfer--indent-and-switch-to-indent-mode ()
   "Switch to Indent mode and call Indent Mode immediately."
   (interactive)
-  (parinfer-switch-to-indent-mode-aux)
-  (parinfer-invoke-parinfer-when-necessary))
+  (parinfer--switch-to-indent-mode-aux)
+  (parinfer--invoke-parinfer-when-necessary))
 
-(defun parinfer-switch-to-paren-mode ()
+(defun parinfer--switch-to-paren-mode ()
   "Switch to paren mode."
-  (setq parinfer-style 'paren)
+  (setq parinfer--mode 'paren)
   (message "Parinfer: Paren Mode")
   (when (bound-and-true-p company-mode)
     (remove-hook 'company-completion-cancelled-hook 'parinfer-indent t)
-    (add-hook 'company-completion-finished-hook 'parinfer-reindent-sexp t t))
+    (add-hook 'company-completion-finished-hook 'parinfer--reindent-sexp t t))
   (when parinfer-indent-mode-dim-close-parens
     (parinfer--disable-dim-parens)
     (parinfer--enable-rainbow-delimiters))
   (force-mode-line-update))
 
-(defun parinfer-in-comment-or-string-p ()
+(defun parinfer--in-comment-or-string-p ()
   "Return if we are in comment or string."
   (let ((f (get-text-property (point) 'face)))
     (or (nth 3 (syntax-ppss))
@@ -292,69 +292,183 @@ Buffer text, we should see a confirm message."
         (eq f 'font-lock-comment-face)
         (eq f 'font-lock-comment-delimiter-face))))
 
-(defun parinfer-goto-line (n)
+(defun parinfer--goto-line (n)
   "Goto the beginning of line N."
   (goto-char (point-min))
   (forward-line (1- n))
   (beginning-of-line))
 
-(defun parinfer-goto-next-defun ()
+(defun parinfer--goto-next-defun ()
   "Goto next defun, skip comment or string."
   (interactive)
   (let ((pt (point)))
     (when (not (eq (point-max) pt))
-      (if (search-forward-regexp parinfer-defun-regex nil t)
+      (if (search-forward-regexp parinfer--defun-regex nil t)
           (if (= (1+ pt) (point))
-              (parinfer-goto-next-defun)
+              (parinfer--goto-next-defun)
             (let ((last-pos (point)))
               (while (and last-pos
-                          (parinfer-in-comment-or-string-p)
+                          (parinfer--in-comment-or-string-p)
                           (not (eq (point-max) (point))))
                 
-                (search-forward-regexp parinfer-defun-regex nil t)
+                (search-forward-regexp parinfer--defun-regex nil t)
                 (if (eq (point) last-pos)
                     (setq last-pos nil)
                   (setq last-pos (point)))))
             (backward-char))
         (goto-char (point-max))))))
 
-(defun parinfer-goto-previous-defun-aux ()
+(defun parinfer--goto-previous-defun-aux ()
   "Goto previous defun aux function."
-  (search-backward-regexp parinfer-defun-regex nil t)
+  (search-backward-regexp parinfer--defun-regex nil t)
   (let ((last-pos (point)))
     (while (and last-pos
-                (parinfer-in-comment-or-string-p)
+                (parinfer--in-comment-or-string-p)
                 (not (eq (point-min) (point))))
-      (search-backward-regexp parinfer-defun-regex nil t)
+      (search-backward-regexp parinfer--defun-regex nil t)
       (if (eq (point) last-pos)
           (setq last-pos nil)
         (setq last-pos (point))))))
 
-(defun parinfer-goto-previous-defun ()
+(defun parinfer--goto-previous-defun ()
   "Goto previous defun, skip comment or string."
   (interactive)
-  (parinfer-goto-previous-defun-aux)
-  (parinfer-goto-previous-defun-aux))
+  (parinfer--goto-previous-defun-aux)
+  (parinfer--goto-previous-defun-aux))
 
-(defun parinfer-lighter ()
+(defun parinfer--lighter ()
   "Return the lighter for specify mode."
-  (if (eq 'paren parinfer-style)
+  (if (eq 'paren parinfer--mode)
       parinfer-paren-lighter
     parinfer-indent-lighter))
 
-(defun parinfer-ediff-startup-hook ()
+(defun parinfer--ediff-init-keys ()
   "Inits for ediff.  since we don't need all features, simplify opeators."
   (local-set-key (kbd "q") 'parinfer-ediff-quit))
 
-(defun parinfer-cursor-x ()
+(defun parinfer--cursor-x ()
   "Get the cursor-x which is need by parinferlib computation."
   (length
    (buffer-substring-no-properties
     (line-beginning-position)
     (point))))
 
+(defun parinfer--reindent-sexp (&optional ignored)
+  "Call aggressive-indent.))
+IGNORED is for compatible with hook."
+  (when (not (parinfer--in-comment-or-string-p))
+    (aggressive-indent-indent-defun)))
+
+(defun parinfer--invoke-parinfer (&optional pos)
+  "Supposed to be called after each content change.
+POS is the position we want to call parinfer."
+  (if (and pos (not (eq pos (point))))
+      (let ((current-pos (point)))
+        (goto-char pos)
+        (parinfer--invoke-parinfer)
+        (goto-char current-pos))
+    (cl-letf (((symbol-function 'message) #'format))
+      (cond
+       ((eq 'paren parinfer--mode) (parinfer-paren))
+       ((eq 'indent parinfer--mode) (parinfer-indent))
+       (t "nothing")))))
+
+(defun parinfer--invoke-pos ()
+  "Return where pariner should be invoked."
+  (when this-command
+    (cond
+     ((and (symbolp this-command)
+           (string-prefix-p "parinfer-" (symbol-name this-command)))
+      nil)
+
+     ((parinfer--in-comment-or-string-p) nil)
+
+     ;; Disable when region is active.
+     ((region-active-p) nil)
+
+     ;; Disable in multiple-cursor-mode.
+     ((bound-and-true-p multiple-cursors-mode) nil)
+
+     ((and (eq 'indent parinfer--mode)
+           parinfer--text-modified
+           (not (equal parinfer--last-line-number (line-number-at-pos))))
+      (save-excursion
+        (parinfer--goto-line parinfer--last-line-number)
+        (line-beginning-position)))
+
+     ((eq this-command 'self-insert-command) (point))
+
+     (t nil))))
+
+(defun parinfer--invoke-parinfer-when-necessary ()
+  "Invoke parinfer when necessary."
+  (let ((pos (parinfer--invoke-pos)))
+    (when pos
+      (parinfer--invoke-parinfer pos)
+      (setq parinfer--text-modified nil)))
+  (setq parinfer--last-line-number (line-number-at-pos (point))))
+
+(defun parinfer--active-line-region ()
+  "Auto adjust region so that the shift can work properly."
+  (let* ((begin (region-beginning))
+         (end (region-end))
+         (new-begin (save-excursion (goto-char begin) (line-beginning-position))))
+    (goto-char new-begin)
+    (set-mark-command nil)
+    (goto-char end)
+    (setq deactivate-mark nil)
+    (setq parinfer--region-shifted t)))
+
+(defun parinfer--shift (distance)
+  "Shift text.  For right, DISTANCE > 0; left, DISTANCE < 0."
+  (when (use-region-p)
+    (when (not parinfer--region-shifted)
+      (parinfer--active-line-region))
+    (let ((mark (mark)))
+      (save-excursion
+        (indent-rigidly (region-beginning)
+                        (region-end)
+                        distance)
+        (push-mark mark t t)
+        (setq deactivate-mark nil)))))
+
+(defun parinfer-mode-enable ()
+  "Enable 'parinfer-mode'."
+  ;; Always use whitespace for indentation.
+  (setq-mode-local parinfer-mode indent-tabs-mode nil)
+  (setq parinfer--last-line-number (line-number-at-pos (point)))
+  (run-hooks 'parinfer-mode-enable-hook)
+  (add-hook 'post-command-hook 'parinfer--invoke-parinfer-when-necessary t t)
+  (add-hook 'self-insert-command 'parinfer--set-text-modified t t)
+  (add-hook 'activate-mark-hook 'parinfer--regin-mode-enable t t)
+  (add-hook 'deactivate-mark-hook 'parinfer--region-mode-disable t t)
+  (parinfer--switch-to-indent-mode))
+
+(defun parinfer-mode-disable ()
+  "Disable 'parinfer-mode'."
+  (run-hooks 'parinfer-mode-disable-hook)
+  (remove-hook 'activate-mark-hook 'parinfer--regin-mode-enable t)
+  (remove-hook 'self-insert-command 'parinfer--set-text-modified t)
+  (remove-hook 'deactivate-mark-hook 'parinfer--region-mode-disable t)
+  (remove-hook 'post-command-hook 'parinfer--invoke-parinfer-when-necessary t)
+  (parinfer--region-mode-disable))
+
+(defun parinfer--regin-mode-enable ()
+  "Run when region activated."
+  (parinfer-region-mode 1))
+
+(defun parinfer--region-mode-disable ()
+  "Run when region deactivated, indent code if ‘parinfer--mode’ is 'indent."
+  (when (and (eq 'indent parinfer--mode)
+             parinfer--region-shifted)
+    (parinfer-indent)
+    (when (not (ignore-errors (parinfer--reindent-sexp nil)))
+      (parinfer-indent-buffer))
+    (setq parinfer--region-shifted nil))
+  (parinfer-region-mode -1))
+
 ;; -----------------------------------------------------------------------------
-;; Parinfer functions
+;; Parinfer commands
 ;; -----------------------------------------------------------------------------
 
 (defun parinfer-untabify-buffer ()
@@ -375,19 +489,19 @@ Currently parinfer can not handle indentation with tab.  Use this to remove tab 
   "Call parinfer indent on current & previous top level S-exp."
   (interactive)
   (let* ((window-start-pos (window-start))
-         (start (save-excursion (parinfer-goto-previous-defun) (point)))
-         (end (save-excursion (parinfer-goto-next-defun) (point)))
+         (start (save-excursion (parinfer--goto-previous-defun) (point)))
+         (end (save-excursion (parinfer--goto-next-defun) (point)))
          (text (buffer-substring-no-properties start end))
          (line-number (line-number-at-pos))
          (cursor-line (- line-number (line-number-at-pos start)))
-         (cursor-x (parinfer-cursor-x))
+         (cursor-x (parinfer--cursor-x))
          (opts (list :cursor-x cursor-x :cursor-line cursor-line :preview-cursor-scope parinfer-preview-cursor-scope))
          (result (parinferlib-indent-mode text opts)))
     (when (and (plist-get result :success)
                (plist-get result :changed-lines))
       (delete-region start end)
       (insert (plist-get result :text))
-      (parinfer-goto-line line-number)
+      (parinfer--goto-line line-number)
       (forward-char (plist-get result :cursor-x))
       (set-window-start (selected-window) window-start-pos))))
 
@@ -396,7 +510,7 @@ Currently parinfer can not handle indentation with tab.  Use this to remove tab 
   (interactive)
   (let* ((window-start-pos (window-start))
          (cursor-line (1- (line-number-at-pos)))
-         (cursor-x (parinfer-cursor-x))
+         (cursor-x (parinfer--cursor-x))
          (opts (list :cursor-x cursor-x :cursor-line cursor-line :preview-cursor-scope parinfer-preview-cursor-scope))
          (text (buffer-substring-no-properties (point-min) (point-max)))
          (result (parinferlib-indent-mode text opts))
@@ -404,11 +518,11 @@ Currently parinfer can not handle indentation with tab.  Use this to remove tab 
     (when (and (plist-get result :success)
                changed-lines)
       (cl-loop for l in changed-lines do
-               (parinfer-goto-line (1+ (plist-get l :line-no)))
+               (parinfer--goto-line (1+ (plist-get l :line-no)))
                (delete-region (line-beginning-position)
                               (line-end-position))
                (insert (plist-get l :line)))
-      (parinfer-goto-line (1+ cursor-line))
+      (parinfer--goto-line (1+ cursor-line))
       (forward-char (plist-get result :cursor-x))
       (set-window-start (selected-window) window-start-pos))))
 
@@ -418,7 +532,7 @@ if there's any change, display a confirm message in minibuffer."
   (interactive)
   (let* ((window-start-pos (window-start))
          (cursor-line (1- (line-number-at-pos)))
-         (cursor-x (parinfer-cursor-x))
+         (cursor-x (parinfer--cursor-x))
          (opts (list :cursor-line cursor-line :cursor-x cursor-x))
          (text (buffer-substring-no-properties (point-min) (point-max)))
          (result (parinferlib-indent-mode text opts))
@@ -432,14 +546,14 @@ if there's any change, display a confirm message in minibuffer."
                (not (string= text (plist-get result :text))))
           (if (y-or-n-p "Caution! Buffer will be modified if you swith to Indent mode, continue? ")
               (progn (cl-loop for l in changed-lines do
-                              (parinfer-goto-line (1+ (plist-get l :line-no)))
+                              (parinfer--goto-line (1+ (plist-get l :line-no)))
                               (delete-region (line-beginning-position)
                                              (line-end-position))
                               (insert (plist-get l :line)))
-                     (parinfer-goto-line (1+ cursor-line))
+                     (parinfer--goto-line (1+ cursor-line))
                      (forward-char (plist-get result :cursor-x))
                      (set-window-start (selected-window) window-start-pos)
-                     (setq parinfer-first-load nil)
+                     (setq parinfer--first-load nil)
                      t)
             nil)
         t))))
@@ -448,78 +562,23 @@ if there's any change, display a confirm message in minibuffer."
   "Do parinfer paren  on current & previous top level S-exp.
 Set `parinfer-paren-modify-parentheses` to t let paren mode modify content."
   (interactive)
-  (when (and (not (ignore-errors (parinfer-reindent-sexp nil)))
+  (when (and (not (ignore-errors (parinfer--reindent-sexp nil)))
              parinfer-paren-modify-parentheses)
     (let* ((window-start-pos (window-start))
-           (start (save-excursion (parinfer-goto-previous-defun) (point)))
-           (end (save-excursion (parinfer-goto-next-defun) (point)))
+           (start (save-excursion (parinfer--goto-previous-defun) (point)))
+           (end (save-excursion (parinfer--goto-next-defun) (point)))
            (text (buffer-substring-no-properties start end))
            (line-number (line-number-at-pos))
            (cursor-line (- line-number (line-number-at-pos start)))
-           (cursor-x (parinfer-cursor-x))
+           (cursor-x (parinfer--cursor-x))
            (opts (list :cursor-x cursor-x :cursor-line cursor-line))
            (result (parinferlib-paren-mode text opts)))
       (progn
         (delete-region start end)
         (insert (plist-get result :text))
-        (parinfer-goto-line line-number)
+        (parinfer--goto-line line-number)
         (forward-char (plist-get result :cursor-x))
         (set-window-start (selected-window) window-start-pos)))))
-
-(defun parinfer-reindent-sexp (&optional ignored)
-  "Call aggressive-indent.))
-IGNORED is for compatible with hook."
-  (when (not (parinfer-in-comment-or-string-p))
-    (aggressive-indent-indent-defun)))
-
-(defun parinfer-invoke-parinfer (&optional pos)
-  "Supposed to be called after each content change.
-POS is the position we want to call parinfer."
-  (if (and pos (not (eq pos (point))))
-      (let ((current-pos (point)))
-        (goto-char pos)
-        (parinfer-invoke-parinfer)
-        (goto-char current-pos))
-    (cl-letf (((symbol-function 'message) #'format))
-      (cond
-       ((eq 'paren parinfer-style) (parinfer-paren))
-       ((eq 'indent parinfer-style) (parinfer-indent))
-       (t "nothing")))))
-
-(defun parinfer-invoke-pos ()
-  "Return where pariner should be invoked."
-  (when this-command
-    (cond
-     ((and (symbolp this-command)
-           (string-prefix-p "parinfer-" (symbol-name this-command)))
-      nil)
-
-     ((parinfer-in-comment-or-string-p) nil)
-
-     ;; Disable when region is active.
-     ((region-active-p) nil)
-
-     ;; Disable in multiple-cursor-mode.
-     ((bound-and-true-p multiple-cursors-mode) nil)
-
-     ((and (eq 'indent parinfer-style)
-           parinfer--text-modified
-           (not (equal parinfer-last-line-number (line-number-at-pos))))
-      (save-excursion
-        (parinfer-goto-line parinfer-last-line-number)
-        (line-beginning-position)))
-
-     ((eq this-command 'self-insert-command) (point))
-
-     (t nil))))
-
-(defun parinfer-invoke-parinfer-when-necessary ()
-  "Invoke parinfer when necessary."
-  (let ((pos (parinfer-invoke-pos)))
-    (when pos
-      (parinfer-invoke-parinfer pos)
-      (setq parinfer--text-modified nil)))
-  (setq parinfer-last-line-number (line-number-at-pos (point))))
 
 (defun parinfer-ediff-quit ()
   "Quit ‘parinfer-diff’ directly, without confirm."
@@ -532,7 +591,7 @@ POS is the position we want to call parinfer."
   "Replacement in command ‘parinfer-mode’ for ‘backward-delete-char’ command."
   (interactive)
   (parinfer-run
-   (if (eq 'paren parinfer-style)
+   (if (eq 'paren parinfer--mode)
        (if (string-match-p "^[[:space:]]+$"
                            (buffer-substring-no-properties
                             (line-beginning-position)
@@ -601,47 +660,12 @@ POS is the position we want to call parinfer."
   (parinfer-paren-run
    (call-interactively 'delete-indentation)))
 
-(defun parinfer-mode-enable ()
-  "Enable 'parinfer-mode'."
-  ;; Always use whitespace for indentation.
-  (setq-mode-local parinfer-mode indent-tabs-mode nil)
-  (setq parinfer-last-line-number (line-number-at-pos (point)))
-  (run-hooks 'parinfer-mode-enable-hook)
-  (add-hook 'post-command-hook 'parinfer-invoke-parinfer-when-necessary t t)
-  (add-hook 'self-insert-command 'parinfer--set-text-modified t t)
-  (add-hook 'activate-mark-hook 'parinfer-region-mode-enable t t)
-  (add-hook 'deactivate-mark-hook 'parinfer-region-mode-disable t t)
-  (parinfer-switch-to-indent-mode))
-
-(defun parinfer-mode-disable ()
-  "Disable 'parinfer-mode'."
-  (run-hooks 'parinfer-mode-disable-hook)
-  (remove-hook 'activate-mark-hook 'parinfer-region-mode-enable t)
-  (remove-hook 'self-insert-command 'parinfer--set-text-modified t)
-  (remove-hook 'deactivate-mark-hook 'parinfer-region-mode-disable t)
-  (remove-hook 'post-command-hook 'parinfer-invoke-parinfer-when-necessary t)
-  (parinfer-region-mode-disable))
-
-(defun parinfer-region-mode-enable ()
-  "Run when region activated."
-  (parinfer-region-mode 1))
-
-(defun parinfer-region-mode-disable ()
-  "Run when region deactivated, indent code if ‘parinfer-style’ is 'indent."
-  (when (and (eq 'indent parinfer-style)
-             parinfer-region-shifted)
-    (parinfer-indent)
-    (when (not (ignore-errors (parinfer-reindent-sexp nil)))
-      (parinfer-indent-buffer))
-    (setq parinfer-region-shifted nil))
-  (parinfer-region-mode -1))
-
 (defun parinfer-toggle-mode ()
   "Switch parinfer mode between Indent Mode and Paren Mode."
   (interactive)
-  (if (eq 'paren parinfer-style)
-      (parinfer-switch-to-indent-mode)
-    (parinfer-switch-to-paren-mode)))
+  (if (eq 'paren parinfer--mode)
+      (parinfer--switch-to-indent-mode)
+    (parinfer--switch-to-paren-mode)))
 
 (defun parinfer-diff ()
   "Diff current code and the code after applying Indent Mode in Ediff.)
@@ -656,43 +680,19 @@ Use this to browse and apply the changes."
       (erase-buffer)
       (insert (plist-get result :text))
       (funcall m)
-      (ediff-buffers orig-buffer new-buffer '(parinfer-ediff-startup-hook)))))
-
-(defun parinfer-line-region ()
-  "Auto adjust region so that the shift can work properly."
-  (let* ((begin (region-beginning))
-         (end (region-end))
-         (new-begin (save-excursion (goto-char begin) (line-beginning-position))))
-    (goto-char new-begin)
-    (set-mark-command nil)
-    (goto-char end)
-    (setq deactivate-mark nil)
-    (setq parinfer-region-shifted t)))
-
-(defun parinfer-shift (distance)
-  "Shift text.  For right, DISTANCE > 0; left, DISTANCE < 0."
-  (when (use-region-p)
-    (when (not parinfer-region-shifted)
-      (parinfer-line-region))
-    (let ((mark (mark)))
-      (save-excursion
-        (indent-rigidly (region-beginning)
-                        (region-end)
-                        distance)
-        (push-mark mark t t)
-        (setq deactivate-mark nil)))))
+      (ediff-buffers orig-buffer new-buffer '(parinfer--ediff-init-keys)))))
 
 (defun parinfer-shift-right ()
   "In Indent Mode with region active, shift text left."
   (interactive)
-  (when (eq 'indent parinfer-style)
-    (parinfer-shift 1)))
+  (when (eq 'indent parinfer--mode)
+    (parinfer--shift 1)))
 
 (defun parinfer-shift-left ()
   "In Indent Mode with region active, shift text left."
   (interactive)
-  (when (eq 'indent parinfer-style)
-    (parinfer-shift -1)))
+  (when (eq 'indent parinfer--mode)
+    (parinfer--shift -1)))
 
 ;; -----------------------------------------------------------------------------
 ;; Keymaps
@@ -728,7 +728,7 @@ Use this to browse and apply the changes."
 ;;;###autoload
 (define-minor-mode parinfer-mode
   "Parinfer mode."
-  nil (:eval (parinfer-lighter)) parinfer-mode-map
+  nil (:eval (parinfer--lighter)) parinfer-mode-map
   (if parinfer-mode
       (parinfer-mode-enable)
     (parinfer-mode-disable)))
@@ -740,7 +740,7 @@ Use this to browse and apply the changes."
   :keymap parinfer-region-mode-map)
 
 ;; -----------------------------------------------------------------------------
-;; Additional commands port from Paredit, etc. WIP
+;; Additional commands, WIP.
 ;; -----------------------------------------------------------------------------
 (defun parinfer-reverse-transpose-sexps ()
   "Reverse transpose."
@@ -755,42 +755,6 @@ Use this to browse and apply the changes."
   (when (not (ignore-errors (transpose-sexps 1)))
     (forward-sexp)
     (ignore-errors (transpose-sexps 1))))
-
-(defun parinfer-forward-slurp-sexp ()
-  "Useless now."
-  (interactive)
-  (parinfer-paren-run
-   (paredit-forward-slurp-sexp)))
-
-(defun parinfer-backward-slurp-sexp ()
-  "Useless now."
-  (interactive)
-  (parinfer-paren-run
-   (paredit-backward-slurp-sexp)))
-
-(defun parinfer-forward-barf-sexp ()
-  "Useless now."
-  (interactive)
-  (parinfer-paren-run
-   (paredit-forward-barf-sexp)))
-
-(defun parinfer-backward-barf-sexp ()
-  "Useless now."
-  (interactive)
-  (parinfer-paren-run
-   (paredit-backward-barf-sexp)))
-
-(defun parinfer-raise-sexp ()
-  "Useless now."
-  (interactive)
-  (parinfer-paren-run
-   (paredit-raise-sexp)))
-
-(defun parinfer-convolute-sexp ()
-  "Useless now."
-  (interactive)
-  (parinfer-paren-run
-   (paredit-convolute-sexp)))
 
 (provide 'parinfer)
 ;;; parinfer.el ends here

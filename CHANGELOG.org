@@ -1,0 +1,11 @@
+#+TITLE: CHANGELOG
+#+AUTHOR: DogLooksGood
+
+* v0.1.3
+- Rename all private function with the prefix ~parinfer--~ instead of ~parinfer-~.
+- Remove paredit dependencies sine we don't neet it.
+- Add group for parinfer-theme.el, fix the compile warnnings ~defface `parinfer-dim-paren-face' fails to specify containing group~.
+
+* v0.1.2
+- Fix lag when move cursor in a very large sexp(especially when holding ~C-n~ or ~C-p~).
+

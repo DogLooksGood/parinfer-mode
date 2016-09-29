@@ -3,13 +3,18 @@
 
 ;;; Code
 
+(defgroup parinfer-group
+  nil
+  "Parinfer customize group."
+  :group 'faces)
 
 (defface parinfer-dim-paren-face
    '((((class color) (background dark))
       (:foreground "grey40"))
      (((class color) (background light))
       (:foreground "grey60")))
-   "Parinfer dim paren face.")
+   "Parinfer dim paren face."
+   :group 'parinfer-group)
 
 (defun parinfer--enable-dim-parens ()
   "Indent Mode dim close parens."
