@@ -158,9 +158,8 @@ Not yet, I simply use ~electric-pair-mode~ for auto pairs.
 #+END_SRC
 
 ** Performance.
-On each text modification, the current & previous top-level form will be computed. 
-When switching to Indent mode, whole buffer will be computed. 
-No performance issue now.
+There's a performance issue on large top level sexp(more than 300 lines).
+After each input, parinfer-mode will calculate the previous & current top level sexp.
 
 ** Hooks?
 ~parinfer-mode-enable-hook~ and ~parinfer-mode-disable-hook~.
