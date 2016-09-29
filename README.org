@@ -153,6 +153,7 @@ But there's already a plugin called [[https://github.com/luxbock/evil-cleverpare
 If you are using evil, try using ~evil-cleverparens~ + ~parinfer-mode~ .
 *** v0.1.4 (on MELPA, haven't deploy to MELPA Stable yet)
 Attempt to support use with evil directly, works fine for limited test. WIP.
+[[file:images/evil_demo.gif]]
 
 ** Use in Cider REPL?
 Not yet, I simply use ~electric-pair-mode~ for auto pairs.
