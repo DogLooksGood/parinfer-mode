@@ -9,21 +9,27 @@
 * What is Parinfer?
 [[https://github.com/shaunlebron/parinfer][Take a look at this]]
 
+* Compatibility
+*NOTIC*:A list of modes thoses should *NOT* be enabled with parinfer-mode at the same time.
+- paredit
+- electric-pair-mode
+- Auto Pairs
+- [[https://github.com/abo-abo/lispy][lispy]]
+- [[https://github.com/Fuco1/smartparens][smartparens]]
+- [[https://github.com/Malabarba/aggressive-indent-mode][aggressive-indent-mode]]
+
+These plugins also do auto pairs, conflict with parinfer-mode.
+
+But you can still *install* & *require* these fancy plugins, and use the commands.
 * Installation
-*NOTICE*: parinfer-mode will not work properly if there's another minor mode *enabled* for auto parens(Such as ~paredit~, ~electric-pair-mode~, ~lispy~, ~smartparens~, etc). 
-
-But you can still *require* these plugins and use their commands.
-
-If you are using ~evil~, [[https://github.com/luxbock/evil-cleverparens][evil-cleverparens]] is okay.
-Because it will not change the behaviour for insert-state, and parinfer-mode only works in insert-state.
-
 Available on Melpa(and Melpa Stable) now, I recommand to install with [[https://github.com/jwiegley/use-package][use-package]] .
 #+BEGIN_SRC emacs-lisp
   (use-package parinfer
     :ensure t
     :bind
     (("C-," . parinfer-toggle-mode)
-     ;; You can use paredit with parinfer.
+     ;; You can use other structual edit plugin with parinfer.
+     ;; This is an example for Paredit.
      ;; To avoid the conflicts, just bind commands those you want. 
      ;; do NOT enable paredit-mode.
      ("M-r" . paredit-raise-sexp)
@@ -99,7 +105,7 @@ I'm already using parinfer-mode for Clojure And Elisp. It should be stable and s
 If there's any bug or uncomfortable stuff, open an issue please.
 
 ** I found command XXX break matched parens!
-If XXX is a built-in or been used wildly command, please open an issue, I'll have a fix.
+If XXX is a built-in or wildly used command, please open an issue, I'll have a fix.
 
 Alternatively, you can do it yourself. There're two macros.
 
