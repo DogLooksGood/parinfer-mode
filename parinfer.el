@@ -5,7 +5,7 @@
 ;; Author: Shi Tianshu
 ;; Homepage: https://github.com/DogLooksGood/parinfer-mode
 ;; Version: 0.1.4
-;; Package-Requires: ((aggressive-indent "1.8.1") (cl-lib "0.5")
+;; Package-Requires: ((dash "2.13.0") (aggressive-indent "1.8.1") (cl-lib "0.5")
 ;; Keywords: Parinfer
 
 ;; This file is not part of GNU Emacs.
@@ -147,6 +147,7 @@
 ;; -----------------------------------------------------------------------------
 (require 'parinferlib)
 (require 'parinfer-theme)
+(require 'dash)
 (require 'aggressive-indent)
 (require 'mode-local)
 (require 'paredit)
@@ -207,6 +208,29 @@
   "Current delay timer.")
 (make-variable-buffer-local 'parinfer--delay-timer)
 
+(defvar parinfer-clean-up-command-list
+  (list 'evil-delete-char 'self-insert-command)
+  "After these commands, parinfer will invoke when cursor leave current line.")
+
+(defvar parinfer-skip-command-list
+  (list 'evil-previous-line 'evil-forward-char 'evil-backward-char 'evil-next-line
+        'evil-forward-word 'evil-forward-word-begin 'evil-backward-word-begin 'evil-backward-end
+        'evil-scroll-page-down 'evil-scroll-up)
+  "Do not invoke parinfer after these commands.")
+
+(defvar parinfer-skip-command-prefix-list '("eval-" "parinfer-")
+  "Do not invoke parinfer after commands with these prefixs.")
+
+(defvar parinfer-instantly-invoke-command-list
+  (list 'evil-delete 'evil-change 'evil-change-line 'evil-paste-before 'evil-paste-after
+        'evil-delete-line 'evil-delete-char 'evil-delete-backward-char 'evil-substitute
+        'evil-change-whole-line 'evil-force-normal-state 'evil-normal-state
+        'evil-shift-left 'evil-shift-right)
+  "Invoke parinfer instantly after these commands.")
+
+(defvar parinfer-instantly-invoke-command-prefix-list ()
+  "Invoke parinfer instantly after commands with these prefixs.")
+
 ;; -----------------------------------------------------------------------------
 ;; Macros
 ;; -----------------------------------------------------------------------------
@@ -228,8 +252,7 @@
   "Run BODY, then invode parinfer(depend on current parinfermode) immediately."
   `(progn
      ,@body
-     (parinfer--invoke-parinfer)
-     (parinfer--set-text-modified)))
+     (parinfer--invoke-parinfer)))
 
 ;; -----------------------------------------------------------------------------
 ;; Helpers
@@ -237,7 +260,9 @@
 
 (defun parinfer--set-text-modified ()
   "Set ‘parinfer--text-modified’ to t."
-  (setq parinfer--text-modified t))
+  (when (and (symbolp this-command)
+             (member this-command parinfer-clean-up-command-list))
+    (setq parinfer--text-modified t)))
 
 (defun parinfer--unset-text-modified ()
   "Set ‘parinfer--text-modified’ to nil."
@@ -397,21 +422,43 @@ POS is the position we want to call parinfer."
        ((eq 'indent parinfer--mode) (parinfer-indent))
        (t "nothing")))))
 
+(defun parinfer--should-disable-p ()
+  "Should parinfer disabled at this moment."
+  (and (bound-and-true-p multiple-cursors-mode)))
+
+(parinfer--should-disable-p)
+
+(defun parinfer--should-skip-this-command-p ()
+  "Should parinfer skip this command."
+  (if (member this-command parinfer-skip-command-list)
+      t
+    (-any-p (lambda (prefix) (string-prefix-p prefix (symbol-name this-command)))
+            parinfer-skip-command-prefix-list)))
+
+(defun parinfer--should-invoke-instantly-p ()
+  "Should parinfer be invoked instantly."
+  (if (member this-command parinfer-instantly-invoke-command-list)
+      t
+    (-any-p (lambda (prefix) (string-prefix-p prefix (symbol-name this-command)))
+            parinfer-instantly-invoke-command-prefix-list)))
+
+(parinfer--should-skip-this-command-p)
+
 (defun parinfer--invoke-parinfer-when-necessary ()
   "Invoke parinfer when necessary."
   (when this-command
     (cond
-     ((and (symbolp this-command)
-           (string-prefix-p "parinfer-" (symbol-name this-command)))
+     ((not (symbolp this-command))
       nil)
+     
+     ((parinfer--should-skip-this-command-p) nil)
 
      ((parinfer--in-comment-or-string-p) nil)
 
      ;; Disable when region is active.
      ((region-active-p) nil)
 
-     ;; Disable in multiple-cursor-mode.
-     ((bound-and-true-p multiple-cursors-mode) nil)
+     ((parinfer--should-disable-p) nil)
 
      ((and (eq 'indent parinfer--mode)
            parinfer--text-modified
@@ -419,6 +466,9 @@ POS is the position we want to call parinfer."
       (parinfer--invoke-parinfer-instantly (save-excursion
                                              (parinfer--goto-line parinfer--last-line-number)
                                              (line-beginning-position))))
+
+     ((parinfer--should-invoke-instantly-p)
+      (parinfer--invoke-parinfer-instantly (point)))
 
      ((eq this-command 'self-insert-command)
       (parinfer--invoke-parinfer (point)))
@@ -457,7 +507,7 @@ POS is the position we want to call parinfer."
   (setq parinfer--last-line-number (line-number-at-pos (point)))
   (run-hooks 'parinfer-mode-enable-hook)
   (add-hook 'post-command-hook 'parinfer--invoke-parinfer-when-necessary t t)
-  (add-hook 'self-insert-command 'parinfer--set-text-modified t t)
+  (add-hook 'post-command-hook 'parinfer--set-text-modified t t)
   (add-hook 'activate-mark-hook 'parinfer--regin-mode-enable t t)
   (add-hook 'deactivate-mark-hook 'parinfer--region-mode-disable t t)
   (parinfer--switch-to-indent-mode))
@@ -466,7 +516,7 @@ POS is the position we want to call parinfer."
   "Disable 'parinfer-mode'."
   (run-hooks 'parinfer-mode-disable-hook)
   (remove-hook 'activate-mark-hook 'parinfer--regin-mode-enable t)
-  (remove-hook 'self-insert-command 'parinfer--set-text-modified t)
+  (remove-hook 'post-command-hook 'parinfer--set-text-modified t)
   (remove-hook 'deactivate-mark-hook 'parinfer--region-mode-disable t)
   (remove-hook 'post-command-hook 'parinfer--invoke-parinfer-when-necessary t)
   (parinfer--region-mode-disable))
@@ -639,6 +689,7 @@ if there's any change, display a confirm message in minibuffer."
 
 (defun parinfer-paren ()
   "Do parinfer paren  on current & previous top level S-exp."
+  (interactive)
   (ignore-errors (parinfer--reindent-sexp nil)))
 
 (defun parinfer-ediff-quit ()
@@ -729,7 +780,7 @@ if there's any change, display a confirm message in minibuffer."
     (parinfer--switch-to-paren-mode)))
 
 (defun parinfer-diff ()
-  "Diff current code and the code after applying Indent Mode in Ediff.)
+  "Diff current code and the code after applying Indent Mode in Ediff.))
 Use this to browse and apply the changes."
   (interactive)
   (let* ((orig-text (buffer-substring-no-properties (point-min) (point-max)))
