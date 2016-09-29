@@ -601,11 +601,11 @@ Currently parinfer can not handle indentation with tab.  Use this to remove tab 
   (parinfer-untabify-buffer)
   (call-interactively 'mark-whole-buffer)
   (call-interactively 'indent-region)
-  (call-interactively 'keyboard-quit))
+  (call-interactively 'keyboard-quit)
+  (call-interactively 'parinfer-indent-buffer))
 
 (defun parinfer-indent ()
   "Parinfer indent."
-  (interactive)
   (let ((ctx (parinfer--prepare)))
     (parinfer--execute ctx)))
 
@@ -613,26 +613,6 @@ Currently parinfer can not handle indentation with tab.  Use this to remove tab 
   "Parinfer indent instantly."
   (let ((ctx (parinfer--prepare)))
     (parinfer--execute-instantly ctx)))
-
-;; (defun parinfer-indent ()
-;;   "Call parinfer indent on current & previous top level S-exp."
-;;   (interactive)
-;;   (let* ((window-start-pos (window-start))
-;;          (start (save-excursion (parinfer--goto-previous-defun) (point)))
-;;          (end (save-excursion (parinfer--goto-next-defun) (point)))
-;;          (text (buffer-substring-no-properties start end))
-;;          (line-number (line-number-at-pos))
-;;          (cursor-line (- line-number (line-number-at-pos start)))
-;;          (cursor-x (parinfer--cursor-x))
-;;          (opts (list :cursor-x cursor-x :cursor-line cursor-line :preview-cursor-scope parinfer-preview-cursor-scope))
-;;          (result (parinferlib-indent-mode text opts)))
-;;     (when (and (plist-get result :success)
-;;                (plist-get result :changed-lines))
-;;       (delete-region start end)
-;;       (insert (plist-get result :text))
-;;       (parinfer--goto-line line-number)
-;;       (forward-char (plist-get result :cursor-x))
-;;       (set-window-start (selected-window) window-start-pos))))
 
 (defun parinfer-indent-buffer ()
   "Call parinfer indent on whole buffer."
@@ -689,7 +669,6 @@ if there's any change, display a confirm message in minibuffer."
 
 (defun parinfer-paren ()
   "Do parinfer paren  on current & previous top level S-exp."
-  (interactive)
   (ignore-errors (parinfer--reindent-sexp nil)))
 
 (defun parinfer-ediff-quit ()
