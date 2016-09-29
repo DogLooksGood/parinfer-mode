@@ -158,8 +158,19 @@ Not yet, I simply use ~electric-pair-mode~ for auto pairs.
 #+END_SRC
 
 ** Performance.
+*** v0.1.3
 There's a performance issue on large top level sexp(more than 300 lines).
 After each input, parinfer-mode will calculate the previous & current top level sexp.
+
+*** v0.1.4 (on MELPA, haven't deploy to MELPA Stable yet)
+Parinfer-mode will try idle delay processing on large sexp.
+
+Behaviour can be customized:
+#+BEGIN_SRC emacs-lisp
+  ;;  Defaults.
+  (setq parinfer-delay-invoke-threshold 6000) ; If processing range is longer than this, we use delay processing.
+  (setq parinfer-delay-invoke-idle 0.3) ; delay idle
+#+END_SRC
 
 ** Hooks?
 ~parinfer-mode-enable-hook~ and ~parinfer-mode-disable-hook~.

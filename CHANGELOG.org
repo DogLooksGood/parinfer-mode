@@ -1,6 +1,9 @@
 #+TITLE: CHANGELOG
 #+AUTHOR: DogLooksGood
 
+* v0.1.4
+- Delay processing on large S-expression. customize with ~parinfer-delay-invoke-threshold~ and ~parinfer-delay-invoke-idle~.
+
 * v0.1.3
 - Rename all private function with the prefix ~parinfer--~ instead of ~parinfer-~.
 - Remove paredit dependencies sine we don't neet it.
