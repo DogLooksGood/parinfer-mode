@@ -87,11 +87,22 @@ Use parinfer dim style for Indent Mode, and rainbow-delimiters for Paren Mode.
   (setq parinfer-indent-mode-dim-close-parens t)  ;; this is enabled by default
 #+END_SRC
 
-* FAQ
-** Preview cursor scope?
+* Performance & Delay processing.
+Parinfer-mode will try idle delay processing on large sexp.
+
+Behaviour can be customized:
+#+BEGIN_SRC emacs-lisp
+  ;;  Defaults.
+  (setq parinfer-delay-invoke-threshold 6000) ; If processing range is longer than this, we use delay processing.
+  (setq parinfer-delay-invoke-idle 0.3) ; delay idle
+#+END_SRC
+
+* Preview cursor scope?
 #+BEGIN_SRC emacs-lisp
   (setq parinfer-preview-cursor-scope t)  ; default nil
 #+END_SRC
+
+* FAQ
 
 ** Indent region.
 In *Indent* Mode, Mark the lines those you want to shift. Press ~TAB~ or ~>~ to shift rgiht, and ~Shift-TAB~ or ~<~ to shift left.
@@ -107,37 +118,7 @@ I'm already using parinfer-mode for Clojure And Elisp. It should be stable and s
 If there's any bug or uncomfortable stuff, open an issue please.
 
 ** I found command XXX break matched parens!
-If XXX is a built-in or wildly used command, please open an issue, I'll have a fix.
-
-Alternatively, you can do it yourself. There're two macros.
-
-*** parinfer-run
-This macro will run the BODY code, then invoke parinfer to fix parentheses(if we are in indent-mode).
-#+BEGIN_SRC emacs-lisp
-  ;; This is a sample, parinfer-mode have already remap yank with parinfer-yank.
-
-  (defun parinfer-yank ()
-    (interactive)
-    (parinfer-run
-     (call-interactively 'yank)))
-
-  ;; Replace yank to parinfer-yank.
-  (define-key parinfer-mode-map [remap yank] 'parinfer-yank)
-#+END_SRC
-
-*** parinfer-paren-run
-This macro will always run BODY in paren-mode, avoid changing the S-exp struct. 
-#+BEGIN_SRC emacs-lisp
-  ;; This is a sample, parinfer-mode already remap delete-indentation with parinfer-delete-indentation.
-
-  (defun parinfer-delete-indentation ()
-    (interactive)
-    (parinfer-paren-run
-     (call-interactively 'delete-indentation)))
-
-  ;; Replace delete-indentation to parinfer-indentation.
-  (define-key parinfer-mode-map [remap delete-indentation] 'parinfer-delete-indentation)
-#+END_SRC
+Please open an issue, I'll have a fix.
 
 ** Parinfer-mode toggle indent mode is changing the indentation.
 The indentation of code should not be changed by indent mode. When you meet this, your code probably have indentation with *TAB*.
@@ -145,35 +126,14 @@ The indentation of code should not be changed by indent mode. When you meet this
 Currently Parinfer can not handle tab indentation, you can change all tab indentation to whitespace for current buffer with ~M-x parinfer-untabify-buffer~.
 
 ** Use with Evil?
-*** v0.1.3
-Parinfer mode only works in insert-state.
-
-But there's already a plugin called [[https://github.com/luxbock/evil-cleverparens][evil-cleverparens]] , that handles parentheses nicely for evil normal or visual states.
-
-If you are using evil, try using ~evil-cleverparens~ + ~parinfer-mode~ .
-*** v0.1.4 (on MELPA, haven't deploy to MELPA Stable yet)
-Attempt to support use with evil directly, works fine for limited test. WIP.
+Attempt to support use with evil directly, works fine for limited test. *WIP*.
+If it's not work as your expect, Please open a issue.
 [[file:images/evil_demo.gif]]
 
 ** Use in Cider REPL?
 Not yet, I simply use ~electric-pair-mode~ for auto pairs.
 #+BEGIN_SRC emacs-lisp
   (add-hook 'cider-repl-mode-hook #'electric-pair-mode)
-#+END_SRC
-
-** Performance.
-*** v0.1.3
-There's a performance issue on large top level sexp(more than 300 lines).
-After each input, parinfer-mode will calculate the previous & current top level sexp.
-
-*** v0.1.4 (on MELPA, haven't deploy to MELPA Stable yet)
-Parinfer-mode will try idle delay processing on large sexp.
-
-Behaviour can be customized:
-#+BEGIN_SRC emacs-lisp
-  ;;  Defaults.
-  (setq parinfer-delay-invoke-threshold 6000) ; If processing range is longer than this, we use delay processing.
-  (setq parinfer-delay-invoke-idle 0.3) ; delay idle
 #+END_SRC
 
 ** Hooks?
