@@ -1,6 +1,11 @@
 #+TITLE: CHANGELOG
 #+AUTHOR: DogLooksGood
 
+* v0.2.0
+- Add ~parinfer-skip-command-list~, ~parinfer-skip-command-prefix-list~, ~parinfer-instantly-invoke-command-list~, ~parinfer-instantly-invoke-command-prefix-list~.
+- Compatibility with Evil. 
+- BUGFIX: Broken ~Package-Requires~. 
+
 * v0.1.4
 - Delay processing on large S-expression. customize with ~parinfer-delay-invoke-threshold~ and ~parinfer-delay-invoke-idle~.
 
