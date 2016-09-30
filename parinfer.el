@@ -139,7 +139,7 @@
       (list 'evil-delete 'evil-change 'evil-change-line 'evil-paste-before 'evil-paste-after
         'evil-delete-line 'evil-delete-char 'evil-delete-backward-char 'evil-substitute
         'evil-change-whole-line 'evil-force-normal-state 'evil-normal-state
-        'evil-shift-left 'evil-shift-right 'yank 'delete-region))
+        'evil-shift-left 'evil-shift-right 'delete-region))
 
 (defvar parinfer-instantly-invoke-command-prefix-list
   "Invoke parinfer instantly after commands with these prefixs.")
@@ -173,8 +173,8 @@
   "Run BODY, then invode parinfer(depend on current parinfermode) immediately."
   `(progn
      ,@body
-     (parinfer--invoke-parinfer)
-     (setq parinfer--text-modified t)))
+     (setq parinfer--text-modified t)
+     (parinfer--invoke-parinfer)))
 
 ;; -----------------------------------------------------------------------------
 ;; Helpers
@@ -188,6 +188,7 @@
 
 (defun parinfer--unset-text-modified ()
   "Set ‘parinfer--text-modified’ to nil."
+  (message "unset")
   (setq parinfer--text-modified nil))
 
 (defun parinfer--disable-rainbow-delimiters ()
@@ -357,8 +358,10 @@ POS is the position we want to call parinfer."
 
 (defun parinfer--should-disable-p ()
   "Should parinfer disabled at this moment."
-  (and (bound-and-true-p multiple-cursors-mode)
-       (region-active-p)))
+  (or (and (bound-and-true-p multiple-cursors-mode)
+           (region-active-p))
+      (and (symbolp this-command)
+           (eq this-command 'yank))))
 
 (defun parinfer--should-skip-this-command-p ()
   "Should parinfer skip this command."
@@ -658,8 +661,10 @@ if there's any change, display a confirm message in minibuffer."
 (defun parinfer-yank ()
   "Replacement in 'parinfer-mode' for 'yank' command."
   (interactive)
-  (parinfer-run
-   (call-interactively 'yank)))
+  (call-interactively 'yank)
+  (setq parinfer--text-modified t)
+  (parinfer-indent-buffer)
+  (message "%s" parinfer--text-modified))
 
 (defun parinfer-kill-region ()
   "Replacement in 'parinfer-mode' for 'kill-region' command."
@@ -737,6 +742,7 @@ Use this to browse and apply the changes."
     (define-key map [remap backward-delete-char-untabify] 'parinfer-backward-delete-char)
     (define-key map [remap delete-backward-char] 'parinfer-backward-delete-char)
     (define-key map ";" 'parinfer-semicolon)
+    (define-key map [remap yank] 'parinfer-yank)
     map))
 
 (defvar parinfer-region-mode-map
