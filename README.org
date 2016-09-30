@@ -127,7 +127,9 @@ Currently Parinfer can not handle tab indentation, you can change all tab indent
 
 ** Use with Evil?
 Attempt to support use with evil directly, works fine for limited test. *WIP*.
+
 If it's not work as your expect, Please open a issue.
+
 [[file:images/evil_demo.gif]]
 
 ** Use in Cider REPL?
