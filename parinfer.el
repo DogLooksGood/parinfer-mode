@@ -156,11 +156,16 @@
 ;; Macros
 ;; -----------------------------------------------------------------------------
 
+(defmacro parinfer-silent (&rest body)
+  "Local set function `message' to `format'."
+  `(cl-letf (((symbol-function 'message) #'format))
+     ,@body))
+
 (defmacro parinfer-paren-run (&rest body)
   "Run BODY in paren mode.  Keep S-sexp in correct indentation."
   (let ((toggle (make-symbol "toggle")))
     `(let ((,toggle (eq parinfer--mode 'indent)))
-       (cl-letf (((symbol-function 'message) #'format))
+       (parinfer-silent
          (when ,toggle
             (parinfer--switch-to-paren-mode)
           ,@body
@@ -335,7 +340,7 @@ Buffer text, we should see a confirm message."
         (parinfer--invoke-parinfer-instantly)
         (parinfer--goto-line ln)
         (forward-char x))
-    (cl-letf (((symbol-function 'message) #'format))
+     (parinfer-silent
       (cond
        ((eq 'paren parinfer--mode) (parinfer-paren))
        ((eq 'indent parinfer--mode) (parinfer-indent-instantly))
@@ -349,7 +354,7 @@ POS is the position we want to call parinfer."
         (goto-char pos)
         (parinfer--invoke-parinfer)
         (goto-char current-pos))
-    (cl-letf (((symbol-function 'message) #'format))
+    (parinfer-silent
       (cond
        ((eq 'paren parinfer--mode) (parinfer-paren))
        ((eq 'indent parinfer--mode) (parinfer-indent))
