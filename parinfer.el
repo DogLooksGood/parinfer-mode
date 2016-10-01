@@ -158,16 +158,15 @@
 
 (defmacro parinfer-paren-run (&rest body)
   "Run BODY in paren mode.  Keep S-sexp in correct indentation."
-  `(progn
-     (let* ((current-style parinfer--mode)
-            (toggle (eq current-style 'indent)))
+  (let ((toggle (make-symbol "toggle")))
+    `(let ((,toggle (eq parinfer--mode 'indent)))
        (cl-letf (((symbol-function 'message) #'format))
-         (when toggle
-           (parinfer--switch-to-paren-mode))
-         ,@body
-         (when toggle
-           (parinfer--reindent-sexp)
-           (parinfer--indent-and-switch-to-indent-mode))))))
+         (when ,toggle
+            (parinfer--switch-to-paren-mode)
+          ,@body
+          (when ,toggle
+            (parinfer--reindent-sexp)
+            (parinfer--indent-and-switch-to-indent-mode)))))))
 
 (defmacro parinfer-run (&rest body)
   "Run BODY, then invode parinfer(depend on current parinfermode) immediately."
@@ -277,7 +276,7 @@ Buffer text, we should see a confirm message."
               (while (and last-pos
                           (parinfer--in-comment-or-string-p)
                           (not (eq (point-max) (point))))
-                
+
                 (search-forward-regexp parinfer--defun-regex nil t)
                 (if (eq (point) last-pos)
                     (setq last-pos nil)
@@ -507,7 +506,7 @@ CTX is the context for parinfer execution."
         (forward-char (plist-get result :cursor-x))
         (set-window-start (selected-window) window-start-pos))
     (parinfer--unset-text-modified)))
-  
+
 (defun parinfer--execute-instantly (ctx)
   "Execute parinfer instantly with context CTX."
   (let* ((opts (plist-get ctx :opts))
@@ -790,5 +789,3 @@ Use this to browse and apply the changes."
 
 (provide 'parinfer)
 ;;; parinfer.el ends here
-
-
