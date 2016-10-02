@@ -135,17 +135,15 @@ used in parinfer paren mode.")
     (evil-previous-line evil-forward-char evil-backward-char evil-next-line
      evil-forward-word evil-forward-word-begin evil-backward-word-begin evil-backward-end
      evil-scroll-page-down evil-scroll-up)
-    :default-prefix ()
     :instantly-prefix ()
     :skip-prefix ())
   "parinfer invoke scheme which is depend on the previous commands.
 
 1. :default           Invoke parinfer (delay on large sexp) after theses commands.
-2. :default-prefix    Invoke parinfer (delay on large sexp) after commands with these prefixs.
-3. :instantly         Invoke parinfer instantly after these commands.
-4. :instantly-prefix  Invoke parinfer instantly after these commands.
-3. :disable           Do not invoke parinfer after these commands.
-6. :disable-prefix    Do not invoke parinfer after commands with these prefixs.")
+2. :instantly         Invoke parinfer instantly after these commands.
+3. :instantly-prefix  Invoke parinfer instantly after these commands.
+4. :disable           Do not invoke parinfer after these commands.
+5. :disable-prefix    Do not invoke parinfer after commands with these prefixs.")
 
 ;; -----------------------------------------------------------------------------
 ;; Macros
