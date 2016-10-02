@@ -89,11 +89,12 @@
   "If last command modified text.")
 (make-variable-buffer-local 'parinfer--text-modified)
 
-(defvar parinfer-indent-lighter " Parinfer:Indent"
-  "Lighter for indent mode in mode line.")
+(defvar parinfer-lighters
+  '(" Parinfer:Indent" . " Parinfer:Paren")
+  "Parinfer lighters in mode line.
 
-(defvar parinfer-paren-lighter  " Parinfer:Paren"
-  "Lighter for paren mode in mode line.")
+The car of it is used in parinfer indent mode, the cdr
+used in parinfer paren mode.")
 
 (defvar parinfer-mode-enable-hook nil
   "Call after parinfer mode is enabled.")
@@ -308,8 +309,8 @@ Buffer text, we should see a confirm message."
 (defun parinfer--lighter ()
   "Return the lighter for specify mode."
   (if (eq 'paren parinfer--mode)
-      parinfer-paren-lighter
-    parinfer-indent-lighter))
+      (cdr parinfer-lighters)
+    (car parinfer-lighters)))
 
 (defun parinfer--ediff-init-keys ()
   "Inits for ediff.  since we don't need all features, simplify opeators."
