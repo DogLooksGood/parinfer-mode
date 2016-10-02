@@ -203,8 +203,8 @@
   (when (fboundp 'rainbow-delimiters-mode)
     (rainbow-delimiters-mode-enable)))
 
-(defun parinfer--switch-to-indent-mode-aux ()
-  "Swith to indent mode aux function."
+(defun parinfer--switch-to-indent-mode-1 ()
+  "Swith to indent mode auxiliary function."
   (setq parinfer--mode 'indent)
   (setq parinfer--first-load nil)
   (message "Parinfer: Indent Mode")
@@ -223,14 +223,14 @@ Buffer text, we should see a confirm message."
   (if (not parinfer--first-load)
       (progn
         (parinfer-indent-buffer)
-        (parinfer--switch-to-indent-mode-aux))
+        (parinfer--switch-to-indent-mode-1))
     (when (parinfer-indent-with-confirm)
-      (parinfer--switch-to-indent-mode-aux))))
+      (parinfer--switch-to-indent-mode-1))))
 
 (defun parinfer--indent-and-switch-to-indent-mode ()
   "Switch to Indent mode and call Indent Mode immediately."
   (interactive)
-  (parinfer--switch-to-indent-mode-aux)
+  (parinfer--switch-to-indent-mode-1)
   (parinfer--invoke-parinfer-when-necessary))
 
 (defun parinfer--company-cancel (&ignored)
@@ -287,8 +287,8 @@ Buffer text, we should see a confirm message."
             (backward-char))
         (goto-char (point-max))))))
 
-(defun parinfer--goto-previous-defun-aux ()
-  "Goto previous defun aux function."
+(defun parinfer--goto-previous-defun-1 ()
+  "Goto previous defun auxiliary function."
   (search-backward-regexp parinfer--defun-regex nil t)
   (let ((last-pos (point)))
     (while (and last-pos
@@ -302,8 +302,8 @@ Buffer text, we should see a confirm message."
 (defun parinfer--goto-previous-defun ()
   "Goto previous defun, skip comment or string."
   (interactive)
-  (parinfer--goto-previous-defun-aux)
-  (parinfer--goto-previous-defun-aux))
+  (parinfer--goto-previous-defun-1)
+  (parinfer--goto-previous-defun-1))
 
 (defun parinfer--lighter ()
   "Return the lighter for specify mode."
