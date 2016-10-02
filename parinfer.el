@@ -122,28 +122,36 @@ used in parinfer paren mode.")
   "Current delay timer.")
 (make-variable-buffer-local 'parinfer--delay-timer)
 
-(defvar parinfer-invoke-scheme
-  '(:default
-    (evil-delete-char self-insert-command delete-indentation kill-line
+(defvar parinfer-strategy
+  '((default
+     evil-delete-char self-insert-command delete-indentation kill-line
      comment-dwim kill-word delete-char newline kill-region)
-    :instantly
-    (evil-delete evil-change evil-change-line evil-paste-before evil-paste-after
+    (instantly
+     evil-delete evil-change evil-change-line evil-paste-before evil-paste-after
      evil-delete-line evil-delete-char evil-delete-backward-char evil-substitute
      evil-change-whole-line evil-force-normal-state evil-normal-state
      evil-shift-left evil-shift-right delete-region)
-    :skip
-    (evil-previous-line evil-forward-char evil-backward-char evil-next-line
+    (skip
+     evil-previous-line evil-forward-char evil-backward-char evil-next-line
      evil-forward-word evil-forward-word-begin evil-backward-word-begin evil-backward-end
-     evil-scroll-page-down evil-scroll-up)
-    :instantly-prefix ()
-    :skip-prefix ())
-  "parinfer invoke scheme which is depend on the previous commands.
+     evil-scroll-page-down evil-scroll-up))
+  "Parinfer invoke strategy.
 
-1. :default           Invoke parinfer (delay on large sexp) after theses commands.
-2. :instantly         Invoke parinfer instantly after these commands.
-3. :instantly-prefix  Invoke parinfer instantly after these commands.
-4. :disable           Do not invoke parinfer after these commands.
-5. :disable-prefix    Do not invoke parinfer after commands with these prefixs.")
+This variable is an association list, user can use `parinfer-strategy-parse'
+to parse it and use `parinfer-strategy-add' to set it.
+
+Its elements is like below:
+
+ (STRATEGY-NAME COMMAND COMMAND1 ...  CMDS-REGEXP CMDS-REGEXP1 ...)
+
+The COMMAND is a symbol and CMDS-REGEXP is a regexp string which
+used to match command.
+
+ strategy name    Description
+ --------------   -------------------------------------------
+ default          Invoke parinfer (delay on large sexp)
+ instantly        Invoke parinfer instantly
+ disable          Do not invoke parinfer")
 
 ;; -----------------------------------------------------------------------------
 ;; Macros
@@ -177,25 +185,43 @@ used in parinfer paren mode.")
 ;; Helpers
 ;; -----------------------------------------------------------------------------
 
-(defun parinfer-invoke-scheme-get (prop)
-  "Get the property PROP of `parinfer-invoke-scheme'."
-  (plist-get parinfer-invoke-scheme prop))
+(defun parinfer-strategy-parse (strategy-name)
+  "Parse strategy, which is named STRATEGY-NAME in `parinfer-strategy'.
 
-(defun parinfer-invoke-scheme-add (prop value)
-  "Add new commands to the property PROP of `parinfer-invoke-scheme',
-The VALUE is a command or a commands list."
-  (let* ((value (if (symbolp value)
-                    (list value)
-                  value))
-         (orig-value (plist-get parinfer-invoke-scheme prop))
-         (new-value (append orig-value value)))
-    (plist-put parinfer-invoke-scheme prop new-value)))
+Its output is like the below:
+
+  (:commands (cmd1 cmd2 cmd3)
+   :regexps (regexp1 regexp2 regexp3))"
+  (let ((list (cdr (assq strategy-name parinfer-strategy))))
+    `(:commands ,(cl-remove-if #'stringp list)
+      :regexps  ,(cl-remove-if #'symbolp list))))
+
+(defun parinfer-strategy-add (strategy-name commands)
+  "Set COMMANDS to use parinfer strategy, which is named STRATEGY-NAME.
+The results will save to `parinfer-strategy'.
+
+COMMANDS can be:
+
+1. A command (symbol)
+2. A commands list (symbol list)
+3. A regexp which is used to match commands
+4. A list of regexps which are used to match commands"
+  (let* ((commands (if (listp commands)
+                       commands
+                     (list commands)))
+         (orig-value (cdr (assq strategy-name parinfer-strategy)))
+         (new-value (cl-remove-duplicates
+                     (append orig-value commands)
+                     :test #'equal)))
+    (push (cons strategy-name new-value)
+          parinfer-strategy)))
 
 (defun parinfer--set-text-modified ()
   "Set ‘parinfer--text-modified’ to t."
   (when (and (symbolp this-command)
-             (-contains-p (parinfer-invoke-scheme-get :default)
-                          this-command))
+             (-contains-p
+              (plist-get (parinfer-strategy-parse 'default) :commands)
+              this-command))
     (setq parinfer--text-modified t)))
 
 (defun parinfer--unset-text-modified ()
@@ -375,28 +401,32 @@ POS is the position we want to call parinfer."
       (and (symbolp this-command)
            (eq this-command 'yank))))
 
-(defun parinfer--should (prop prefix-prop)
-  (if (member this-command
-                (parinfer-invoke-scheme-get prop))
-      t
-    (-any-p (lambda (prefix) (string-prefix-p prefix (symbol-name this-command)))
-            (parinfer-invoke-scheme-get prefix-prop))))
+(defun parinfer--strategy-match-p (command strategy-name)
+  (let* ((output (parinfer-strategy-parse strategy-name))
+         (cmds (plist-get output :commands))
+         (regexps (plist-get output :regexps)))
+    (if (member command cmds)
+        t
+      (-any-p #'(lambda (regexp)
+                  (string-match-p
+                   regexp (symbol-name command)))
+              regexps))))
 
 (defun parinfer--should-skip-this-command-p ()
   "Should parinfer skip this command."
-  (parinfer--should :skip :skip-prefix))
+  (parinfer--strategy-match-p this-command 'skip))
 
 (defun parinfer--should-invoke-instantly-p ()
   "Should parinfer be invoked instantly."
- (parinfer--should :instantly :instantly-prefix))
+  (parinfer--strategy-match-p this-command 'instantly))
+
+(defun parinfer--should-invoke-p ()
+  (parinfer--strategy-match-p this-command 'default))
 
 (defun parinfer--should-clean-up-p ()
   (and (eq 'indent parinfer--mode)
        parinfer--text-modified
        (not (equal parinfer--last-line-number (line-number-at-pos)))))
-
-(defun parinfer--should-invoke-p ()
-  (-contains-p (parinfer-invoke-scheme-get :default) this-command))
 
 (defun parinfer--clean-up ()
   (when parinfer--delay-timer
