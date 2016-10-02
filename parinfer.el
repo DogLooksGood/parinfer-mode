@@ -121,36 +121,30 @@
   "Current delay timer.")
 (make-variable-buffer-local 'parinfer--delay-timer)
 
-(defvar parinfer-skip-command-list nil
-  "Do not invoke parinfer after these commands.")
-(setq parinfer-skip-command-list
-      (list 'evil-previous-line 'evil-forward-char 'evil-backward-char 'evil-next-line
-       'evil-forward-word 'evil-forward-word-begin 'evil-backward-word-begin 'evil-backward-end
-       'evil-scroll-page-down 'evil-scroll-up))
+(defvar parinfer-invoke-scheme
+  '(:default
+    (evil-delete-char self-insert-command delete-indentation kill-line
+     comment-dwim kill-word delete-char newline kill-region)
+    :instantly
+    (evil-delete evil-change evil-change-line evil-paste-before evil-paste-after
+     evil-delete-line evil-delete-char evil-delete-backward-char evil-substitute
+     evil-change-whole-line evil-force-normal-state evil-normal-state
+     evil-shift-left evil-shift-right delete-region)
+    :skip
+    (evil-previous-line evil-forward-char evil-backward-char evil-next-line
+     evil-forward-word evil-forward-word-begin evil-backward-word-begin evil-backward-end
+     evil-scroll-page-down evil-scroll-up)
+    :default-prefix ()
+    :instantly-prefix ()
+    :skip-prefix ())
+  "parinfer invoke scheme which is depend on the previous commands.
 
-(defvar parinfer-skip-command-prefix-list nil
-  "Do not invoke parinfer after commands with these prefixs.")
-(setq parinfer-skip-command-prefix-list
-      ())
-
-(defvar parinfer-instantly-invoke-command-list
-  "Invoke parinfer instantly after these commands.")
-(setq parinfer-instantly-invoke-command-list
-      (list 'evil-delete 'evil-change 'evil-change-line 'evil-paste-before 'evil-paste-after
-        'evil-delete-line 'evil-delete-char 'evil-delete-backward-char 'evil-substitute
-        'evil-change-whole-line 'evil-force-normal-state 'evil-normal-state
-        'evil-shift-left 'evil-shift-right 'delete-region))
-
-(defvar parinfer-instantly-invoke-command-prefix-list
-  "Invoke parinfer instantly after commands with these prefixs.")
-(setq parinfer-instantly-invoke-command-prefix-list
-      ())
-
-(defvar parinfer-invoke-command-list
-  "Invoke parinfer (delay on large sexp) after theses commands.")
-(setq parinfer-invoke-command-list
-      (list 'evil-delete-char 'self-insert-command 'delete-indentation 'kill-line
-            'comment-dwim 'kill-word 'delete-char 'newline 'kill-region))
+1. :default           Invoke parinfer (delay on large sexp) after theses commands.
+2. :default-prefix    Invoke parinfer (delay on large sexp) after commands with these prefixs.
+3. :instantly         Invoke parinfer instantly after these commands.
+4. :instantly-prefix  Invoke parinfer instantly after these commands.
+3. :disable           Do not invoke parinfer after these commands.
+6. :disable-prefix    Do not invoke parinfer after commands with these prefixs.")
 
 ;; -----------------------------------------------------------------------------
 ;; Macros
@@ -184,10 +178,14 @@
 ;; Helpers
 ;; -----------------------------------------------------------------------------
 
+(defun parinfer-invoke-scheme-get (option)
+  (plist-get parinfer-invoke-scheme option))
+
 (defun parinfer--set-text-modified ()
   "Set ‘parinfer--text-modified’ to t."
   (when (and (symbolp this-command)
-             (-contains-p parinfer-invoke-command-list this-command))
+             (-contains-p (parinfer-invoke-scheme-get :default)
+                          this-command))
     (setq parinfer--text-modified t)))
 
 (defun parinfer--unset-text-modified ()
@@ -367,19 +365,20 @@ POS is the position we want to call parinfer."
       (and (symbolp this-command)
            (eq this-command 'yank))))
 
-(defun parinfer--should-skip-this-command-p ()
-  "Should parinfer skip this command."
-  (if (member this-command parinfer-skip-command-list)
+(defun parinfer--should (option prefix-option)
+  (if (member this-command
+                (parinfer-invoke-scheme-get option))
       t
     (-any-p (lambda (prefix) (string-prefix-p prefix (symbol-name this-command)))
-            parinfer-skip-command-prefix-list)))
+            (parinfer-invoke-scheme-get prefix-option))))
+
+(defun parinfer--should-skip-this-command-p ()
+  "Should parinfer skip this command."
+  (parinfer--should :skip :skip-prefix))
 
 (defun parinfer--should-invoke-instantly-p ()
   "Should parinfer be invoked instantly."
-  (if (member this-command parinfer-instantly-invoke-command-list)
-      t
-    (-any-p (lambda (prefix) (string-prefix-p prefix (symbol-name this-command)))
-            parinfer-instantly-invoke-command-prefix-list)))
+ (parinfer--should :instantly :instantly-prefix))
 
 (defun parinfer--should-clean-up-p ()
   (and (eq 'indent parinfer--mode)
@@ -387,7 +386,7 @@ POS is the position we want to call parinfer."
        (not (equal parinfer--last-line-number (line-number-at-pos)))))
 
 (defun parinfer--should-invoke-p ()
-  (-contains-p parinfer-invoke-command-list this-command))
+  (-contains-p (parinfer-invoke-scheme-get :default) this-command))
 
 (defun parinfer--clean-up ()
   (when parinfer--delay-timer
