@@ -63,7 +63,6 @@
 (require 'dash)
 (require 'aggressive-indent)
 (require 'mode-local)
-(require 'paredit)
 (require 'cl-lib)
 (require 'ediff)
 
@@ -102,6 +101,11 @@ used in parinfer paren mode.")
 (defvar parinfer-mode-disable-hook nil
   "Call after parinfer mode is disabled.")
 
+(defvar parinfer-switch-mode-hook nil
+  "Call after parinfer mode switch between Indent Mode & Paren Mode.
+
+One argument for hook function, MODE present for the mode will be used.")
+
 (defvar parinfer--last-line-number -1
   "Holds the last line number after invoke-parinfer-when-necessary.")
 (make-variable-buffer-local 'parinfer--last-line-number)
@@ -135,7 +139,7 @@ used in parinfer paren mode.")
      evil-previous-line evil-forward-char evil-backward-char evil-next-line
      evil-forward-word evil-forward-word-begin evil-backward-word-begin evil-backward-end
      evil-scroll-page-down evil-scroll-up))
-  "Parinfer invoke strategy.
+  "Parinfer invoke strategy.)
 
 This variable is an association list, user can use `parinfer-strategy-parse'
 to parse it and use `parinfer-strategy-add' to set it.
@@ -183,10 +187,10 @@ used to match command.
 
 (defmacro parinfer--switch-to (mode &rest body)
   "Macro which used to switch indent/paren mode."
-  (declare (indent 1) (debug t))
   (let ((m (make-symbol "mode")))
     `(let ((,m ,mode))
        ,@body
+       (run-hook-with-args 'parinfer-switch-mode-hook ,m)
        (when (bound-and-true-p company-mode)
          (add-hook 'company-completion-cancelled-hook 'parinfer--company-cancel t t)
          (remove-hook 'company-completion-finished-hook 'parinfer--company-finish t))
@@ -240,7 +244,6 @@ COMMANDS can be:
 
 (defun parinfer--unset-text-modified ()
   "Set ‘parinfer--text-modified’ to nil."
-  (message "Parinfer: set `parinfer--text-modified' to nil.")
   (setq parinfer--text-modified nil))
 
 (defun parinfer--set-rainbow-delimiters (mode)
@@ -253,10 +256,11 @@ COMMANDS can be:
 
 (defun parinfer--switch-to-indent-mode-1 ()
   "Swith to indent mode auxiliary function."
-  (parinfer--switch-to 'indent
-    (setq parinfer--mode 'indent)
-    (setq parinfer--first-load nil)
-    (message "Parinfer: Indent Mode")))
+  (parinfer--switch-to
+   'indent
+   (setq parinfer--mode 'indent)
+   (setq parinfer--first-load nil)
+   (message "Parinfer: Indent Mode")))
 
 (defun parinfer--switch-to-indent-mode ()
   "Switch to Indent Mode, this will apply indent fix on whole buffer.)
@@ -285,9 +289,12 @@ Buffer text, we should see a confirm message."
 
 (defun parinfer--switch-to-paren-mode ()
   "Switch to paren mode."
-  (parinfer--switch-to 'paren
-    (setq parinfer--mode 'paren)
-    (message "Parinfer: Paren Mode")))
+  (parinfer--switch-to
+   'paren
+   (when parinfer--delay-timer
+     (parinfer--clean-up))
+   (setq parinfer--mode 'paren)
+   (message "Parinfer: Paren Mode")))
 
 (defun parinfer--in-comment-or-string-p ()
   "Return if we are in comment or string."
@@ -407,9 +414,9 @@ POS is the position we want to call parinfer."
          (regexps (plist-get output :regexps)))
     (if (member command cmds)
         t
-      (-any-p #'(lambda (regexp)
-                  (string-match-p
-                   regexp (symbol-name command)))
+      (-any-p (lambda (regexp)
+                (string-match-p
+                 regexp (symbol-name command)))
               regexps))))
 
 (defun parinfer--should-skip-this-command-p ()
@@ -794,6 +801,7 @@ Use this to browse and apply the changes."
     (define-key map (kbd "S-<tab>") 'parinfer-shift-left)
     (define-key map (kbd ">") 'parinfer-shift-right)
     (define-key map (kbd "<") 'parinfer-shift-left)
+    (define-key map (kbd "<backspace>") 'delete-region)
     map))
 
 ;; -----------------------------------------------------------------------------
