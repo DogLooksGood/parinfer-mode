@@ -494,10 +494,10 @@ POS is the position we want to call parinfer."
          (orig (list :start start :end end :window-start-pos window-start-pos :line-number line-number)))
     (list :text text :opts opts :orig orig)))
 
-(defun parinfer--apply-result (result ctx)
+(defun parinfer--apply-result (result context)
   "Apply parinfer RESULT to current buffer.
-CTX is the context for parinfer execution."
-  (let* ((orig (plist-get ctx :orig))
+CONTEXT is the context for parinfer execution."
+  (let* ((orig (plist-get context :orig))
          (start (plist-get orig :start))
          (end (plist-get orig :end))
          (window-start-pos (plist-get orig :window-start-pos))
@@ -511,26 +511,26 @@ CTX is the context for parinfer execution."
         (set-window-start (selected-window) window-start-pos))
     (parinfer--unset-text-modified)))
 
-(defun parinfer--execute-instantly (ctx)
-  "Execute parinfer instantly with context CTX."
-  (let* ((opts (plist-get ctx :opts))
-         (text (plist-get ctx :text))
+(defun parinfer--execute-instantly (context)
+  "Execute parinfer instantly with context CONTEXT."
+  (let* ((opts (plist-get context :opts))
+         (text (plist-get context :text))
          (result (parinferlib-indent-mode text opts)))
-    (parinfer--apply-result result ctx)))
+    (parinfer--apply-result result context)))
 
-(defun parinfer--execute (ctx)
-  "Execute parinfer with context CTX."
+(defun parinfer--execute (context)
+  "Execute parinfer with context CONTEXT."
   (when parinfer--delay-timer
     (cancel-timer parinfer--delay-timer)
     (setq parinfer--delay-timer nil))
-  (let ((text (plist-get ctx :text)))
+  (let ((text (plist-get context :text)))
     (if (> (length text) parinfer-delay-invoke-threshold)
         (setq parinfer--delay-timer
               (run-with-idle-timer
                parinfer-delay-invoke-idle
                nil
                #'parinfer-indent-instantly))
-      (parinfer--execute-instantly ctx))))
+      (parinfer--execute-instantly context))))
 ;; -----------------------------------------------------------------------------
 ;; Parinfer commands
 ;; -----------------------------------------------------------------------------
@@ -552,13 +552,13 @@ Currently parinfer can not handle indentation with tab.  Use this to remove tab 
 
 (defun parinfer-indent ()
   "Parinfer indent."
-  (let ((ctx (parinfer--prepare)))
-    (parinfer--execute ctx)))
+  (let ((context (parinfer--prepare)))
+    (parinfer--execute context)))
 
 (defun parinfer-indent-instantly ()
   "Parinfer indent instantly."
-  (let ((ctx (parinfer--prepare)))
-    (parinfer--execute-instantly ctx)))
+  (let ((context (parinfer--prepare)))
+    (parinfer--execute-instantly context)))
 
 (defun parinfer-indent-buffer ()
   "Call parinfer indent on whole buffer."
