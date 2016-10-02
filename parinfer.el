@@ -177,8 +177,8 @@ used in parinfer paren mode.")
 ;; Helpers
 ;; -----------------------------------------------------------------------------
 
-(defun parinfer-invoke-scheme-get (option)
-  (plist-get parinfer-invoke-scheme option))
+(defun parinfer-invoke-scheme-get (prop)
+  (plist-get parinfer-invoke-scheme prop))
 
 (defun parinfer-invoke-scheme-add (prop value)
   "Add new commands to the property PROP of `parinfer-invoke-scheme',
@@ -374,12 +374,12 @@ POS is the position we want to call parinfer."
       (and (symbolp this-command)
            (eq this-command 'yank))))
 
-(defun parinfer--should (option prefix-option)
+(defun parinfer--should (prop prefix-prop)
   (if (member this-command
-                (parinfer-invoke-scheme-get option))
+                (parinfer-invoke-scheme-get prop))
       t
     (-any-p (lambda (prefix) (string-prefix-p prefix (symbol-name this-command)))
-            (parinfer-invoke-scheme-get prefix-option))))
+            (parinfer-invoke-scheme-get prefix-prop))))
 
 (defun parinfer--should-skip-this-command-p ()
   "Should parinfer skip this command."
