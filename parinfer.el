@@ -72,6 +72,9 @@
 (defconst parinfer--defun-regex "^[^ \n\t\";]"
   "Regex for finding the beginning of S-exp.")
 
+(defvar parinfer-debug nil
+  "Enable parinfer debug when set to t.")
+
 (defvar parinfer--mode 'paren
   "Parinfer mode style, 'paren or 'indent.")
 (make-variable-buffer-local 'parinfer--mode)
@@ -182,8 +185,15 @@ used to match command.
   "Run BODY, then invode parinfer(depend on current parinfermode) immediately."
   `(progn
      ,@body
-     (setq parinfer--text-modified t)
+     (parinfer--setq-text-modified t)
      (parinfer--invoke-parinfer)))
+
+(defmacro parinfer--setq-text-modified (value)
+  "Set parinfer--text-modified to VALUE."
+  `(progn
+     (setq parinfer--text-modified ,value)
+     (when parinfer-debug
+       (message "parinfer: set parinfer--text-modified to %S." parinfer--text-modified))))
 
 (defmacro parinfer--switch-to (mode &rest body)
   "Macro which used to switch indent/paren mode."
@@ -235,6 +245,7 @@ COMMANDS can be:
           parinfer-strategy)))
 
 (defun parinfer--strategy-match-p (command strategy-name)
+  "Return t if COMMAND's parinfer invoke strategy is STRATEGY-NAME."
   (let* ((output (parinfer-strategy-parse strategy-name))
          (cmds (plist-get output :commands))
          (regexps (plist-get output :regexps)))
@@ -246,14 +257,11 @@ COMMANDS can be:
               regexps))))
 
 (defun parinfer--set-text-modified ()
-  "Set ‘parinfer--text-modified’ to t."
+  "Set ‘parinfer--text-modified’ to t when `this-command' use default
+invoke strategy."
   (when (and (symbolp this-command)
              (parinfer--strategy-match-p this-command 'default))
-    (setq parinfer--text-modified t)))
-
-(defun parinfer--unset-text-modified ()
-  "Set ‘parinfer--text-modified’ to nil."
-  (setq parinfer--text-modified nil))
+    (parinfer--setq-text-modified t)))
 
 (defun parinfer--set-rainbow-delimiters (mode)
   "Set rainbow delimiters depend MODE."
@@ -554,7 +562,7 @@ CONTEXT is the context for parinfer execution."
         (parinfer--goto-line line-number)
         (forward-char (plist-get result :cursor-x))
         (set-window-start (selected-window) window-start-pos))
-    (parinfer--unset-text-modified)))
+    (parinfer--setq-text-modified nil)))
 
 (defun parinfer--execute-instantly (context)
   "Execute parinfer instantly with context CONTEXT."
@@ -710,7 +718,7 @@ if there's any change, display a confirm message in minibuffer."
   "Replacement in 'parinfer-mode' for 'yank' command."
   (interactive)
   (call-interactively 'yank)
-  (setq parinfer--text-modified t)
+  (parinfer--setq-text-modified t)
   (parinfer-indent-buffer)
   (message "%s" parinfer--text-modified))
 
@@ -733,7 +741,7 @@ every semicolon input."
   (interactive)
   (call-interactively 'self-insert-command)
   (parinfer-indent)
-  (setq parinfer--text-modified t))
+  (parinfer--setq-text-modified t))
 
 (defun parinfer-comment-dwim ()
   "Replacement in 'parinfer-mode' for 'comment-dwim' command."
