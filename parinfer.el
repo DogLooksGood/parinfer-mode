@@ -181,6 +181,20 @@ used to match command.
      (setq parinfer--text-modified t)
      (parinfer--invoke-parinfer)))
 
+(defmacro parinfer--switch-to (mode &rest body)
+  "Macro which used to switch indent/paren mode."
+  (declare (indent 1) (debug t))
+  (let ((m (make-symbol "mode")))
+    `(let ((,m ,mode))
+       ,@body
+       (when (bound-and-true-p company-mode)
+         (add-hook 'company-completion-cancelled-hook 'parinfer--company-cancel t t)
+         (remove-hook 'company-completion-finished-hook 'parinfer--company-finish t))
+       (when parinfer-indent-mode-dim-close-parens
+         (parinfer--set-rainbow-delimiters ,m)
+         (parinfer--set-dim-parens ,m))
+       (force-mode-line-update))))
+
 ;; -----------------------------------------------------------------------------
 ;; Helpers
 ;; -----------------------------------------------------------------------------
@@ -229,28 +243,20 @@ COMMANDS can be:
   (message "Parinfer: set `parinfer--text-modified' to nil.")
   (setq parinfer--text-modified nil))
 
-(defun parinfer--disable-rainbow-delimiters ()
-  "Disable rainbow delimiters if it's enabled."
-  (when (bound-and-true-p rainbow-delimiters-mode)
-    (rainbow-delimiters-mode-disable)))
-
-(defun parinfer--enable-rainbow-delimiters ()
-  "Enable rainbow delimiters if it's been installed."
-  (when (fboundp 'rainbow-delimiters-mode)
-    (rainbow-delimiters-mode-enable)))
+(defun parinfer--set-rainbow-delimiters (mode)
+  "Set rainbow delimiters depend MODE."
+  (cl-case mode
+    (indent (when (bound-and-true-p rainbow-delimiters-mode)
+              (rainbow-delimiters-mode-disable)))
+    (paren (when (fboundp 'rainbow-delimiters-mode)
+             (rainbow-delimiters-mode-enable)))))
 
 (defun parinfer--switch-to-indent-mode-1 ()
   "Swith to indent mode auxiliary function."
-  (setq parinfer--mode 'indent)
-  (setq parinfer--first-load nil)
-  (message "Parinfer: Indent Mode")
-  (when (bound-and-true-p company-mode)
-    (add-hook 'company-completion-cancelled-hook 'parinfer-company-cancel t t)
-    (remove-hook 'company-completion-finished-hook 'parinfer--company-finish t))
-  (when parinfer-indent-mode-dim-close-parens
-    (parinfer--disable-rainbow-delimiters)
-    (parinfer--enable-dim-parens))
-  (force-mode-line-update))
+  (parinfer--switch-to 'indent
+    (setq parinfer--mode 'indent)
+    (setq parinfer--first-load nil)
+    (message "Parinfer: Indent Mode")))
 
 (defun parinfer--switch-to-indent-mode ()
   "Switch to Indent Mode, this will apply indent fix on whole buffer.)
@@ -279,15 +285,9 @@ Buffer text, we should see a confirm message."
 
 (defun parinfer--switch-to-paren-mode ()
   "Switch to paren mode."
-  (setq parinfer--mode 'paren)
-  (message "Parinfer: Paren Mode")
-  (when (bound-and-true-p company-mode)
-    (remove-hook 'company-completion-cancelled-hook 'parinfer-company-cancel t)
-    (add-hook 'company-completion-finished-hook 'parinfer--company-finish t t))
-  (when parinfer-indent-mode-dim-close-parens
-    (parinfer--disable-dim-parens)
-    (parinfer--enable-rainbow-delimiters))
-  (force-mode-line-update))
+  (parinfer--switch-to 'paren
+    (setq parinfer--mode 'paren)
+    (message "Parinfer: Paren Mode")))
 
 (defun parinfer--in-comment-or-string-p ()
   "Return if we are in comment or string."
