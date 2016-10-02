@@ -594,10 +594,11 @@ Currently parinfer can not handle indentation with tab.  Use this to remove tab 
   "Untabify whole buffer then reindent whole buffer."
   (interactive)
   (parinfer-untabify-buffer)
-  (call-interactively 'mark-whole-buffer)
-  (call-interactively 'indent-region)
-  (call-interactively 'keyboard-quit)
-  (call-interactively 'parinfer-indent-buffer))
+  (dolist (cmd '(mark-whole-buffer
+                 indent-region
+                 keyboard-quit
+                 parinfer-indent-buffer))
+    (call-interactively cmd)))
 
 (defun parinfer-indent ()
   "Parinfer indent."
