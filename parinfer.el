@@ -234,12 +234,21 @@ COMMANDS can be:
     (push (cons strategy-name new-value)
           parinfer-strategy)))
 
+(defun parinfer--strategy-match-p (command strategy-name)
+  (let* ((output (parinfer-strategy-parse strategy-name))
+         (cmds (plist-get output :commands))
+         (regexps (plist-get output :regexps)))
+    (if (member command cmds)
+        t
+      (-any-p (lambda (regexp)
+                (string-match-p
+                 regexp (symbol-name command)))
+              regexps))))
+
 (defun parinfer--set-text-modified ()
   "Set ‘parinfer--text-modified’ to t."
   (when (and (symbolp this-command)
-             (-contains-p
-              (plist-get (parinfer-strategy-parse 'default) :commands)
-              this-command))
+             (parinfer--strategy-match-p this-command 'default))
     (setq parinfer--text-modified t)))
 
 (defun parinfer--unset-text-modified ()
@@ -407,17 +416,6 @@ POS is the position we want to call parinfer."
            (region-active-p))
       (and (symbolp this-command)
            (eq this-command 'yank))))
-
-(defun parinfer--strategy-match-p (command strategy-name)
-  (let* ((output (parinfer-strategy-parse strategy-name))
-         (cmds (plist-get output :commands))
-         (regexps (plist-get output :regexps)))
-    (if (member command cmds)
-        t
-      (-any-p (lambda (regexp)
-                (string-match-p
-                 regexp (symbol-name command)))
-              regexps))))
 
 (defun parinfer--should-skip-this-command-p ()
   "Should parinfer skip this command."
