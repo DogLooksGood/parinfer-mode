@@ -216,10 +216,11 @@ used to match command.
 (defun parinfer-strategy-parse (strategy-name)
   "Parse strategy, which is named STRATEGY-NAME in `parinfer-strategy'.
 
-Its output is like the below:
+Its output is a plist, which context is *similar* the below:
 
-  (:commands (cmd1 cmd2 cmd3)
-   :regexps (regexp1 regexp2 regexp3))"
+ :commands cmd1 cmd2 cmd3
+ :regexps regexp1 regexp2 regexp3
+"
   (let ((list (cdr (assq strategy-name parinfer-strategy))))
     `(:commands ,(cl-remove-if #'stringp list)
       :regexps  ,(cl-remove-if #'symbolp list))))
