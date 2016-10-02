@@ -771,6 +771,10 @@ Use this to browse and apply the changes."
       (funcall m)
       (ediff-buffers orig-buffer new-buffer '(parinfer--ediff-init-keys)))))
 
+(defun parinfer-region-mode-switch-mode ()
+  (interactive)
+  (message "Can't toggle Parinfer Mode when region is active."))
+
 (defun parinfer-shift-right ()
   "In Indent Mode with region active, shift text left."
   (interactive)
@@ -802,6 +806,7 @@ Use this to browse and apply the changes."
     (define-key map (kbd ">") 'parinfer-shift-right)
     (define-key map (kbd "<") 'parinfer-shift-left)
     (define-key map (kbd "<backspace>") 'delete-region)
+    (define-key map [remap parinfer-toggle-mode] 'parinfer-region-mode-switch-mode)
     map))
 
 ;; -----------------------------------------------------------------------------
