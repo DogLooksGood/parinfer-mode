@@ -19,9 +19,9 @@
 (defun parinfer--set-dim-parens (mode)
   "Set dim close parens, which is depended MODE."
   (cl-case mode
-    (paren (font-lock-add-keywords
+    (paren (font-lock-remove-keywords
             nil '((")\\|}\\|]" . 'parinfer-dim-paren-face))))
-    (indent (font-lock-remove-keywords
+    (indent (font-lock-add-keywords
              nil '((")\\|}\\|]" . 'parinfer-dim-paren-face)))))
   (font-lock-flush))
 
