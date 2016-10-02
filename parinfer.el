@@ -190,7 +190,7 @@
 
 (defun parinfer--unset-text-modified ()
   "Set ‘parinfer--text-modified’ to nil."
-  (message "unset")
+  (message "Parinfer: set `parinfer--text-modified' to nil.")
   (setq parinfer--text-modified nil))
 
 (defun parinfer--disable-rainbow-delimiters ()
