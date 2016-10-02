@@ -180,6 +180,16 @@ used in parinfer paren mode.")
 (defun parinfer-invoke-scheme-get (option)
   (plist-get parinfer-invoke-scheme option))
 
+(defun parinfer-invoke-scheme-add (prop value)
+  "Add new commands to the property PROP of `parinfer-invoke-scheme',
+The VALUE is a command or a commands list."
+  (let* ((value (if (symbolp value)
+                    (list value)
+                  value))
+         (orig-value (plist-get parinfer-invoke-scheme prop))
+         (new-value (append orig-value value)))
+    (plist-put parinfer-invoke-scheme prop new-value)))
+
 (defun parinfer--set-text-modified ()
   "Set ‘parinfer--text-modified’ to t."
   (when (and (symbolp this-command)
@@ -216,7 +226,7 @@ used in parinfer paren mode.")
   (force-mode-line-update))
 
 (defun parinfer--switch-to-indent-mode ()
-  "Switch to Indent Mode, this will apply indent fix on whole buffer.))
+  "Switch to Indent Mode, this will apply indent fix on whole buffer.)
 If this is the first switching for current buffer and indent mode will change
 Buffer text, we should see a confirm message."
   (if (not parinfer--first-load)
