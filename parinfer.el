@@ -178,6 +178,7 @@ used in parinfer paren mode.")
 ;; -----------------------------------------------------------------------------
 
 (defun parinfer-invoke-scheme-get (prop)
+  "Get the property PROP of `parinfer-invoke-scheme'."
   (plist-get parinfer-invoke-scheme prop))
 
 (defun parinfer-invoke-scheme-add (prop value)
