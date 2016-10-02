@@ -378,10 +378,7 @@ Buffer text, we should see a confirm message."
 
 (defun parinfer--cursor-x ()
   "Get the cursor-x which is need by parinferlib computation."
-  (length
-   (buffer-substring-no-properties
-    (line-beginning-position)
-    (point))))
+  (abs (- (line-beginning-position) (point))))
 
 (defun parinfer--reindent-sexp ()
   "Call aggressive-indent."
@@ -392,9 +389,7 @@ Buffer text, we should see a confirm message."
   "Call Parinfer at POS immediately."
   (if (and pos (not (eq pos (point))))
       (let ((ln (line-number-at-pos))
-            (x (length
-                (buffer-substring-no-properties (line-beginning-position)
-                                                (point)))))
+            (x (parinfer--cursor-x)))
         (goto-char pos)
         (parinfer--invoke-parinfer-instantly)
         (parinfer--goto-line ln)
