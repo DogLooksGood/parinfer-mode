@@ -149,11 +149,7 @@ More information will come when it is stable.
       (key-seq-define parinfer-mode-map ".," 'parinfer-lispy-backward)))
 
   (use-package lispy
-    :ensure t
-    :bind
-    (:map lispy-mode-map
-          ;; Alternative keybinding.
-          ("<escape>" . parinfer-lispy-forward)))
+    :ensure t)
 
   (use-package parinfer
     :ensure t
