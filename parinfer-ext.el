@@ -158,7 +158,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   (define-key lispy-mode-map (kbd "]") 'self-insert-command)
   (define-key lispy-mode-map (kbd "{") 'parinfer-lispy:braces)
   (define-key lispy-mode-map (kbd "}") 'self-insert-command)
-  (define-key lispy-mode-map (kbd ";") 'parinfer-ext:semicolon)
+  (define-key lispy-mode-map (kbd ";") 'parinfer-semicolon)
   (define-key lispy-mode-map [remap lispy-kill] 'kill-line)
   (define-key lispy-mode-map [remap lispy-tick] 'self-insert-command)
   (define-key lispy-mode-map [remap lispy-tilde] 'self-insert-command)
