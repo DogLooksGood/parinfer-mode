@@ -181,12 +181,12 @@ used to match command.
   (let ((toggle (make-symbol "toggle")))
     `(let ((,toggle (eq parinfer--mode 'indent)))
        (parinfer-silent
-         (when ,toggle
-            (parinfer--switch-to-paren-mode)
-          ,@body
-          (when ,toggle
-            (parinfer--reindent-sexp)
-            (parinfer--indent-and-switch-to-indent-mode)))))))
+        (when ,toggle
+          (parinfer--switch-to-paren-mode))
+        ,@body
+        (when ,toggle
+          (parinfer--reindent-sexp)
+          (parinfer--indent-and-switch-to-indent-mode))))))
 
 (defmacro parinfer-run (&rest body)
   "Run BODY, then invode parinfer(depend on current parinfermode) immediately."
@@ -208,7 +208,6 @@ used to match command.
   (let ((m (make-symbol "mode")))
     `(let ((,m ,mode))
        ,@body
-       (run-hook-with-args 'parinfer-switch-mode-hook ,m)
        (when (bound-and-true-p company-mode)
          (add-hook 'company-completion-cancelled-hook
                    'parinfer--company-cancel t t)
@@ -288,6 +287,7 @@ invoke strategy."
    'indent
    (setq parinfer--mode 'indent)
    (setq parinfer--first-load nil)
+   (run-hook-with-args 'parinfer-switch-mode-hook 'indent)
    (message "Parinfer: Indent Mode")))
 
 (defun parinfer--switch-to-indent-mode ()
@@ -322,6 +322,7 @@ Buffer text, we should see a confirm message."
    (when parinfer--delay-timer
      (parinfer--clean-up))
    (setq parinfer--mode 'paren)
+   (run-hook-with-args 'parinfer-switch-mode-hook 'paren)
    (message "Parinfer: Paren Mode")))
 
 (defun parinfer--in-comment-or-string-p ()
@@ -829,8 +830,6 @@ Use this to browse and apply the changes."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "<tab>") 'parinfer-shift-right)
     (define-key map (kbd "S-<tab>") 'parinfer-shift-left)
-    (define-key map (kbd ">") 'parinfer-shift-right)
-    (define-key map (kbd "<") 'parinfer-shift-left)
     (define-key map (kbd "<backspace>") 'delete-region)
     (define-key map [remap parinfer-toggle-mode] 'parinfer-region-mode-switch-mode)
     map))
