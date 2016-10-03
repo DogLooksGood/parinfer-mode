@@ -64,7 +64,6 @@
 (require 'mode-local)
 (require 'aggressive-indent)
 (require 'ediff)
-(require 'parinfer-ext)
 
 ;; -----------------------------------------------------------------------------
 ;; Custom variables
