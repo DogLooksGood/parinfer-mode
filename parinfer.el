@@ -716,7 +716,7 @@ if there's any change, display a confirm message in minibuffer."
           nil)
       (if (and changed-lines
                (not (string= text (plist-get result :text))))
-          (if (y-or-n-p "Caution! Buffer will be modified if you swith to Indent mode, continue? ")
+          (if (y-or-n-p "Caution: YES = Indent-mode (Buffer will be modified); NO = Paren-mode, which one? ")
               (progn (cl-loop for l in changed-lines do
                               (parinfer--goto-line (1+ (plist-get l :line-no)))
                               (delete-region (line-beginning-position)
