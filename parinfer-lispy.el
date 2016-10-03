@@ -8,9 +8,13 @@
 
 (defun parinfer-lispy-space ()
   (interactive)
-  (call-interactively 'self-insert-command)
-  (when (parinfer--lispy-left-between-parens-p)
-    (backward-char)))
+  (if (or (eq (point) (line-beginning-position))
+          (eq (point) (line-end-position)))
+      (call-interactively 'self-insert-command)
+    (progn
+      (call-interactively 'self-insert-command)
+      (when (parinfer--lispy-left-between-parens-p)
+        (backward-char)))))
 
 (defun parinfer-lispy-forward ()
   (interactive)
@@ -30,15 +34,11 @@
       (eq c 123)))
 
 (defun parinfer--lispy-left-between-parens-p ()
-  (unless (or (eq (point) (line-beginning-position))
-              (eq (point) (line-end-position)))
-    (let ((ca (char-after))
-          (cb (char-before)))
-      (message "%s,%s" (parinfer--lispy-paren-char-p ca)
-               (parinfer--lispy-paren-char-p cb))
-      (and (not (parinfer--in-comment-or-string-p))
-           (parinfer--lispy-paren-char-p ca)
-           (parinfer--lispy-paren-char-p cb)))))
+  (let ((ca (char-after))
+        (cb (char-before (- (point) 1))))
+    (and (not (parinfer--in-comment-or-string-p))
+         (parinfer--lispy-paren-char-p ca)
+         (parinfer--lispy-paren-char-p cb))))
 
 (defun parinfer-lispy-parens ()
   (interactive)
