@@ -58,13 +58,13 @@
 ;; -----------------------------------------------------------------------------
 ;; Requires
 ;; -----------------------------------------------------------------------------
-(require 'parinferlib)
-(require 'parinfer-theme)
-(require 'dash)
-(require 'aggressive-indent)
-(require 'mode-local)
 (require 'cl-lib)
+(require 'dash)
+(require 'parinferlib)
+(require 'mode-local)
+(require 'aggressive-indent)
 (require 'ediff)
+(require 'parinfer-ext)
 
 ;; -----------------------------------------------------------------------------
 ;; Custom variables
@@ -78,6 +78,10 @@
 
 The car of it is used in parinfer indent mode, the cdr
 used in parinfer paren mode.")
+
+(defvar parinfer-extensions
+  '(dim-paren company rainbow-delimiters)
+ "Parinfer extensions, which will be enabled when run parinfer.")
 
 (defvar parinfer-mode-enable-hook nil
   "Call after parinfer mode is enabled.")
@@ -95,9 +99,6 @@ One argument for hook function, MODE present for the mode will be used.")
 
 It will show the cursor's scope on an empty line by inserting
 close-parens after it.")
-
-(defvar parinfer-indent-mode-dim-close-parens t
-  "Dimming close parens in Indent Mode.")
 
 (defvar parinfer-delay-invoke-threshold 6000
   "Threshold for 'parinfer-mode' delay processing.")
@@ -142,6 +143,9 @@ used to match command.
 
 (defconst parinfer--defun-regex "^[^ \n\t\";]"
   "Regex for finding the beginning of S-exp.")
+
+(defconst parinfer--extension-prefix "parinfer-ext::"
+  "The prefix of parinfer extensions.")
 
 (defvar parinfer--mode 'paren
   "Parinfer mode style, 'paren or 'indent.")
@@ -208,19 +212,35 @@ used to match command.
   (let ((m (make-symbol "mode")))
     `(let ((,m ,mode))
        ,@body
-       (when (bound-and-true-p company-mode)
-         (add-hook 'company-completion-cancelled-hook
-                   'parinfer--company-cancel t t)
-         (remove-hook 'company-completion-finished-hook
-                      'parinfer--company-finish t))
-       (when parinfer-indent-mode-dim-close-parens
-         (parinfer--set-rainbow-delimiters ,m)
-         (parinfer--set-dim-parens ,m))
+       (dolist (extension parinfer-extensions)
+         (parinfer-extension-funcall extension ,m))
        (force-mode-line-update))))
+
+(defmacro parinfer-define-extension (name docstr &rest body)
+  "Defines an extension for perinfer.
+
+An parinfer extension is just a function with an argument MODE,
+its name is NAME with prefix `parinfer--extension-prefix'.
+
+Extensions can add new features to parinfer, but when extension's
+dependents can't be met, parinfer will works well."
+  (declare (indent 2) (doc-string 2))
+  (let ((fun-name (intern (concat parinfer--extension-prefix
+                                  (symbol-name name)))))
+    `(defun ,fun-name (mode)
+       ,(or docstr "This parinfer extension is not documented.")
+       ,@body)))
 
 ;; -----------------------------------------------------------------------------
 ;; Helpers
 ;; -----------------------------------------------------------------------------
+
+(defun parinfer-extension-funcall (name mode)
+  "Call a function of extension, which name is NAME."
+  (let ((func (intern (concat parinfer--extension-prefix
+                              (symbol-name name)))))
+    (when (functionp func)
+      (funcall func mode))))
 
 (defun parinfer-strategy-parse (strategy-name)
   "Parse strategy, which is named STRATEGY-NAME in `parinfer-strategy'.
@@ -273,14 +293,6 @@ invoke strategy."
              (parinfer--strategy-match-p this-command 'default))
     (parinfer--setq-text-modified t)))
 
-(defun parinfer--set-rainbow-delimiters (mode)
-  "Set rainbow delimiters depend MODE."
-  (cl-case mode
-    (indent (when (bound-and-true-p rainbow-delimiters-mode)
-              (rainbow-delimiters-mode-disable)))
-    (paren (when (fboundp 'rainbow-delimiters-mode)
-             (rainbow-delimiters-mode-enable)))))
-
 (defun parinfer--switch-to-indent-mode-1 ()
   "Swith to indent mode auxiliary function."
   (parinfer--switch-to
@@ -306,14 +318,6 @@ Buffer text, we should see a confirm message."
   (interactive)
   (parinfer--switch-to-indent-mode-1)
   (parinfer--invoke-parinfer-when-necessary))
-
-(defun parinfer--company-cancel (&ignored)
-  "Invoke when company cancelled, ignore IGNORED."
-  (parinfer-indent))
-
-(defun parinfer--company-finish (&ignored)
-  "Invoke when company finished, ignore IGNORED. "
-  (parinfer--reindent-sexp))
 
 (defun parinfer--switch-to-paren-mode ()
   "Switch to paren mode."
