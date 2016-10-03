@@ -82,9 +82,6 @@ Use parinfer dim style for Indent Mode, and rainbow-delimiters for Paren Mode.
   ;; Install rainbow-delimiters.
   ;; Do not enable rainbow-delimiters directly, parinfer-mode will handle this.
   (use-package rainbow-delimiters)
-
-  ;; Dim parens for Indent Mode.
-  (setq parinfer-indent-mode-dim-close-parens t)  ;; this is enabled by default
 #+END_SRC
 
 * Performance & Delay processing.
