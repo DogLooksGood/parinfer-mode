@@ -113,7 +113,7 @@ close-parens after it.")
      evil-delete evil-change evil-change-line evil-paste-before evil-paste-after
      evil-delete-line evil-delete-char evil-delete-backward-char evil-substitute
      evil-change-whole-line evil-force-normal-state evil-normal-state
-     evil-shift-left evil-shift-right delete-region)
+     evil-shift-left evil-shift-right delete-region newline)
     (skip
      evil-previous-line evil-forward-char evil-backward-char evil-next-line
      evil-forward-word evil-forward-word-begin evil-backward-word-begin
