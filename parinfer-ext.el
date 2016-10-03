@@ -191,5 +191,24 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   :unmount
   (lispy-mode -1))
 
+;; -----------------------------------------------------------------------------
+;; Evil
+;; -----------------------------------------------------------------------------
+
+(parinfer-define-extension evil
+  "Integration with Evil."
+  :mount
+  (parinfer-strategy-add 'default
+    'ievil-delete-char)
+  (parinfer-strategy-add 'instantly
+    '(evil-delete evil-change evil-change-line evil-paste-before evil-paste-after
+      evil-delete-line evil-delete-char evil-delete-backward-char evil-substitute
+      evil-change-whole-line evil-force-normal-state evil-normal-state
+      evil-shift-left evil-shift-right))
+  (parinfer-strategy-add 'skip
+    '(evil-previous-line evil-forward-char evil-backward-char evil-next-line
+      evil-forward-word evil-forward-word-begin evil-backward-word-begin
+      evil-backward-end evil-scroll-page-down evil-scroll-up)))
+
 (provide 'parinfer-ext)
 ;;; parinfer-ext.el ends here

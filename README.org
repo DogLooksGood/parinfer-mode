@@ -20,8 +20,6 @@
 - [[https://github.com/Fuco1/smartparens][smartparens]]
 - [[https://github.com/Malabarba/aggressive-indent-mode][aggressive-indent-mode]]
 
-These plugins also do auto pairs, conflict with parinfer-mode.
-
 But you can still *install* & *require* these fancy plugins, and use the commands.
 * Installation
 Available on Melpa(and Melpa Stable) now, I recommand to install with [[https://github.com/jwiegley/use-package][use-package]] .
@@ -76,14 +74,74 @@ Some keybindings in Ediff:
 
 Normally, after indenting the whole buffer with ~C-x h~ ~C-M-\~, you can switch to Indent Mode safely.
 
-* Pretty parens.
-Use parinfer dim style for Indent Mode, and rainbow-delimiters for Paren Mode.
+* Extensions.
+Extensions used to make parinfer-mode work properly with other minor mode or additional features.
+
+Enable extensions by setting ~parinfer-extensions~. Default: (company pretty-parens)
+** Pretty Parens
 #+BEGIN_SRC emacs-lisp
   ;; Install rainbow-delimiters.
   ;; Do not enable rainbow-delimiters directly, parinfer-mode will handle this.
   (use-package rainbow-delimiters)
 #+END_SRC
 
+** Company
+Enable it when you use company for compatibility.
+
+** Evil
+Attempt to support use with evil directly, works fine for limited test. *WIP*.
+
+Enable parinfer evil extensions.
+#+BEGIN_SRC emacs-lisp
+  (setq parinfer-extensions '(company pretty-parens evil))
+#+END_SRC
+
+If it's not work as your expect, Please open a issue.
+
+[[file:images/evil_demo.gif]]
+
+** Lispy
+It is *WIP* for now. Do not use it in your production.
+Following command enable parinfer with lispy. 
+
+Parinfer + Lispy will be an awesome solution for structual editing.
+More information will come when it is stable.
+
+To use with lispy, install lispy and set ~parinfer-extensions~ to include ~lispy~.
+#+BEGIN_SRC emacs-lisp
+  ;; Instead of using [ and ] as lispy-forward and lispy-backward.
+  (use-package key-seq
+    :ensure t
+    :init
+    (progn
+      (key-chord-mode 1)
+      (key-seq-define parinfer-mode-map ",." 'parinfer-lispy-forward)
+      (key-seq-define parinfer-mode-map ".," 'parinfer-lispy-backward)))
+
+  (use-package lispy
+    :ensure t)
+
+  (use-package parinfer
+    :ensure t
+    :init
+    (progn
+      (setq parinfer-extensions '(pretty-parens company lispy))
+      (add-hook 'clojure-mode-hook #'parinfer-mode)
+      (add-hook 'emacs-lisp-mode-hook #'parinfer-mode)))
+#+END_SRC
+*** Trade Off
+#+BEGIN_EXAMPLE
+  (defun hello ()
+    |(print 123))
+
+  ;; After you press ( at the cursor`|`
+  ;; You have to insert a space before input the code.
+  ;; Because in this situation:
+  (defun hello ()
+    (|(print 123)))
+
+  ;; Lispy's single key command is available.
+#+END_EXAMPLE
 * Performance & Delay processing.
 Parinfer-mode will try idle delay processing on large sexp.
 
@@ -122,53 +180,6 @@ The indentation of code should not be changed by indent mode. When you meet this
 
 Currently Parinfer can not handle tab indentation, you can change all tab indentation to whitespace for current buffer with ~M-x parinfer-untabify-buffer~.
 
-** Use with Evil?
-Attempt to support use with evil directly, works fine for limited test. *WIP*.
-
-If it's not work as your expect, Please open a issue.
-
-[[file:images/evil_demo.gif]]
-
-** Use with Lispy?
-It is *WIP* for now. Do not use it in your production.
-Following command enable parinfer with lispy. 
-
-Parinfer + Lispy will be an awesome solution for structual editing.
-More information will come when it is stable.
-#+BEGIN_SRC emacs-lisp
-  ;; Instead of using [ and ] as lispy-forward and lispy-backward.
-  (use-package key-seq
-    :ensure t
-    :init
-    (progn
-      (key-chord-mode 1)
-      (key-seq-define parinfer-mode-map ",." 'parinfer-lispy-forward)
-      (key-seq-define parinfer-mode-map ".," 'parinfer-lispy-backward)))
-
-  (use-package lispy
-    :ensure t)
-
-  (use-package parinfer
-    :ensure t
-    :init
-    (progn
-      (setq parinfer-extensions '(pretty-parens company lispy))
-      (add-hook 'clojure-mode-hook #'parinfer-mode)
-      (add-hook 'emacs-lisp-mode-hook #'parinfer-mode)))
-#+END_SRC
-*** Trade Off
-#+BEGIN_EXAMPLE
-  (defun hello ()
-    |(print 123))
-
-  ;; After you press ( at the cursor`|`
-  ;; You have to insert a space before input the code.
-  ;; Because in this situation:
-  (defun hello ()
-    (|(print 123)))
-
-  ;; Lispy's single key command is available.
-#+END_EXAMPLE
 ** Use in REPL?
 Not yet, I simply use ~electric-pair-mode~ for auto pairs.
 #+BEGIN_SRC emacs-lisp

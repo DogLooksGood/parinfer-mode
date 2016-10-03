@@ -107,17 +107,12 @@ close-parens after it.")
 
 (defvar parinfer-strategy
   '((default
-     evil-delete-char self-insert-command delete-indentation kill-line
+     self-insert-command delete-indentation kill-line
      comment-dwim kill-word delete-char newline kill-region)
     (instantly
-     evil-delete evil-change evil-change-line evil-paste-before evil-paste-after
-     evil-delete-line evil-delete-char evil-delete-backward-char evil-substitute
-     evil-change-whole-line evil-force-normal-state evil-normal-state
-     evil-shift-left evil-shift-right delete-region newline)
-    (skip
-     evil-previous-line evil-forward-char evil-backward-char evil-next-line
-     evil-forward-word evil-forward-word-begin evil-backward-word-begin
-     evil-backward-end evil-scroll-page-down evil-scroll-up))
+     delete-region newline)
+    (skip))
+     
   "Parinfer invoke strategy.)
 
 This variable is an association list, user can use `parinfer-strategy-parse'
