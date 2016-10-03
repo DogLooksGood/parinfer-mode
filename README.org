@@ -155,8 +155,7 @@ More information will come when it is stable.
     :ensure t
     :init
     (progn
-      (require 'parinfer-lispy)
-      (parinfer-lispy-rocks)
+      (setq parinfer-extensions '(pretty-parens company lispy))
       (add-hook 'clojure-mode-hook #'parinfer-mode)
       (add-hook 'emacs-lisp-mode-hook #'parinfer-mode)))
 #+END_SRC

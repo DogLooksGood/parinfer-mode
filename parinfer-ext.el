@@ -29,13 +29,15 @@
 
 ;;; Code:
 
+(require 'parinfer)
+
 (defgroup parinfer-ext
   nil
   "Parinfer customize group."
   :group 'faces)
 
 ;; -----------------------------------------------------------------------------
-;; dim-paren
+;; Pretty Parens
 ;; -----------------------------------------------------------------------------
 
 (defface parinfer-dim-paren-face
@@ -47,22 +49,21 @@
    :group 'parinfer-ext)
 
 (parinfer-define-extension pretty-parens
-  "Pretty parens."
-  :toggle
-  (cl-case (parinfer-current-mode)
-    (paren
-     (progn
-       (font-lock-remove-keywords
-        nil '((")\\|}\\|]" . 'parinfer-dim-paren-face)))
-       (when (fboundp 'rainbow-delimiters-mode)
-         (rainbow-delimiters-mode-enable))))         
+  "Pretty parens.
 
-    (indent
-     (progn
-       (when (bound-and-true-p rainbow-delimiters-mode)
-         (rainbow-delimiters-mode-disable))
-       (font-lock-add-keywords
-        nil '((")\\|}\\|]" . 'parinfer-dim-paren-face))))))
+Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
+  :paren
+  (font-lock-remove-keywords
+   nil '((")\\|}\\|]" . 'parinfer-dim-paren-face)))
+  (when (fboundp 'rainbow-delimiters-mode)
+    (rainbow-delimiters-mode-enable))
+  (font-lock-flush)
+
+  :indent
+  (when (bound-and-true-p rainbow-delimiters-mode)
+    (rainbow-delimiters-mode-disable))
+  (font-lock-add-keywords
+   nil '((")\\|}\\|]" . 'parinfer-dim-paren-face)))  
   (font-lock-flush))
 
 ;; -----------------------------------------------------------------------------
@@ -78,22 +79,25 @@
   (parinfer--reindent-sexp))
 
 (parinfer-define-extension company
-  :toggle
-  (cl-case (parinfer-current-mode)
-    (indent (when (bound-and-true-p company-mode)
-              (add-hook 'company-completion-cancelled-hook
-                        'parinfer-company:cancel t t)
-              (remove-hook 'company-completion-finished-hook
-                           'parinfer-company:finish t)))
-    (paren (when (bound-and-true-p company-mode)
-             (add-hook 'company-completion-finished-hook
-                       'parinfer-company:finish t t)
-             (remove-hook 'company-completion-cancelled-hook
-                          'parinfer-company:cancel t)))))
+  "Compatibility fix for company-mode."
+  :indent
+  (when (bound-and-true-p company-mode)
+    (add-hook 'company-completion-cancelled-hook
+              'parinfer-company:cancel t t)
+    (remove-hook 'company-completion-finished-hook
+                 'parinfer-company:finish t))
+  :paren
+  (when (bound-and-true-p company-mode)
+    (add-hook 'company-completion-finished-hook
+              'parinfer-company:finish t t)
+    (remove-hook 'company-completion-cancelled-hook
+                 'parinfer-company:cancel t)))
 
 ;; -----------------------------------------------------------------------------
 ;; lispy
 ;; -----------------------------------------------------------------------------
+
+(defvar lispy-mode-map)
 
 (defun parinfer-lispy:space ()
   (interactive)
@@ -147,11 +151,6 @@
       (call-interactively 'lispy-braces)
     (call-interactively 'self-insert-command)))
 
-(defun parinfer-lispy:switch-mode-behaviour (mode)
-  (if (eq mode 'indent)
-      (lispy-mode 1)
-    (lispy-mode -1)))
-
 (defun parinfer-lispy:init ()
   (define-key lispy-mode-map (kbd "(") 'parinfer-lispy:parens)
   (define-key lispy-mode-map (kbd ")") 'self-insert-command)
@@ -174,11 +173,12 @@
 
 (parinfer-define-extension lispy
   "Integration with Lispy."
-  :toggle
 
-  (cl-case (parinfer-current-mode)
-    (paren (lispy-mode -1))
-    (indent (lispy-mode 1)))
+  :indent
+  (lispy-mode 1)
+
+  :paren
+  (lispy-mode -1)
 
   :mount
   (parinfer-strategy-add 'default
