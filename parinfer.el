@@ -872,5 +872,6 @@ Use this to browse and apply the changes."
     (forward-sexp)
     (ignore-errors (transpose-sexps 1))))
 
+(require 'parinfer-ext)
 (provide 'parinfer)
 ;;; parinfer.el ends here
