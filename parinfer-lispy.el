@@ -9,7 +9,7 @@
 (defun parinfer-lispy-space ()
   (interactive)
   (call-interactively 'self-insert-command)
-  (when (parinfer--lispy-left-p)
+  (when (parinfer--lispy-left-between-parens-p)
     (backward-char)))
 
 (defun parinfer-lispy-forward ()
@@ -23,13 +23,22 @@
   (when parinfer--delay-timer
     (parinfer--clean-up))
   (call-interactively 'lispy-backward))
-  
-(defun parinfer--lispy-left-p ()
-  (let ((c (char-after)))
-    (and (not (parinfer--in-comment-or-string-p))
-         (or (eq c 40)
-             (eq c 91)
-             (eq c 123)))))
+
+(defun parinfer--lispy-paren-char-p (c)
+  (or (eq c 40)
+      (eq c 91)
+      (eq c 123)))
+
+(defun parinfer--lispy-left-between-parens-p ()
+  (unless (or (eq (point) (line-beginning-position))
+              (eq (point) (line-end-position)))
+    (let ((ca (char-after))
+          (cb (char-before)))
+      (message "%s,%s" (parinfer--lispy-paren-char-p ca)
+               (parinfer--lispy-paren-char-p cb))
+      (and (not (parinfer--in-comment-or-string-p))
+           (parinfer--lispy-paren-char-p ca)
+           (parinfer--lispy-paren-char-p cb)))))
 
 (defun parinfer-lispy-parens ()
   (interactive)
@@ -88,7 +97,8 @@
   (add-hook 'lispy-mode-hook #'parinfer--lispy-init)
   (parinfer-strategy-add 'default '(parinfer-lispy-parens
                                     parinfer-lispy-braces
-                                    parinfer-lispy-brackets)))
+                                    parinfer-lispy-brackets
+                                    parinfer-lispy-space)))
 
 (provide 'parinfer-lispy)
 ;;; parinfer-lispy.el ends here
