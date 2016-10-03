@@ -199,7 +199,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   "Integration with Evil."
   :mount
   (parinfer-strategy-add 'default
-    'ievil-delete-char)
+    'evil-delete-char)
   (parinfer-strategy-add 'instantly
     '(evil-delete evil-change evil-change-line evil-paste-before evil-paste-after
       evil-delete-line evil-delete-char evil-delete-backward-char evil-substitute
