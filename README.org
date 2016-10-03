@@ -132,7 +132,52 @@ If it's not work as your expect, Please open a issue.
 
 [[file:images/evil_demo.gif]]
 
-** Use in Cider REPL?
+** Use with Lispy?
+It is *WIP* for now. Do not use it in your production.
+Following command enable parinfer with lispy. 
+
+Parinfer + Lispy will be an awesome solution for structual editing.
+More information will come when it is stable.
+#+BEGIN_SRC emacs-lisp
+  ;; Instead of using [ and ] as lispy-forward and lispy-backward.
+  (use-package key-seq
+    :ensure t
+    :init
+    (progn
+      (key-chord-mode 1)
+      (key-seq-define parinfer-mode-map ",." 'parinfer-lispy-forward)
+      (key-seq-define parinfer-mode-map ".," 'parinfer-lispy-backward)))
+
+  (use-package lispy
+    :ensure t
+    :bind
+    (:map lispy-mode-map
+          ;; Alternative keybinding.
+          ("<escape>" . parinfer-lispy-forward)))
+
+  (use-package parinfer
+    :ensure t
+    :init
+    (progn
+      (require 'parinfer-lispy)
+      (parinfer-lispy-rocks)
+      (add-hook 'clojure-mode-hook #'parinfer-mode)
+      (add-hook 'emacs-lisp-mode-hook #'parinfer-mode)))
+#+END_SRC
+*** Trade Off
+#+BEGIN_EXAMPLE
+  (defun hello ()
+    |(print 123))
+
+  ;; After you press ( at the cursor`|`
+  ;; You have to insert a space before input the code.
+  ;; Because in this situation:
+  (defun hello ()
+    (|(print 123)))
+
+  ;; Lispy's single key command is available.
+#+END_EXAMPLE
+** Use in REPL?
 Not yet, I simply use ~electric-pair-mode~ for auto pairs.
 #+BEGIN_SRC emacs-lisp
   (add-hook 'cider-repl-mode-hook #'electric-pair-mode)
