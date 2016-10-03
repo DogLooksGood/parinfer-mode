@@ -38,7 +38,7 @@
 ;; dim-paren
 ;; -----------------------------------------------------------------------------
 
-(defface parinfer-ext:dim-paren-face
+(defface parinfer-dim-paren-face
    '((((class color) (background dark))
       (:foreground "grey40"))
      (((class color) (background light))
@@ -46,111 +46,118 @@
    "Parinfer dim paren face."
    :group 'parinfer-ext)
 
-(parinfer-define-extension dim-paren
-  (cl-case mode
-    (paren (font-lock-remove-keywords
-            nil '((")\\|}\\|]" . 'parinfer-ext:dim-paren-face))))
-    (indent (font-lock-add-keywords
-             nil '((")\\|}\\|]" . 'parinfer-ext:dim-paren-face)))))
+(parinfer-define-extension pretty-parens
+  "Pretty parens."
+  :toggle
+  (cl-case (parinfer-current-mode)
+    (paren
+     (progn
+       (font-lock-remove-keywords
+        nil '((")\\|}\\|]" . 'parinfer-dim-paren-face)))
+       (when (fboundp 'rainbow-delimiters-mode)
+         (rainbow-delimiters-mode-enable))))         
+
+    (indent
+     (progn
+       (when (bound-and-true-p rainbow-delimiters-mode)
+         (rainbow-delimiters-mode-disable))
+       (font-lock-add-keywords
+        nil '((")\\|}\\|]" . 'parinfer-dim-paren-face))))))
   (font-lock-flush))
 
 ;; -----------------------------------------------------------------------------
 ;; company
 ;; -----------------------------------------------------------------------------
 
-(defun parinfer-ext:company-cancel (&ignored)
+(defun parinfer-company:cancel (&ignored)
   "Invoke when company cancelled, ignore IGNORED."
   (parinfer-indent))
 
-(defun parinfer-ext:company-finish (&ignored)
+(defun parinfer-company:finish (&ignored)
   "Invoke when company finished, ignore IGNORED. "
   (parinfer--reindent-sexp))
 
 (parinfer-define-extension company
-  (when (bound-and-true-p company-mode)
-    (add-hook 'company-completion-cancelled-hook
-              'parinfer-ext:company-cancel t t)
-    (remove-hook 'company-completion-finished-hook
-                 'parinfer-ext:company-finish t)))
-
-;; -----------------------------------------------------------------------------
-;; rainbow-delimiters
-;; -----------------------------------------------------------------------------
-
-(parinfer-define-extension rainbow-delimiters
-  (cl-case mode
-    (indent (when (bound-and-true-p rainbow-delimiters-mode)
-              (rainbow-delimiters-mode-disable)))
-    (paren (when (fboundp 'rainbow-delimiters-mode)
-             (rainbow-delimiters-mode-enable)))))
+  :toggle
+  (cl-case (parinfer-current-mode)
+    (indent (when (bound-and-true-p company-mode)
+              (add-hook 'company-completion-cancelled-hook
+                        'parinfer-company:cancel t t)
+              (remove-hook 'company-completion-finished-hook
+                           'parinfer-company:finish t)))
+    (paren (when (bound-and-true-p company-mode)
+             (add-hook 'company-completion-finished-hook
+                       'parinfer-company:finish t t)
+             (remove-hook 'company-completion-cancelled-hook
+                          'parinfer-company:cancel t)))))
 
 ;; -----------------------------------------------------------------------------
 ;; lispy
 ;; -----------------------------------------------------------------------------
 
-(defun parinfer-ext:lispy-space ()
+(defun parinfer-lispy:space ()
   (interactive)
   (if (or (eq (point) (line-beginning-position))
           (eq (point) (line-end-position)))
       (call-interactively 'self-insert-command)
     (progn
       (call-interactively 'self-insert-command)
-      (when (parinfer-ext:lispy-left-between-parens-p)
+      (when (parinfer-lispy:paren-left-and-between-parens-p)
         (backward-char)))))
 
-(defun parinfer-ext:lispy-forward ()
+(defun parinfer-lispy:forward ()
   (interactive)
   (when parinfer--delay-timer
     (parinfer--clean-up))
   (call-interactively 'lispy-forward))
 
-(defun parinfer-ext:lispy-backward ()
+(defun parinfer-lispy:backward ()
   (interactive)
   (when parinfer--delay-timer
     (parinfer--clean-up))
   (call-interactively 'lispy-backward))
 
-(defun parinfer-ext:lispy-paren-char-p (c)
+(defun parinfer-lispy:paren-char-p (c)
   (or (eq c 40)
       (eq c 91)
       (eq c 123)))
 
-(defun parinfer-ext:lispy-left-between-parens-p ()
+(defun parinfer-lispy:paren-left-and-between-parens-p ()
   (let ((ca (char-after))
         (cb (char-before (- (point) 1))))
     (and (not (parinfer--in-comment-or-string-p))
-         (parinfer-ext:lispy-paren-char-p ca)
-         (parinfer-ext:lispy-paren-char-p cb))))
+         (parinfer-lispy:paren-char-p ca)
+         (parinfer-lispy:paren-char-p cb))))
 
-(defun parinfer-ext:lispy-parens ()
+(defun parinfer-lispy:parens ()
   (interactive)
   (if (region-active-p)
       (call-interactively 'lispy-parens)
     (call-interactively 'self-insert-command)))
 
-(defun parinfer-ext:lispy-brackets ()
+(defun parinfer-lispy:brackets ()
   (interactive)
   (if (region-active-p)
       (call-interactively 'lispy-brackets)
     (call-interactively 'self-insert-command)))
 
-(defun parinfer-ext:lispy-braces ()
+(defun parinfer-lispy:braces ()
   (interactive)
   (if (region-active-p)
       (call-interactively 'lispy-braces)
     (call-interactively 'self-insert-command)))
 
-(defun parinfer-ext:lispy-switch-mode-behaviour (mode)
+(defun parinfer-lispy:switch-mode-behaviour (mode)
   (if (eq mode 'indent)
       (lispy-mode 1)
     (lispy-mode -1)))
 
-(defun parinfer-ext:lispy-init ()
-  (define-key lispy-mode-map (kbd "(") 'parinfer-ext:lispy-parens)
+(defun parinfer-lispy:init ()
+  (define-key lispy-mode-map (kbd "(") 'parinfer-lispy:parens)
   (define-key lispy-mode-map (kbd ")") 'self-insert-command)
-  (define-key lispy-mode-map (kbd "[") 'parinfer-ext:lispy-brackets)
+  (define-key lispy-mode-map (kbd "[") 'parinfer-lispy:brackets)
   (define-key lispy-mode-map (kbd "]") 'self-insert-command)
-  (define-key lispy-mode-map (kbd "{") 'parinfer-ext:lispy-braces)
+  (define-key lispy-mode-map (kbd "{") 'parinfer-lispy:braces)
   (define-key lispy-mode-map (kbd "}") 'self-insert-command)
   (define-key lispy-mode-map (kbd ";") 'parinfer-ext:semicolon)
   (define-key lispy-mode-map [remap lispy-kill] 'kill-line)
@@ -158,27 +165,31 @@
   (define-key lispy-mode-map [remap lispy-tilde] 'self-insert-command)
   (define-key lispy-mode-map [remap lispy-newline-and-indent-plain] 'newline)
   (define-key lispy-mode-map [remap lispy-quotes] 'self-insert-command)
-  (define-key lispy-mode-map [remap lispy-yank] 'parinfer-ext:yank)
+  (define-key lispy-mode-map [remap lispy-yank] 'parinfer-yank)
   (define-key lispy-mode-map [remap lispy-colon] 'self-insert-command)
   (define-key lispy-mode-map [remap lispy-hash] 'self-insert-command)
   (define-key lispy-mode-map [remap lispy-hat] 'self-insert-command)
-  (define-key lispy-mode-map [remap lispy-delete-backward] 'parinfer-ext:backward-delete-char)
-  (define-key lispy-mode-map [remap lispy-space] 'parinfer-ext:lispy-space))
-
-(defun parinfer-ext:disable-lispy-mode ()
-  (when (bound-and-true-p lispy-mode)
-    (lispy-mode -1)))
+  (define-key lispy-mode-map [remap lispy-delete-backward] 'parinfer-backward-delete-char)
+  (define-key lispy-mode-map [remap lispy-space] 'parinfer-lispy:space))
 
 (parinfer-define-extension lispy
-  (add-hook 'parinfer-mode-enable-hook #'parinfer-ext:disable-lispy-mode)
-  (add-hook 'parinfer-switch-mode-hook #'parinfer-ext:lispy-switch-mode-behaviour)
-  (add-hook 'lispy-mode-hook #'parinfer-ext:lispy-init)
-  (parinfer-strategy-add
-   'default
-   '(parinfer-ext:lispy-parens
-     parinfer-ext:lispy-braces
-     parinfer-ext:lispy-brackets
-     parinfer-ext:lispy-space)))
+  "Integration with Lispy."
+  :toggle
+
+  (cl-case (parinfer-current-mode)
+    (paren (lispy-mode -1))
+    (indent (lispy-mode 1)))
+
+  :mount
+  (parinfer-strategy-add 'default
+    '(parinfer-lispy:parens
+      parinfer-lispy:braces
+      parinfer-lispy:brackets
+      parinfer-lispy:space))    
+  (add-hook 'lispy-mode-hook #'parinfer-lispy:init)
+
+  :unmount
+  (lispy-mode -1))
 
 (provide 'parinfer-ext)
 ;;; parinfer-ext.el ends here

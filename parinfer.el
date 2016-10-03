@@ -79,7 +79,7 @@ The car of it is used in parinfer indent mode, the cdr
 used in parinfer paren mode.")
 
 (defvar parinfer-extensions
-  '(dim-paren company rainbow-delimiters)
+  '(company pretty-parens)
  "Parinfer extensions, which will be enabled when run parinfer.")
 
 (defvar parinfer-mode-enable-hook nil
@@ -143,7 +143,7 @@ used to match command.
 (defconst parinfer--defun-regex "^[^ \n\t\";]"
   "Regex for finding the beginning of S-exp.")
 
-(defconst parinfer--extension-prefix "parinfer-ext::"
+(defconst parinfer--extension-prefix "parinfer-"
   "The prefix of parinfer extensions.")
 
 (defvar parinfer--mode 'paren
@@ -208,41 +208,73 @@ used to match command.
 
 (defmacro parinfer--switch-to (mode &rest body)
   "Macro which used to switch indent/paren mode."
-  (let ((m (make-symbol "mode")))
-    `(let ((,m ,mode))
-       ,@body
-       (dolist (extension parinfer-extensions)
-         (parinfer-extension-funcall extension ,m))
-       (force-mode-line-update))))
+  (declare (indent 1))
+  `(progn
+    ,@body
+    (parinfer--extension-lifecycle :toggle)
+    (force-mode-line-update)))
 
-(defmacro parinfer-define-extension (name docstr &rest body)
-  "Defines an extension for perinfer.
-
-An parinfer extension is just a function with an argument MODE,
-its name is NAME with prefix `parinfer--extension-prefix'.
-
-Extensions can add new features to parinfer, but when extension's
-dependents can't be met, parinfer will works well."
-  (declare (indent 2) (doc-string 2))
-  (let ((fun-name (intern (concat parinfer--extension-prefix
-                                  (symbol-name name)))))
-    `(defun ,fun-name (mode)
-       ,(or docstr "This parinfer extension is not documented.")
-       ,@body)))
+(defmacro parinfer-define-extension (name doc-str &rest args)
+  "Define an extension for parinfer-mode."
+  (declare (indent 1) (doc-string 2))
+  (let* ((clauses (parinfer--extension-parse-args args))
+         (mount-body (plist-get clauses :mount))
+         (toggle-body (plist-get clauses :toggle))
+         (unmount-body (plist-get clauses :unmount))
+         (name-str (symbol-name name)))
+    `(progn
+       (when ,(-contains-p clauses :mount)
+         (defun ,(intern (concat parinfer--extension-prefix
+                                 name-str
+                                 ":mount"))
+             ()
+           (progn
+             ,@(plist-get clauses :mount))))
+       (when ,(-contains-p clauses :toggle)
+         (defun ,(intern (concat parinfer--extension-prefix
+                                 name-str
+                                 ":toggle"))
+             ()
+           (progn
+             ,@(plist-get clauses :toggle))))
+       (when ,(-contains-p clauses :unmount)
+         (defun ,(intern (concat parinfer--extension-prefix
+                                 name-str
+                                 ":unmount"))
+             ()
+           (progn
+             ,@(plist-get clauses :unmount)))))))
 
 ;; -----------------------------------------------------------------------------
 ;; Helpers
 ;; -----------------------------------------------------------------------------
 
-(defun parinfer-extension-funcall (name mode)
-  "Call a function of extension, which name is NAME."
+(defun parinfer--extension-parse-args (args)
+  (-map (lambda (x)
+          (if (keywordp (car x))
+              (car x)
+            x))
+        (-partition-by #'keywordp args)))
+
+(defun parinfer--extension-funcall (name lifecycle)
   (let ((func (intern (concat parinfer--extension-prefix
-                              (symbol-name name)))))
+                              (symbol-name name)
+                              (symbol-name lifecycle)))))
+    (when parinfer-debug
+      (message "Load extension: %s, available:%s" func
+               (functionp func)))
     (when (functionp func)
-      (funcall func mode))))
+      (funcall func))))
+
+(defun parinfer--extension-lifecycle (lifecycle)
+  (dolist (extension parinfer-extensions)
+    (parinfer--extension-funcall extension lifecycle)))
+
+(defun parinfer-current-mode ()
+  parinfer--mode)
 
 (defun parinfer-strategy-parse (strategy-name)
-  "Parse strategy, which is named STRATEGY-NAME in `parinfer-strategy'.
+  "Parse strategy, which is named STRATEGY-NAME in `parinfer-strategy'.)
 
 Its output is a plist, which context is *similar* the below:
 
@@ -263,6 +295,7 @@ COMMANDS can be:
 2. A commands list (symbol list)
 3. A regexp which is used to match commands
 4. A list of regexps which are used to match commands"
+  (declare (indent 1))
   (let* ((commands (if (listp commands)
                        commands
                      (list commands)))
@@ -294,12 +327,11 @@ invoke strategy."
 
 (defun parinfer--switch-to-indent-mode-1 ()
   "Swith to indent mode auxiliary function."
-  (parinfer--switch-to
-   'indent
-   (setq parinfer--mode 'indent)
-   (setq parinfer--first-load nil)
-   (run-hook-with-args 'parinfer-switch-mode-hook 'indent)
-   (message "Parinfer: Indent Mode")))
+  (parinfer--switch-to 'indent
+    (setq parinfer--mode 'indent)
+    (setq parinfer--first-load nil)
+    (run-hook-with-args 'parinfer-switch-mode-hook 'indent)
+    (message "Parinfer: Indent Mode")))
 
 (defun parinfer--switch-to-indent-mode ()
   "Switch to Indent Mode, this will apply indent fix on whole buffer.)
@@ -320,13 +352,12 @@ Buffer text, we should see a confirm message."
 
 (defun parinfer--switch-to-paren-mode ()
   "Switch to paren mode."
-  (parinfer--switch-to
-   'paren
-   (when parinfer--delay-timer
-     (parinfer--clean-up))
-   (setq parinfer--mode 'paren)
-   (run-hook-with-args 'parinfer-switch-mode-hook 'paren)
-   (message "Parinfer: Paren Mode")))
+  (parinfer--switch-to 'paren
+    (when parinfer--delay-timer
+      (parinfer--clean-up))
+    (setq parinfer--mode 'paren)
+    (run-hook-with-args 'parinfer-switch-mode-hook 'paren)
+    (message "Parinfer: Paren Mode")))
 
 (defun parinfer--in-comment-or-string-p ()
   "Return if we are in comment or string."
@@ -516,11 +547,13 @@ POS is the position we want to call parinfer."
   ;; Always use whitespace for indentation.
   (setq-mode-local parinfer-mode indent-tabs-mode nil)
   (setq parinfer--last-line-number (line-number-at-pos (point)))
+  (parinfer--switch-to-paren-mode)
   (run-hooks 'parinfer-mode-enable-hook)
   (add-hook 'post-command-hook 'parinfer--invoke-parinfer-when-necessary t t)
   (add-hook 'post-command-hook 'parinfer--set-text-modified t t)
   (add-hook 'activate-mark-hook 'parinfer--regin-mode-enable t t)
   (add-hook 'deactivate-mark-hook 'parinfer--region-mode-disable t t)
+  (parinfer--extension-lifecycle :mount)
   (parinfer--switch-to-indent-mode))
 
 (defun parinfer-mode-disable ()
@@ -530,6 +563,7 @@ POS is the position we want to call parinfer."
   (remove-hook 'post-command-hook 'parinfer--set-text-modified t)
   (remove-hook 'deactivate-mark-hook 'parinfer--region-mode-disable t)
   (remove-hook 'post-command-hook 'parinfer--invoke-parinfer-when-necessary t)
+  (parinfer--extension-lifecycle :unmount)
   (parinfer--region-mode-disable))
 
 (defun parinfer--regin-mode-enable ()
