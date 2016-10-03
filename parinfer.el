@@ -129,7 +129,7 @@ used to match command.
  --------------   -------------------------------------------
  default          Invoke parinfer (delay on large sexp)
  instantly        Invoke parinfer instantly
- disable          Do not invoke parinfer")
+ skip             Do not invoke parinfer")
 
 ;; -----------------------------------------------------------------------------
 ;; Internal variable and constants
@@ -277,7 +277,7 @@ CLAUSES are the codes for lifecycle.
   parinfer--mode)
 
 (defun parinfer-strategy-parse (strategy-name)
-  "Parse strategy, which is named STRATEGY-NAME in `parinfer-strategy'.)
+  "Parse strategy, which is named STRATEGY-NAME in `parinfer-strategy'.
 
 Its output is a plist, which context is *similar* the below:
 
@@ -335,7 +335,7 @@ COMMANDS can be:
     (message "Parinfer: Indent Mode")))
 
 (defun parinfer--switch-to-indent-mode ()
-  "Switch to Indent Mode, this will apply indent fix on whole buffer.)
+  "Switch to Indent Mode, this will apply indent fix on whole buffer.
 If this is the first switching for current buffer and indent mode will change
 Buffer text, we should see a confirm message."
   (if (not parinfer--first-load)
@@ -448,7 +448,7 @@ Buffer text, we should see a confirm message."
        (t "nothing")))))
 
 (defun parinfer--invoke-parinfer (&optional pos)
-  "Supposed to be called after each content change.)
+  "Supposed to be called after each content change.
 POS is the position we want to call parinfer."
   (if (and pos (not (eq pos (point))))
       (let ((current-pos (point)))
