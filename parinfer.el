@@ -375,43 +375,52 @@ Buffer text, we should see a confirm message."
   (forward-line (1- n))
   (beginning-of-line))
 
-(defun parinfer--goto-next-defun ()
-  "Goto next defun, skip comment or string."
-  (interactive)
-  (let ((pt (point)))
-    (when (not (eq (point-max) pt))
-      (if (search-forward-regexp parinfer--defun-regex nil t)
-          (if (= (1+ pt) (point))
-              (parinfer--goto-next-defun)
-            (let ((last-pos (point)))
-              (while (and last-pos
-                          (parinfer--in-comment-or-string-p)
-                          (not (eq (point-max) (point))))
 
-                (search-forward-regexp parinfer--defun-regex nil t)
-                (if (eq (point) last-pos)
-                    (setq last-pos nil)
-                  (setq last-pos (point)))))
-            (backward-char))
-        (goto-char (point-max))))))
 
-(defun parinfer--goto-previous-defun-1 ()
-  "Goto previous defun auxiliary function."
-  (search-backward-regexp parinfer--defun-regex nil t)
-  (let ((last-pos (point)))
-    (while (and last-pos
-                (parinfer--in-comment-or-string-p)
-                (not (eq (point-min) (point))))
-      (search-backward-regexp parinfer--defun-regex nil t)
-      (if (eq (point) last-pos)
-          (setq last-pos nil)
-        (setq last-pos (point))))))
+(defun parinfer--empty-line-p ()
+  (or (eq (line-beginning-position) (line-end-position))
+      (string-match-p
+       "^[[:blank:]]+$"
+       (buffer-substring-no-properties (line-beginning-position)
+                                       (line-end-position)))))
 
-(defun parinfer--goto-previous-defun ()
-  "Goto previous defun, skip comment or string."
-  (interactive)
-  (parinfer--goto-previous-defun-1)
-  (parinfer--goto-previous-defun-1))
+(defun parinfer--goto-current-toplevel ()
+  "Goto the beginning of current toplevel sexp."
+  (back-to-indentation)
+  (while (and (not (eq (point) (point-min)))
+              (or (parinfer--in-comment-or-string-p)
+                  (parinfer--empty-line-p)
+                  (not (eq (point) (line-beginning-position)))))
+    (forward-line -1)
+    (back-to-indentation)))
+
+(defun parinfer--goto-next-toplevel ()
+  "Goto the beggining of next toplevel sexp."
+  (if (eq (line-end-position) (point-max))
+      (end-of-line)
+    (progn
+      (forward-line 1)
+      (let ((found nil))
+        (while (not found)
+          (if (eq (line-end-position) (point-max))
+              (progn
+                (end-of-line)
+                (setq found t))
+            (progn
+              (back-to-indentation)
+              (if (and (not (or (parinfer--in-comment-or-string-p)
+                                (parinfer--empty-line-p)))
+                       (eq (point) (line-beginning-position)))
+                  (progn
+                    (beginning-of-line)
+                    (setq found t))
+                (forward-line 1)))))))))
+
+(defun parinfer--goto-previous-toplevel ()
+  "Goto the beggining of previous toplevel sexp."
+  (parinfer--goto-current-toplevel)
+  (forward-line -1)
+  (parinfer--goto-current-toplevel))
 
 (defun parinfer--lighter ()
   "Return the lighter for specify mode."
@@ -590,8 +599,8 @@ This will finish delay processing immediately."
 (defun parinfer--prepare ()
   "Prepare input arguments for parinferlib."
   (let* ((window-start-pos (window-start))
-         (start (save-excursion (parinfer--goto-previous-defun) (point)))
-         (end (save-excursion (parinfer--goto-next-defun) (point)))
+         (start (save-excursion (parinfer--goto-previous-toplevel) (point)))
+         (end (save-excursion (parinfer--goto-next-toplevel) (point)))
          (text (buffer-substring-no-properties start end))
          (line-number (line-number-at-pos))
          (cursor-line (- line-number (line-number-at-pos start)))
@@ -603,6 +612,8 @@ This will finish delay processing immediately."
                      :end end
                      :window-start-pos window-start-pos
                      :line-number line-number)))
+    (when parinfer-debug
+      (message "text:%s" text))
     (list :text text :opts opts :orig orig)))
 
 (defun parinfer--apply-result (result context)
