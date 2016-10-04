@@ -12,8 +12,8 @@
 [[http://shaunlebron.github.io/parinfer][Take a look at this]]
 
 * Compatibility
-For ~evil~, see [[Evil]].
-For ~Lispy~, see [[Lispy]].
+For ~evil~, see [[https://github.com/DogLooksGood/parinfer-mode#evil][Evil]].
+For ~Lispy~, see [[https://github.com/DogLooksGood/parinfer-mode#lispy][Lispy]].
 Works fine with [[https://github.com/Fuco1/smartparens][smartparens]], and other auto pair minor mode.
 
 * Installation
@@ -102,7 +102,7 @@ Yank depend on current mode(Indent or Paren).
 #+END_SRC
 
 #+NAME: evil
-** <<Evil>>
+** Evil
 Attempt to support use with evil directly, works fine for limited test. *WIP*.
 
 Enable parinfer evil extensions.
