@@ -135,9 +135,6 @@ used to match command.
 ;; Internal variable and constants
 ;; -----------------------------------------------------------------------------
 
-(defconst parinfer--defun-regex "^[^ \n\t\";]"
-  "Regex for finding the beginning of S-exp.")
-
 (defconst parinfer--extension-prefix "parinfer-ext::"
   "The prefix of parinfer extensions.")
 
