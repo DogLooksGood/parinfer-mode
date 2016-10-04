@@ -1,6 +1,19 @@
 #+TITLE: CHANGELOG
 #+AUTHOR: DogLooksGood
 
+* v0.3.2
+- bugfix.
+- ~smart-tab~ extension.
+
+* v0.3.1
+- bugfix.
+- ~smart-yank~ extension.
+
+* v0.3.0
+- bugfix.
+- Refactor code.
+- Extension module.
+
 * v0.2.0
 - Add ~parinfer-skip-command-list~, ~parinfer-skip-command-prefix-list~, ~parinfer-instantly-invoke-command-list~, ~parinfer-instantly-invoke-command-prefix-list~.
 - Compatibility with Evil. 
