@@ -254,6 +254,18 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
    "Parinfer Smart TAB indicator."
    :group 'parinfer-ext)
 
+(defun parinfer-smart-tab:clean-indicator-pre ()
+  (interactive)
+  (when (and parinfer-smart-tab:indicator-line
+             (symbolp this-command)
+             (not (eq this-command 'parinfer-smart-tab:forward-char))
+             (not (eq this-command 'parinfer-smart-tab:backward-char)))
+    (save-excursion
+      (parinfer--goto-line parinfer-smart-tab:indicator-line)
+      (remove-text-properties
+       (line-beginning-position)
+       (line-end-position)
+       '(font-lock-face 'parinfer-smart-tab:indicator-face)))))
 
 (defun parinfer-smart-tab:clean-indicator ()
   (interactive)
@@ -262,20 +274,12 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
              (not (eq this-command 'parinfer-smart-tab:forward-char))
              (not (eq this-command 'parinfer-smart-tab:backward-char)))
     (if (eq (line-number-at-pos) parinfer-smart-tab:indicator-line)
-        (progn
-          (remove-text-properties
-           (line-beginning-position)
-           (line-end-position)
-           '(font-lock-face 'parinfer-smart-tab:indicator-face))
+        (progn 
           (delete-region (point) (line-end-position)))
       (save-excursion
         (parinfer--goto-line parinfer-smart-tab:indicator-line)
         (when (parinfer--empty-line-p)
-          (delete-region (line-beginning-position) (line-end-position)))
-        (remove-text-properties
-         (line-beginning-position)
-         (line-end-position)
-         '(font-lock-face parinfer-smart-tab:indicator-face))))
+          (delete-region (line-beginning-position) (line-end-position)))))
     (setq parinfer-smart-tab:indicator-line nil)))
 
 (defun parinfer-smart-tab:at-close-paren-p ()
@@ -299,16 +303,18 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
       (unless (or (parinfer--in-comment-or-string-p)
                   (parinfer--empty-line-p))
         (end-of-line)
-        (backward-char)
-        (while (eq (char-after) 32)
-          (backward-char))
         (let ((pos-list '(0)))
+          (newline-and-indent)
+          (message "%s" (- (point) (line-beginning-position)))
+          (add-to-list 'pos-list (- (point) (line-beginning-position)))
+          (delete-indentation)
+          (backward-char)
           (while (parinfer-smart-tab:at-close-paren-p)
             (newline-and-indent)
             (add-to-list 'pos-list (- (point) (line-beginning-position)))
             (delete-indentation)
             (backward-char))
-          pos-list)))))
+          (-distinct pos-list))))))
 
 (defun parinfer-smart-tab:mark-positions (pos-list)
   (unless (parinfer-smart-tab:should-ignore-positions pos-list)
@@ -368,12 +374,14 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   "Smart forward-char & backward-char."
   :mount
   (add-hook 'post-command-hook 'parinfer-smart-tab:clean-indicator t t)
+  (add-hook 'pre-command-hook 'parinfer-smart-tab:clean-indicator-pre t t)
   (define-key parinfer-mode-map [remap forward-char] 'parinfer-smart-tab:forward-char)
   (define-key parinfer-mode-map [remap backward-char] 'parinfer-smart-tab:backward-char)
 
   :unmount
-  (remove-hook 'post-command-hook 'parinfer-smart-tab:clean-indicator t))
-
+  (remove-hook 'post-command-hook 'parinfer-smart-tab:clean-indicator t)
+  (remove-hook 'pre-command-hook 'parinfer-smart-tab:clean-indicator-pre t))
+  
 (provide 'parinfer-ext)
 ;;; parinfer-ext.el ends here
 
