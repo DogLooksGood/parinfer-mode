@@ -126,6 +126,11 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
       (eq c 91)
       (eq c 123)))
 
+(defun parinfer-lispy:newline ()
+  (interactive)
+  (parinfer-do
+    (call-interactively 'newline-and-indent)))
+
 (defun parinfer-lispy:paren-left-and-between-parens-p ()
   (let ((ca (char-after))
         (cb (char-before (- (point) 1))))
@@ -162,7 +167,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   (define-key lispy-mode-map [remap lispy-kill] 'kill-line)
   (define-key lispy-mode-map [remap lispy-tick] 'self-insert-command)
   (define-key lispy-mode-map [remap lispy-tilde] 'self-insert-command)
-  (define-key lispy-mode-map [remap lispy-newline-and-indent-plain] 'newline)
+  (define-key lispy-mode-map [remap lispy-newline-and-indent-plain] 'parinfer-lispy:newline)
   (define-key lispy-mode-map [remap lispy-quotes] 'self-insert-command)
   (define-key lispy-mode-map [remap lispy-yank] 'parinfer-yank)
   (define-key lispy-mode-map [remap lispy-colon] 'self-insert-command)
@@ -188,6 +193,8 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
       parinfer-lispy:braces
       parinfer-lispy:brackets
       parinfer-lispy:space))
+  (parinfer-strategy-add 'instantly
+    '(newline))
   (add-hook 'lispy-mode-hook #'parinfer-lispy:init)
 
   :unmount
@@ -341,6 +348,8 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   (when (and (not (parinfer--in-comment-or-string-p))
              (parinfer--empty-line-p)
              (not parinfer-smart-tab:indicator-line))
+    (when parinfer--delay-timer
+      (parinfer--clean-up))
     (let ((pos-list (parinfer-smart-tab:find-possible-positions)))
       (parinfer-smart-tab:mark-positions pos-list)))
   (if (and parinfer-smart-tab:indicator-line
@@ -360,6 +369,8 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   (when (and (not (parinfer--in-comment-or-string-p))
              (parinfer--empty-line-p)
              (not parinfer-smart-tab:indicator-line))
+    (when parinfer--delay-timer
+      (parinfer--clean-up))
     (let ((pos-list (parinfer-smart-tab:find-possible-positions)))
       (parinfer-smart-tab:mark-positions pos-list)))
   (if (and parinfer-smart-tab:indicator-line

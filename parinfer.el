@@ -184,8 +184,19 @@ used to match command.
           (parinfer--indent-and-switch-to-indent-mode))))))
 
 (defmacro parinfer-run (&rest body)
-  "Run BODY, then invode parinfer(depend on current parinfermode) immediately."
+  "DEPRECATED.
+
+Run BODY, then invode parinfer(depend on current parinfermode) immediately."
   `(progn
+     ,@body
+     (parinfer--setq-text-modified t)
+     (parinfer--invoke-parinfer)))
+
+(defmacro parinfer-do (&rest body)
+  "Run BODY, then invoke parinfer."
+  `(progn
+     (when parinfer--delay-timer
+       (parinfer--clean-up))
      ,@body
      (parinfer--setq-text-modified t)
      (parinfer--invoke-parinfer)))
@@ -555,13 +566,21 @@ This will finish delay processing immediately."
         (push-mark mark t t)
         (setq deactivate-mark nil)))))
 
+(defun parinfer--disable-aggressive-indent-mode ()
+  (when (bound-and-true-p aggressive-indent-mode)
+    (message "parinfer-mode disabled aggressive-indent-mode for compatibility reason.")
+    (aggressive-indent-mode -1)))
+
 (defun parinfer-mode-enable ()
   "Enable 'parinfer-mode'."
+  (parinfer--disable-aggressive-indent-mode)
   ;; Always use whitespace for indentation.
   (setq-mode-local parinfer-mode indent-tabs-mode nil)
   (require 'parinfer-ext)
   (setq parinfer--last-line-number (line-number-at-pos (point)))
   (run-hooks 'parinfer-mode-enable-hook)
+  (add-hook 'aggressive-indent-mode-hook
+            'parinfer--disable-aggressive-indent-mode t t)
   (add-hook 'post-command-hook 'parinfer--invoke-parinfer-when-necessary t t)
   (add-hook 'post-command-hook 'parinfer--set-text-modified t t)
   (add-hook 'activate-mark-hook 'parinfer--regin-mode-enable t t)
@@ -572,6 +591,7 @@ This will finish delay processing immediately."
 (defun parinfer-mode-disable ()
   "Disable 'parinfer-mode'."
   (run-hooks 'parinfer-mode-disable-hook)
+  (remove-hook 'aggressive-indent-mode-hook 'parinfer--disable-aggressive-indent-mode t)
   (remove-hook 'activate-mark-hook 'parinfer--regin-mode-enable t)
   (remove-hook 'post-command-hook 'parinfer--set-text-modified t)
   (remove-hook 'deactivate-mark-hook 'parinfer--region-mode-disable t)
