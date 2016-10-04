@@ -218,6 +218,8 @@ Usage:
   CLAUSES)
 
 CLAUSES are the codes for lifecycle.
+:check    called before other type lifecycel, if it return t,
+          the other lifecycle can run.
 :mount    called when 'parinfer-mode' enabled.
 :unmount  called when 'parinfer-mode' disabled.
 :paren    called when 'parinfer-mode' switch to Paren Mode.
@@ -238,6 +240,16 @@ CLAUSES are the codes for lifecycle.
        clause))
     `(progn ,@clause)))
 
+(defmacro parinfer-check (message &rest body)
+  "Message MESSAGE and return nil if the return value of BODB's last expession is nil."
+  (declare (indent 1))
+  (let ((msg (make-symbol "message")))
+    `(let ((,msg ,message))
+       (if (progn ,@body)
+           t
+         (when parinfer-debug
+           (message (format "parinfer: %s" ,message)))
+         nil))))
 
 ;; -----------------------------------------------------------------------------
 ;; Helpers
@@ -255,14 +267,18 @@ CLAUSES are the codes for lifecycle.
 
 (defun parinfer--extension-funcall (extension lifecycle)
   "For specified EXTENSION, call its LIFECYCLE function."
-  (let ((func (intern (concat parinfer--extension-prefix
-                              (symbol-name extension)
-                              (symbol-name lifecycle)))))
+  (let* ((prefix (concat parinfer--extension-prefix
+                         (symbol-name extension)))
+         (func (intern (concat prefix (symbol-name lifecycle))))
+         (check-func (intern (concat prefix ":check"))))
     (when parinfer-debug
       (message "Load extension: %s, available:%s" func
                (functionp func)))
     (when (functionp func)
-      (funcall func))))
+      (if (functionp check-func)
+          (when (funcall check-func)
+            (funcall func))
+        (funcall func)))))
 
 (defun parinfer--extension-lifecycle (lifecycle)
   "Execute LIFECYCLE function for `parinfer-extensions'."

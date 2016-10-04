@@ -52,11 +52,13 @@
   "Pretty parens.
 
 Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
+  :check
+  (parinfer-check "'rainbow-delimiters' package is not installed."
+    (fboundp 'rainbow-delimiters-mode))
   :paren
   (font-lock-remove-keywords
    nil '((")\\|}\\|]" . 'parinfer-dim-paren-face)))
-  (when (fboundp 'rainbow-delimiters-mode)
-    (rainbow-delimiters-mode-enable))
+  (rainbow-delimiters-mode-enable)
   (font-lock-flush)
 
   :indent
@@ -80,18 +82,20 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
 
 (parinfer-define-extension company
   "Compatibility fix for company-mode."
+  :check
+  (parinfer-check "'company' package is not installed."
+    (bound-and-true-p company-mode))
+
   :indent
-  (when (bound-and-true-p company-mode)
-    (add-hook 'company-completion-cancelled-hook
-              'parinfer-company:cancel t t)
-    (remove-hook 'company-completion-finished-hook
-                 'parinfer-company:finish t))
+  (add-hook 'company-completion-cancelled-hook
+            'parinfer-company:cancel t t)
+  (remove-hook 'company-completion-finished-hook
+               'parinfer-company:finish t)
   :paren
-  (when (bound-and-true-p company-mode)
-    (add-hook 'company-completion-finished-hook
-              'parinfer-company:finish t t)
-    (remove-hook 'company-completion-cancelled-hook
-                 'parinfer-company:cancel t)))
+  (add-hook 'company-completion-finished-hook
+            'parinfer-company:finish t t)
+  (remove-hook 'company-completion-cancelled-hook
+               'parinfer-company:cancel t))
 
 ;; -----------------------------------------------------------------------------
 ;; lispy
@@ -173,6 +177,9 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
 
 (parinfer-define-extension lispy
   "Integration with Lispy."
+  :check
+  (parinfer-check "'lispy' package is not installed."
+    (fboundp 'lispy-mode))
 
   :indent
   (lispy-mode 1)
