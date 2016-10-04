@@ -12,15 +12,10 @@
 [[http://shaunlebron.github.io/parinfer][Take a look at this]]
 
 * Compatibility
-*NOTIC*:A list of modes thoses should *NOT* be enabled with parinfer-mode at the same time.
-- paredit
-- electric-pair-mode
-- Auto Pairs
-- [[https://github.com/abo-abo/lispy][lispy]]
-- [[https://github.com/Fuco1/smartparens][smartparens]]
-- [[https://github.com/Malabarba/aggressive-indent-mode][aggressive-indent-mode]]
+For ~evil~, see [[Evil]].
+For ~Lispy~, see [[Lispy]].
+Works fine with [[https://github.com/Fuco1/smartparens][smartparens]], and other auto pair minor mode.
 
-But you can still *install* & *require* these fancy plugins, and use the commands.
 * Installation
 Available on Melpa(and Melpa Stable) now, I recommand to install with [[https://github.com/jwiegley/use-package][use-package]] .
 #+BEGIN_SRC emacs-lisp
@@ -106,7 +101,8 @@ Yank depend on current mode(Indent or Paren).
   (setq parinfer-extensions '(company pretty-parens smart-yank))
 #+END_SRC
 
-** Evil
+#+NAME: evil
+** <<Evil>>
 Attempt to support use with evil directly, works fine for limited test. *WIP*.
 
 Enable parinfer evil extensions.
@@ -118,6 +114,7 @@ If it's not work as your expect, Please open a issue.
 
 [[file:images/evil_demo.gif]]
 
+#+NAME: extensions>lispy
 ** Lispy
 It is *WIP* for now. Do not use it in your production.
 Following command enable parinfer with lispy. 
