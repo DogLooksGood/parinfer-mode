@@ -88,6 +88,13 @@ Enable extensions by setting ~parinfer-extensions~. Default: (company pretty-par
 ** Company
 Enable it when you use company for compatibility.
 
+** Smart Yank
+[[file:images/smart_yank_demo.gif]]
+Yank depend on current mode(Indent or Paren).
+#+BEGIN_SRC emacs-lisp
+  (setq parinfer-extensions '(company pretty-parens smart-yank))
+#+END_SRC
+
 ** Evil
 Attempt to support use with evil directly, works fine for limited test. *WIP*.
 

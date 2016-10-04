@@ -210,5 +210,32 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
       evil-forward-word evil-forward-word-begin evil-backward-word-begin
       evil-backward-end evil-scroll-page-down evil-scroll-up)))
 
+;; -----------------------------------------------------------------------------
+;; Smart yank
+;; -----------------------------------------------------------------------------
+
+(defun parinfer-smart-yank:paren-yank ()
+  (interactive)
+  (let ((yank-str nil))
+    (with-temp-buffer
+      (yank)
+      (parinfer-indent-buffer)
+      (setq yank-str (buffer-substring-no-properties (point-min) (point-max))))
+    (parinfer-paren-run
+     (insert yank-str)
+     (parinfer--reindent-sexp))))
+
+(defun parinfer-smart-yank:yank ()
+  "Yank behaviour depend on current mode(Indent/Paren)."
+  (interactive)
+  (cl-case (parinfer-current-mode)
+    (indent (call-interactively 'parinfer-yank))
+    (paren (call-interactively 'parinfer-smart-yank:paren-yank))))
+
+(parinfer-define-extension smart-yank
+  "Yank depend on current mode."
+  :mount
+  (define-key parinfer-mode-map [remap yank] 'parinfer-smart-yank:yank))
+
 (provide 'parinfer-ext)
 ;;; parinfer-ext.el ends here
