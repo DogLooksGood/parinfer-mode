@@ -95,6 +95,9 @@ Since users' ~TAB~ are highly customized.
 This feature replace the command ~forward-char~ and ~backward-char~.
 
 Default keybindings are ~C-f~ and ~C-b~.
+#+BEGIN_SRC emacs-lisp
+  (setq parinfer-extensions '(company pretty-parens smart-tab))
+#+END_SRC
 
 ** Smart Yank
 [[file:images/smart_yank_demo.gif]]
