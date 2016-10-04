@@ -22,23 +22,8 @@ Available on Melpa(and Melpa Stable) now, I recommand to install with [[https://
   (use-package parinfer
     :ensure t
     :bind
-    (("C-," . parinfer-toggle-mode)
-     ;; You can use other structual edit plugin with parinfer.
-     ;; This is an example for Paredit.
-     ;; To avoid the conflicts, just bind commands those you want. 
-     ;; do NOT enable paredit-mode.
-     ("M-r" . paredit-raise-sexp)
-     ("M-S" . paredit-split-sexp)
-     ("M-J" . paredit-join-sexp)
-     ("C-)" . paredit-forward-slurp-sexp)
-     ("C-(" . paredit-backward-slurp-sexp)
-     ("C-\}" . paredit-forward-barf-sexp)
-     ("C-{" . paredit-backward-barf-sexp)
-     ;; Other command you may want.
-     ("M-j" . parinfer-transpose-sexps)
-     ("M-k" . parinfer-reverse-transpose-sexps))
+    (("C-," . parinfer-toggle-mode))
     :init
-    ;; Enable Parinfer for Emacs Lisp and Clojure.
     (progn
       (add-hook 'clojure-mode-hook #'parinfer-mode)
       (add-hook 'emacs-lisp-mode-hook #'parinfer-mode)))
@@ -47,14 +32,10 @@ Available on Melpa(and Melpa Stable) now, I recommand to install with [[https://
 * Toggle Indent and Paren mode.
 Use ~parinfer-toggle-mode~.
 
-I recommand to add a keybinding for ~parinfer-toggle-mode~, since it will be used frequently.
-#+BEGIN_SRC emacs-lisp
-  (define-key parinfer-mode-map (kbd "C-,") 'parinfer-toggle-mode)
-#+END_SRC
 When the first time, you switch to Indent Mode, if your code will be modified by parinfer,
 You will see a confirm message in minibuffer. Type ~y~ for continue, ~n~ to stay in paren mode.
 
-Use ~parinfer-diff~ to see how parinfer will change the buffer with Ediff.
+Use ~parinfer-diff~ to see how parinfer will change the buffer with Ediff and apply changes manually.
 
 [[file:images/diff_demo.gif]]
 
@@ -186,9 +167,6 @@ When you deactive region, parinfer will compute the parens and adjust the indent
 ** Project status.
 I'm already using parinfer-mode for Clojure And Elisp. It should be stable and should work as expected.
 If there's any bug or uncomfortable stuff, open an issue please.
-
-** I found command XXX break matched parens!
-Please open an issue, I'll have a fix.
 
 ** Parinfer-mode toggle indent mode is changing the indentation.
 The indentation of code should not be changed by indent mode. When you meet this, your code probably have indentation with *TAB*.
