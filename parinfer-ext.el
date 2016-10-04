@@ -181,6 +181,8 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   (lispy-mode -1)
 
   :mount
+  (require 'eldoc)
+  (eldoc-add-command-completions "lispy-" "parinfer-")
   (parinfer-strategy-add 'default
     '(parinfer-lispy:parens
       parinfer-lispy:braces
