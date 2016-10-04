@@ -275,9 +275,9 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
              (symbolp this-command)
              (not (eq this-command 'parinfer-smart-tab:forward-char))
              (not (eq this-command 'parinfer-smart-tab:backward-char)))
-    (if (eq (line-number-at-pos) parinfer-smart-tab:indicator-line)
-        (progn 
-          (delete-region (point) (line-end-position)))
+    (if (and (eq (line-number-at-pos) parinfer-smart-tab:indicator-line)
+             (parinfer--empty-line-p))
+        (delete-region (point) (line-end-position))
       (save-excursion
         (parinfer--goto-line parinfer-smart-tab:indicator-line)
         (when (parinfer--empty-line-p)
@@ -316,6 +316,9 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
             (add-to-list 'pos-list (- (point) (line-beginning-position)))
             (delete-indentation)
             (backward-char))
+          (end-of-line)
+          (while (eq 32 (char-before)) 
+            (backward-delete-char 1))
           (-distinct pos-list))))))
 
 (defun parinfer-smart-tab:mark-positions (pos-list)
@@ -370,7 +373,6 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
               (end-of-line)
             (backward-char))))
     (call-interactively 'backward-char)))
-
 
 (parinfer-define-extension smart-tab
   "Smart forward-char & backward-char."
