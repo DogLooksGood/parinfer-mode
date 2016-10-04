@@ -112,7 +112,7 @@ close-parens after it.")
     (instantly
      delete-region newline)
     (skip))
-     
+
   "Parinfer invoke strategy.)
 
 This variable is an association list, user can use `parinfer-strategy-parse'
@@ -129,7 +129,7 @@ used to match command.
  --------------   -------------------------------------------
  default          Invoke parinfer (delay on large sexp)
  instantly        Invoke parinfer instantly
- disable          Do not invoke parinfer")
+ skip             Do not invoke parinfer")
 
 ;; -----------------------------------------------------------------------------
 ;; Internal variable and constants
@@ -226,49 +226,35 @@ CLAUSES are the codes for lifecycle.
 :paren    called when 'parinfer-mode' switch to Paren Mode.
 :indent   called when 'parinfer-mode' switch to Indent Mode."
   (declare (indent 1) (doc-string 2))
-  (let* ((clauses-1 (parinfer--extension-parse-clauses clauses))
-         (name-str (symbol-name name)))
-    `(progn
-       (when ,(-contains-p clauses-1 :mount)
-         (defun ,(intern (concat parinfer--extension-prefix
-                                 name-str
-                                 ":mount"))
-             ()
-           (progn
-             ,@(plist-get clauses-1 :mount))))
-       (when ,(-contains-p clauses-1 :paren)
-         (defun ,(intern (concat parinfer--extension-prefix
-                                 name-str
-                                 ":paren"))
-             ()
-           (progn
-             ,@(plist-get clauses-1 :paren))))
-       (when ,(-contains-p clauses-1 :indent)
-         (defun ,(intern (concat parinfer--extension-prefix
-                                 name-str
-                                 ":indent"))
-             ()
-           (progn
-             ,@(plist-get clauses-1 :indent))))
-       (when ,(-contains-p clauses-1 :unmount)
-         (defun ,(intern (concat parinfer--extension-prefix
-                                 name-str
-                                 ":unmount"))
-             ()
-           (progn
-             ,@(plist-get clauses-1 :unmount)))))))
+  (let* ((alist (parinfer--plist2alist clauses))
+         (keys (delete-dups (mapcar #'car alist)))
+         (name-str (symbol-name name))
+         clause)
+    (dolist (key keys)
+      (push
+       `(defun ,(intern (concat parinfer--extension-prefix
+                                name-str
+                                (symbol-name key)))
+            ()
+          (progn
+            ,@(cdr (assq key alist))))
+       clause))
+    `(progn ,@clause)))
+
 
 ;; -----------------------------------------------------------------------------
 ;; Helpers
 ;; -----------------------------------------------------------------------------
 
-(defun parinfer--extension-parse-clauses (clauses)
-  "Parse CLAUSES for `parinfer-define-extension'."
-  (-map (lambda (x)
-          (if (keywordp (car x))
-              (car x)
-            x))
-        (-partition-by #'keywordp clauses)))
+(defun parinfer--plist2alist (plist)
+  "Convert a property PLIST to an association list."
+  (let (key output)
+    (dolist (x plist)
+      (if (keywordp x)
+          (progn (setq key x)
+                 (push (list key) output))
+        (push `(,@(assq key output) ,x) output)))
+    output))
 
 (defun parinfer--extension-funcall (extension lifecycle)
   "For specified EXTENSION, call its LIFECYCLE function."
@@ -291,7 +277,7 @@ CLAUSES are the codes for lifecycle.
   parinfer--mode)
 
 (defun parinfer-strategy-parse (strategy-name)
-  "Parse strategy, which is named STRATEGY-NAME in `parinfer-strategy'.)
+  "Parse strategy, which is named STRATEGY-NAME in `parinfer-strategy'.
 
 Its output is a plist, which context is *similar* the below:
 
@@ -349,7 +335,7 @@ COMMANDS can be:
     (message "Parinfer: Indent Mode")))
 
 (defun parinfer--switch-to-indent-mode ()
-  "Switch to Indent Mode, this will apply indent fix on whole buffer.)
+  "Switch to Indent Mode, this will apply indent fix on whole buffer.
 If this is the first switching for current buffer and indent mode will change
 Buffer text, we should see a confirm message."
   (if (not parinfer--first-load)
@@ -462,7 +448,7 @@ Buffer text, we should see a confirm message."
        (t "nothing")))))
 
 (defun parinfer--invoke-parinfer (&optional pos)
-  "Supposed to be called after each content change.)
+  "Supposed to be called after each content change.
 POS is the position we want to call parinfer."
   (if (and pos (not (eq pos (point))))
       (let ((current-pos (point)))
@@ -730,7 +716,7 @@ if there's any change, display a confirm message in minibuffer."
           nil)
       (if (and changed-lines
                (not (string= text (plist-get result :text))))
-          (if (y-or-n-p "Caution! Buffer will be modified if you swith to Indent mode, continue? ")
+          (if (y-or-n-p "Caution: YES = Indent-mode (Buffer will be modified); NO = Paren-mode, which one? ")
               (progn (cl-loop for l in changed-lines do
                               (parinfer--goto-line (1+ (plist-get l :line-no)))
                               (delete-region (line-beginning-position)

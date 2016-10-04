@@ -3,7 +3,7 @@
 ;; Copyright (c) 2016, Shi Tianshu
 
 ;; Author: Shi Tianshu
-;; Homepage: https://github.com/DogLooksGood/parinfer-ext:mode
+;; Homepage: https://github.com/DogLooksGood/parinfer-mode
 ;; Keywords: Parinfer
 
 ;; This file is not part of GNU Emacs.
@@ -63,7 +63,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   (when (bound-and-true-p rainbow-delimiters-mode)
     (rainbow-delimiters-mode-disable))
   (font-lock-add-keywords
-   nil '((")\\|}\\|]" . 'parinfer-dim-paren-face)))  
+   nil '((")\\|}\\|]" . 'parinfer-dim-paren-face)))
   (font-lock-flush))
 
 ;; -----------------------------------------------------------------------------
@@ -185,7 +185,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
     '(parinfer-lispy:parens
       parinfer-lispy:braces
       parinfer-lispy:brackets
-      parinfer-lispy:space))    
+      parinfer-lispy:space))
   (add-hook 'lispy-mode-hook #'parinfer-lispy:init)
 
   :unmount
