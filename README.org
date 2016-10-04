@@ -88,6 +88,13 @@ Enable extensions by setting ~parinfer-extensions~. Default: (company pretty-par
 ** Company
 Enable it when you use company for compatibility.
 
+** Smart TAB
+[[file:images/smart_tab_demo.gif]]
+Since users' ~TAB~ are highly customized. 
+This feature replace the command ~forward-char~ and ~backward-char~.
+
+Default keybindings are ~C-f~ and ~C-b~.
+
 ** Smart Yank
 [[file:images/smart_yank_demo.gif]]
 Yank depend on current mode(Indent or Paren).
