@@ -90,6 +90,7 @@ Enable it when you use company for compatibility.
 
 ** Smart TAB
 [[file:images/smart_tab_demo.gif]]
+
 Since users' ~TAB~ are highly customized. 
 This feature replace the command ~forward-char~ and ~backward-char~.
 
