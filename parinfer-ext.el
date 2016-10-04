@@ -244,5 +244,24 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   :mount
   (define-key parinfer-mode-map [remap yank] 'parinfer-smart-yank:yank))
 
+;; -----------------------------------------------------------------------------
+;; adjust-parens (Make tab smart)
+;; -----------------------------------------------------------------------------
+
+(parinfer-define-extension adjust-parens
+  "Add adjust-parens feature"
+  :check
+  (parinfer-check "'adjust-parens' package is not installed."
+    (fboundp 'adjust-parens-mode))
+
+  :indent
+  (adjust-parens-mode 1)
+
+  :paren
+  (adjust-parens-mode -1)
+
+  :unmount
+  (adjust-parens-mode -1))
+
 (provide 'parinfer-ext)
 ;;; parinfer-ext.el ends here
