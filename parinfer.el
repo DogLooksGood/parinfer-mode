@@ -192,6 +192,18 @@ Run BODY, then invode parinfer(depend on current parinfermode) immediately."
      (parinfer--setq-text-modified t)
      (parinfer--invoke-parinfer)))
 
+(defmacro parinfer--delay-run (&rest body)
+  "Wrap BODY to a lambda expression, then run it will
+`run-with-idle-timer'."
+  `(progn
+     (parinfer--cancel-timer)
+     (setq parinfer--delay-timer
+           (run-with-idle-timer
+            parinfer-delay-invoke-idle
+            nil
+            (lambda ()
+              (progn ,@body))))))
+
 (defmacro parinfer-do (&rest body)
   "Run BODY, then invoke parinfer."
   `(progn
@@ -248,7 +260,6 @@ CLAUSES are the codes for lifecycle.
             ,@(cdr (assq key alist))))
        clause))
     `(progn ,@clause)))
-
 
 ;; -----------------------------------------------------------------------------
 ;; Helpers
@@ -674,11 +685,8 @@ CONTEXT is the context for parinfer execution."
   (parinfer--cancel-timer)
   (let ((text (plist-get context :text)))
     (if (> (length text) parinfer-delay-invoke-threshold)
-        (setq parinfer--delay-timer
-              (run-with-idle-timer
-               parinfer-delay-invoke-idle
-               nil
-               #'parinfer-indent-instantly))
+        (parinfer--delay-run
+         (parinfer-indent-instantly))
       (parinfer--execute-instantly context))))
 ;; -----------------------------------------------------------------------------
 ;; Parinfer commands
