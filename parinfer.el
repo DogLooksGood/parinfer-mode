@@ -480,8 +480,8 @@ POS is the position we want to call parinfer."
 
 (defun parinfer--should-disable-p ()
   "Should parinfer disabled at this moment."
-  (or (and (bound-and-true-p multiple-cursors-mode)
-           (region-active-p))
+  (or (bound-and-true-p multiple-cursors-mode)
+      (region-active-p)
       (and (symbolp this-command)
            (eq this-command 'yank))))
 
