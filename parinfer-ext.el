@@ -282,15 +282,17 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
              (symbolp this-command)
              (not (eq this-command 'parinfer-smart-tab:forward-char))
              (not (eq this-command 'parinfer-smart-tab:backward-char)))
-    (if (and (eq (line-number-at-pos) parinfer-smart-tab:indicator-line)
-             (parinfer--empty-line-p))
-        (delete-region (point) (line-end-position))
+    (if (and (eq (line-number-at-pos) parinfer-smart-tab:indicator-line))
+        (save-excursion
+          (end-of-line)
+          (while (eq (char-before) 32)
+            (backward-delete-char 1)))              
       (save-excursion
         (parinfer--goto-line parinfer-smart-tab:indicator-line)
         (when (parinfer--empty-line-p)
           (delete-region (line-beginning-position) (line-end-position)))))
     (setq parinfer-smart-tab:indicator-line nil)))
-
+           
 (defun parinfer-smart-tab:at-close-paren-p ()
   (let ((c (char-after)))
     (or (eq c 41)
