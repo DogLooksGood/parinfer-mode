@@ -316,7 +316,6 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
         (end-of-line)
         (let ((pos-list '(0)))
           (newline-and-indent)
-          (message "%s" (- (point) (line-beginning-position)))
           (add-to-list 'pos-list (- (point) (line-beginning-position)))
           (delete-indentation)
           (backward-char)
