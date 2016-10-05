@@ -911,6 +911,7 @@ Use this to browse and apply the changes."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "<tab>") 'parinfer-shift-right)
     (define-key map (kbd "S-<tab>") 'parinfer-shift-left)
+    (define-key map (kbd "<backtab>") 'parinfer-shift-left)
     (define-key map (kbd "<backspace>") 'delete-region)
     (define-key map [remap parinfer-toggle-mode] 'parinfer-region-mode-switch-mode)
     map))
