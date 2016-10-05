@@ -831,7 +831,7 @@ if there's any change, display a confirm message in minibuffer."
 (defun parinfer-newline ()
   "Replacement in 'parinfer-mode' for 'newline' command."
   (interactive)
-  (parinfer-run
+  (parinfer-do
    (call-interactively 'newline)))
 
 (defun parinfer-semicolon ()
