@@ -310,11 +310,19 @@ COMMANDS can be:
                        commands
                      (list commands)))
          (orig-value (cdr (assq strategy parinfer-strategy)))
+         (keys (mapcar #'car parinfer-strategy))
          (new-value (cl-remove-duplicates
                      (append orig-value commands)
-                     :test #'equal)))
-    (push (cons strategy new-value)
-          parinfer-strategy)))
+                     :test #'equal
+                     :from-end t))
+         output)
+    (dolist (x parinfer-strategy)
+      (if (eq (car x) strategy)
+          (push (cons strategy new-value) output)
+        (push x output)))
+    (when (not (memq strategy keys))
+      (push (cons strategy new-value) output))
+    (setq parinfer-strategy (reverse output))))
 
 (defun parinfer--strategy-match-p (command strategy-name)
   "Return t if COMMAND's parinfer invoke strategy is STRATEGY-NAME."
