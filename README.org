@@ -111,8 +111,8 @@ To use with lispy, install lispy and set ~parinfer-extensions~ to include ~lispy
     :init
     (progn
       (key-chord-mode 1)
-      (key-seq-define parinfer-mode-map ",." 'parinfer-lispy-forward)
-      (key-seq-define parinfer-mode-map ".," 'parinfer-lispy-backward)))
+      (key-seq-define parinfer-mode-map ",." 'parinfer-lispy:forward)
+      (key-seq-define parinfer-mode-map ".," 'parinfer-lispy:backward)))
 
   (use-package lispy
     :ensure t)
