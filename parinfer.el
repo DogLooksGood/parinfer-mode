@@ -354,7 +354,8 @@ COMMANDS can be:
   "Switch to Indent Mode, this will apply indent fix on whole buffer.
 If this is the first switching for current buffer and indent mode will change
 Buffer text, we should see a confirm message."
-  (if (not parinfer--first-load)
+  (if (or (not parinfer--first-load)
+          (string= (buffer-name) " *temp*"))
       (progn
         (parinfer-indent-buffer)
         (parinfer--switch-to-indent-mode-1))
@@ -814,6 +815,11 @@ if there's any change, display a confirm message in minibuffer."
   (parinfer-run
    (call-interactively 'kill-line)))
 
+(defun parinfer-region-delete-region ()
+  (interactive)
+  (parinfer-do
+   (call-interactively 'delete-region)))
+
 (defun parinfer-yank ()
   "Replacement in 'parinfer-mode' for 'yank' command."
   (interactive)
@@ -912,7 +918,7 @@ Use this to browse and apply the changes."
     (define-key map (kbd "<tab>") 'parinfer-shift-right)
     (define-key map (kbd "S-<tab>") 'parinfer-shift-left)
     (define-key map (kbd "<backtab>") 'parinfer-shift-left)
-    (define-key map (kbd "<backspace>") 'delete-region)
+    (define-key map (kbd "<backspace>") 'parinfer-region-delete-region)
     (define-key map [remap parinfer-toggle-mode] 'parinfer-region-mode-switch-mode)
     map))
 
