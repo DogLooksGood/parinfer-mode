@@ -511,13 +511,17 @@ POS is the position we want to call parinfer."
        parinfer--text-modified
        (not (equal parinfer--last-line-number (line-number-at-pos)))))
 
+(defun parinfer--cancel-timer ()
+  "Cancel timer: `parinfer--delay-timer' ."
+  (when parinfer--delay-timer
+    (cancel-timer parinfer--delay-timer)
+    (setq parinfer--delay-timer nil)))
+
 (defun parinfer--clean-up ()
   "Parinfer do clean job.
 
 This will finish delay processing immediately."
-  (when parinfer--delay-timer
-    (cancel-timer parinfer--delay-timer)
-    (setq parinfer--delay-timer nil))
+  (parinfer--cancel-timer)
   (parinfer--invoke-parinfer-instantly
        (save-excursion
          (parinfer--goto-line parinfer--last-line-number)
@@ -667,9 +671,7 @@ CONTEXT is the context for parinfer execution."
 
 (defun parinfer--execute (context)
   "Execute parinfer with context CONTEXT."
-  (when parinfer--delay-timer
-    (cancel-timer parinfer--delay-timer)
-    (setq parinfer--delay-timer nil))
+  (parinfer--cancel-timer)
   (let ((text (plist-get context :text)))
     (if (> (length text) parinfer-delay-invoke-threshold)
         (setq parinfer--delay-timer
