@@ -207,8 +207,7 @@ Run BODY, then invode parinfer(depend on current parinfermode) immediately."
 (defmacro parinfer-do (&rest body)
   "Run BODY, then invoke parinfer."
   `(progn
-     (when parinfer--delay-timer
-       (parinfer--clean-up))
+     (parinfer--cleanup-when parinfer--delay-timer)
      ,@body
      (parinfer--setq-text-modified t)
      (parinfer--invoke-parinfer)))
@@ -382,8 +381,7 @@ Buffer text, we should see a confirm message."
 (defun parinfer--switch-to-paren-mode ()
   "Switch to paren mode."
   (parinfer--switch-to 'paren
-    (when parinfer--delay-timer
-      (parinfer--clean-up))
+    (parinfer--cleanup-when parinfer--delay-timer)
     (setq parinfer--mode 'paren)
     (run-hook-with-args 'parinfer-switch-mode-hook 'paren)
     (message "Parinfer: Paren Mode")))
@@ -528,15 +526,16 @@ POS is the position we want to call parinfer."
     (cancel-timer parinfer--delay-timer)
     (setq parinfer--delay-timer nil)))
 
-(defun parinfer--clean-up ()
-  "Parinfer do clean job.
+(defun parinfer--cleanup-when (cond)
+  "Parinfer do clean job when COND is set to t.
 
 This will finish delay processing immediately."
-  (parinfer--cancel-timer)
-  (parinfer--invoke-parinfer-instantly
-       (save-excursion
-         (parinfer--goto-line parinfer--last-line-number)
-         (line-beginning-position))))
+  (when cond
+    (parinfer--cancel-timer)
+    (parinfer--invoke-parinfer-instantly
+     (save-excursion
+       (parinfer--goto-line parinfer--last-line-number)
+       (line-beginning-position)))))
 
 (defun parinfer--invoke-parinfer-when-necessary ()
   "Invoke parinfer when necessary."
@@ -548,7 +547,7 @@ This will finish delay processing immediately."
      ((parinfer--should-disable-p) nil)
 
      ((parinfer--should-clean-up-p)
-      (parinfer--clean-up))
+      (parinfer--cleanup-when t))
 
      ((parinfer--in-comment-or-string-p) nil)
 
