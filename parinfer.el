@@ -292,8 +292,8 @@ Its output is a plist, which context is *similar* the below:
  :commands cmd1 cmd2 cmd3
  :regexps regexp1 regexp2 regexp3"
   (let ((list (cdr (assq strategy-name parinfer-strategy))))
-    `(:commands ,(cl-remove-if #'stringp list)
-      :regexps  ,(cl-remove-if #'symbolp list))))
+    `(:commands ,(cl-remove-if-not #'symbolp list)
+      :regexps  ,(cl-remove-if-not #'stringp list))))
 
 (defun parinfer-strategy-add (strategy commands)
   "Append new commands to STRATEGY.
