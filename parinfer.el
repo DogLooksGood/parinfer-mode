@@ -569,6 +569,12 @@ This will finish delay processing immediately."
      (t nil)))
   (setq parinfer--last-line-number (line-number-at-pos (point))))
 
+(defun parinfer--update-text-modified ()
+  (when (and (symbolp this-command)
+             (parinfer--strategy-match-p this-command 'default)
+             (not (parinfer--in-string-p)))
+    (setq parinfer--text-modified t)))
+
 (defun parinfer--active-line-region ()
   "Auto adjust region so that the shift can work properly."
   (let* ((begin (region-beginning))
@@ -610,7 +616,7 @@ This will finish delay processing immediately."
   (add-hook 'aggressive-indent-mode-hook
             'parinfer--disable-aggressive-indent-mode t t)
   (add-hook 'post-command-hook 'parinfer--invoke-parinfer-when-necessary t t)
-  (add-hook 'post-command-hook 'parinfer--set-text-modified t t)
+  (add-hook 'post-command-hook 'parinfer--update-text-modified t t)
   (add-hook 'activate-mark-hook 'parinfer--regin-mode-enable t t)
   (add-hook 'deactivate-mark-hook 'parinfer--region-mode-disable t t)
   (parinfer--extension-lifecycle :mount)
@@ -621,7 +627,7 @@ This will finish delay processing immediately."
   "Disable 'parinfer-mode'."
   (remove-hook 'aggressive-indent-mode-hook 'parinfer--disable-aggressive-indent-mode t)
   (remove-hook 'activate-mark-hook 'parinfer--regin-mode-enable t)
-  (remove-hook 'post-command-hook 'parinfer--set-text-modified t)
+  (remove-hook 'post-command-hook 'parinfer--update-text-modified t)
   (remove-hook 'deactivate-mark-hook 'parinfer--region-mode-disable t)
   (remove-hook 'post-command-hook 'parinfer--invoke-parinfer-when-necessary t)
   (parinfer--extension-lifecycle :unmount)
@@ -802,7 +808,7 @@ If there's any change, display a confirm message in minibuffer."
           nil)
       (if (and changed-lines
                (not (string= text (plist-get result :text))))
-          (if (y-or-n-p "Caution: YES = Indent-mode (Buffer will be modified); NO = Paren-mode, which one? ")
+          (if (y-or-n-p "Parinfer: Switch to indent will modify this buffer, continue? ")
               (progn (cl-loop for l in changed-lines do
                               (parinfer--goto-line (1+ (plist-get l :line-no)))
                               (delete-region (line-beginning-position)
@@ -830,15 +836,18 @@ If there's any change, display a confirm message in minibuffer."
 (defun parinfer-backward-delete-char ()
   "Replacement in command ‘parinfer-mode’ for ‘backward-delete-char’ command."
   (interactive)
-  (parinfer-run
-   (if (eq 'paren parinfer--mode)
-       (if (string-match-p "^[[:space:]]+$"
-                           (buffer-substring-no-properties
-                            (line-beginning-position)
-                            (point)))
-           (delete-indentation)
-         (backward-delete-char 1))
-     (backward-delete-char 1))))
+  (if (eq 'paren parinfer--mode)
+      (if (string-match-p "^[[:space:]]+$"
+                          (buffer-substring-no-properties
+                           (line-beginning-position)
+                           (point)))
+          (delete-indentation)
+        (backward-delete-char 1))
+    (progn
+      (backward-delete-char 1)
+      (if (parinfer--in-string-p)
+          (parinfer--setq-text-modified nil)
+        (parinfer--invoke-parinfer)))))
 
 (defun parinfer-backward-kill-word ()
   "Replacement in symbol 'parinfer-mode' for 'backward-kill-word' command."
@@ -890,7 +899,7 @@ If there's any change, display a confirm message in minibuffer."
    (call-interactively 'newline)))
 
 (defun parinfer-semicolon ()
-  "Insert semicolon, always indent after insertion.))))
+  "Insert semicolon, always indent after insertion.
 
 This is the very special situation, since we always need
 invoke parinfer after every semicolon input."
@@ -898,6 +907,13 @@ invoke parinfer after every semicolon input."
   (call-interactively 'self-insert-command)
   (parinfer-indent)
   (parinfer--setq-text-modified t))
+
+;; (defun parinfer-double-quote ()
+;;   "Insert a pair of quotes, or a single quote after backslash. "
+;;   (interactive)
+;;   (insert "\"")
+;;   (unless (parinfer--in-string-p)
+;;     (parinfer--setq-text-modified t)))
 
 (defun parinfer-comment-dwim ()
   "Replacement in 'parinfer-mode' for 'comment-dwim' command."
@@ -959,6 +975,7 @@ Use this to browse and apply the changes."
     (define-key map [remap backward-delete-char-untabify] 'parinfer-backward-delete-char)
     (define-key map [remap delete-backward-char] 'parinfer-backward-delete-char)
     (define-key map ";" 'parinfer-semicolon)
+    ;; (define-key map "\"" 'parinfer-double-quote)
     (define-key map [remap yank] 'parinfer-yank)
     map))
 
