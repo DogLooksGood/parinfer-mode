@@ -426,6 +426,11 @@ Buffer text, we should see a confirm message."
     (forward-line -1)
     (back-to-indentation)))
 
+(defun parinfer--toplevel-line-p ()
+  (string-match-p "^[({\\[#`]" (buffer-substring-no-properties
+                                (line-beginning-position)
+                                (line-end-position))))
+
 (defun parinfer--goto-next-toplevel ()
   "Goto the beggining of next toplevel sexp."
   (if (eq (line-end-position) (point-max))
@@ -442,7 +447,8 @@ Buffer text, we should see a confirm message."
               (back-to-indentation)
               (if (and (not (or (parinfer--in-comment-or-string-p)
                                 (parinfer--empty-line-p)))
-                       (eq (point) (line-beginning-position)))
+                       (eq (point) (line-beginning-position))
+                       (parinfer--toplevel-line-p))
                   (progn
                     (beginning-of-line)
                     (setq found t))
@@ -589,7 +595,7 @@ This will finish delay processing immediately."
     (setq parinfer--region-shifted t)))
 
 (defun parinfer--shift (distance)
-  "Shift text.  For right, DISTANCE > 0; left, DISTANCE < 0."
+  "Shift text.  For right, DISTANCE > 0, for left, DISTANCE < 0."
   (when (use-region-p)
     (when (not parinfer--region-shifted)
       (parinfer--active-line-region))
@@ -908,12 +914,20 @@ invoke parinfer after every semicolon input."
   (parinfer-indent)
   (parinfer--setq-text-modified t))
 
-;; (defun parinfer-double-quote ()
-;;   "Insert a pair of quotes, or a single quote after backslash. "
-;;   (interactive)
-;;   (insert "\"")
-;;   (unless (parinfer--in-string-p)
-;;     (parinfer--setq-text-modified t)))
+(defun parinfer-double-quote ()
+  "Insert a pair of quotes, or a single quote after backslash. "
+  (interactive)
+  (if (parinfer--in-string-p)
+      (let ((orig-end (save-excursion (parinfer--goto-next-toplevel) (line-number-at-pos))))
+        (insert "\"")
+        (let ((new-end (save-excursion (parinfer--goto-next-toplevel) (line-number-at-pos))))
+          (if (and (< orig-end new-end))
+              (progn
+                (backward-char 1)
+                (insert "\\")
+                (forward-char 1))
+            (parinfer--invoke-parinfer))))
+    (call-interactively 'self-insert-command)))
 
 (defun parinfer-comment-dwim ()
   "Replacement in 'parinfer-mode' for 'comment-dwim' command."
@@ -975,7 +989,7 @@ Use this to browse and apply the changes."
     (define-key map [remap backward-delete-char-untabify] 'parinfer-backward-delete-char)
     (define-key map [remap delete-backward-char] 'parinfer-backward-delete-char)
     (define-key map ";" 'parinfer-semicolon)
-    ;; (define-key map "\"" 'parinfer-double-quote)
+    (define-key map "\"" 'parinfer-double-quote)
     (define-key map [remap yank] 'parinfer-yank)
     map))
 
