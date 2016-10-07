@@ -670,8 +670,9 @@ This will finish delay processing immediately."
     (when parinfer--x-after-shift
       (if (> parinfer--x-after-shift
              (- (line-end-position) (line-beginning-position)))
-          (end-of-line)                            
-        (forward-char parinfer--x-after-shift)))
+          (end-of-line)
+        (when (> parinfer--x-after-shift 0)
+          (forward-char parinfer--x-after-shift))))
     (setq parinfer--region-shifted nil)
     (setq parinfer--x-after-shift nil))
   (parinfer-region-mode -1))
