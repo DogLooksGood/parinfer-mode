@@ -1061,22 +1061,5 @@ Use this to browse and apply the changes."
   :init-value nil
   :keymap parinfer-region-mode-map)
 
-;; -----------------------------------------------------------------------------
-;; Additional commands, WIP.
-;; -----------------------------------------------------------------------------
-(defun parinfer-reverse-transpose-sexps ()
-  "Reverse transpose."
-  (interactive)
-  (when (not (ignore-errors (transpose-sexps -1)))
-    (forward-sexp)
-    (ignore-errors (transpose-sexps -1))))
-
-(defun parinfer-transpose-sexps ()
-  "Transpose."
-  (interactive)
-  (when (not (ignore-errors (transpose-sexps 1)))
-    (forward-sexp)
-    (ignore-errors (transpose-sexps 1))))
-
 (provide 'parinfer)
 ;;; parinfer.el ends here
