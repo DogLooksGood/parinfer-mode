@@ -335,10 +335,13 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
                          (region-end)
                          distance)
          (push-mark mark t t)
+         (setq parinfer--x-after-shift
+               (+ parinfer--x-after-shift distance))
          (setq deactivate-mark nil))))))
 
 (defun parinfer-smart-tab:active-line-region ()
   "Auto adjust region so that the shift can work properly."
+  (setq parinfer--x-after-shift (- (point) (line-beginning-position)))
   (let* ((begin (region-beginning))
          (end (region-end))
          (new-begin (save-excursion
