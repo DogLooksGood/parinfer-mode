@@ -309,9 +309,8 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
                                        (point)))
            (text (buffer-substring-no-properties sexp-begin begin))
            (pos-list nil))
-      (parinfer-silent
+      (progn
        (with-temp-buffer
-         (with-silent-modifications)
          (insert text)
          (newline-and-indent)
          (parinfer-indent-buffer)
@@ -405,11 +404,11 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   (save-excursion
     (unless (= 1 (line-number-at-pos))
       (forward-line -1)
-      (while (and (or (parinfer--in-comment-or-string-p)
+      (while (and (or (parinfer--comment-line-p)
                       (parinfer--empty-line-p))
                   (not (= 1 (line-number-at-pos))))
         (forward-line -1))
-      (unless (or (parinfer--in-comment-or-string-p)
+      (unless (or (parinfer--comment-line-p)
                   (parinfer--empty-line-p))
         (end-of-line)
         (let ((pos-list '(0)))

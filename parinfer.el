@@ -423,7 +423,8 @@ Buffer text, we should see a confirm message."
   (while (and (not (eq (point) (point-min)))
               (or (parinfer--in-comment-or-string-p)
                   (parinfer--empty-line-p)
-                  (not (eq (point) (line-beginning-position)))))
+                  (not (eq (point) (line-beginning-position)))
+                  (not (parinfer--toplevel-line-p))))
     (forward-line -1)
     (back-to-indentation)))
 
@@ -563,6 +564,17 @@ This will finish delay processing immediately."
        (save-excursion
          (parinfer--goto-line parinfer--last-line-number)
          (line-beginning-position))))
+
+(defun parinfer--comment-line-p ()
+  (save-excursion
+    (back-to-indentation)
+    (let ((f (get-text-property (point) 'face)))
+      (and (string-match-p "^;+.*$" (buffer-substring-no-properties (point) (line-end-position)))
+           (save-excursion
+             (end-of-line)
+             (or (nth 4 (syntax-ppss))
+                 (eq f 'font-lock-comment-face)
+                 (eq f 'font-lock-comment-delimiter-face)))))))
 
 (defun parinfer--invoke-parinfer-when-necessary ()
   "Invoke parinfer when necessary."
