@@ -670,8 +670,8 @@ This will finish delay processing immediately."
     (when parinfer--x-after-shift
       (if (> parinfer--x-after-shift
              (- (line-end-position) (line-beginning-position)))
-          (end-of-line))                            
-      (forward-char parinfer--x-after-shift))
+          (end-of-line)                            
+        (forward-char parinfer--x-after-shift)))
     (setq parinfer--region-shifted nil)
     (setq parinfer--x-after-shift nil))
   (parinfer-region-mode -1))
@@ -916,8 +916,7 @@ If there's any change, display a confirm message in minibuffer."
   (interactive)
   (call-interactively 'yank)
   (parinfer--setq-text-modified t)
-  (parinfer-indent-buffer)
-  (message "%s" parinfer--text-modified))
+  (parinfer-indent-buffer))
 
 (defun parinfer-kill-region ()
   "Replacement in 'parinfer-mode' for 'kill-region' command."
