@@ -940,7 +940,9 @@ invoke parinfer after every semicolon input."
           (if (or (< orig-end new-end)
                   (and orig-end-is-max
                        (parinfer--unfinished-string-p)))
-              (progn
+              (unless (string-match-p "[^\\\\]\\\\$" (buffer-substring-no-properties
+                                                      (line-beginning-position)
+                                                      (line-end-position)))
                 (backward-char 1)
                 (insert "\\")
                 (forward-char 1))
