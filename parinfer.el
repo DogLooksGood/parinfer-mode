@@ -658,9 +658,8 @@ This will finish delay processing immediately."
   "Run when region deactivated, indent code if ‘parinfer--mode’ is 'indent."
   (when (and (eq 'indent parinfer--mode)
              parinfer--region-shifted)
+    (beginning-of-line)
     (parinfer-indent-buffer)
-    (when (not (ignore-errors (parinfer--reindent-sexp)))
-      (parinfer-indent-buffer))
     (setq parinfer--region-shifted nil))
   (parinfer-region-mode -1))
 
