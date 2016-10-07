@@ -162,6 +162,10 @@ used to match command.
   "Current delay timer.")
 (make-variable-buffer-local 'parinfer--delay-timer)
 
+(defvar parinfer--x-after-shift nil
+  "Where the cursor x should be, after shift region.")
+(make-variable-buffer-local 'parinfer--x-after-shift)
+
 ;; -----------------------------------------------------------------------------
 ;; Macros
 ;; -----------------------------------------------------------------------------
@@ -593,6 +597,7 @@ This will finish delay processing immediately."
 
 (defun parinfer--active-line-region ()
   "Auto adjust region so that the shift can work properly."
+  (setq parinfer--x-after-shift (- (point) (line-beginning-position)))
   (let* ((begin (region-beginning))
          (end (region-end))
          (new-begin (save-excursion
@@ -615,6 +620,8 @@ This will finish delay processing immediately."
                         (region-end)
                         distance)
         (push-mark mark t t)
+        (setq parinfer--x-after-shift
+              (+ parinfer--x-after-shift distance))
         (setq deactivate-mark nil)))))
 
 (defun parinfer--disable-aggressive-indent-mode ()
@@ -659,8 +666,15 @@ This will finish delay processing immediately."
   (when (and (eq 'indent parinfer--mode)
              parinfer--region-shifted)
     (beginning-of-line)
-    (parinfer-indent-buffer)
-    (setq parinfer--region-shifted nil))
+    (parinfer-indent-instantly)
+    (when parinfer--x-after-shift
+      (if (> parinfer--x-after-shift
+             (- (line-end-position) (line-beginning-position)))
+          (end-of-line)
+        (when (> parinfer--x-after-shift 0)
+          (forward-char parinfer--x-after-shift))))
+    (setq parinfer--region-shifted nil)
+    (setq parinfer--x-after-shift nil))
   (parinfer-region-mode -1))
 
 (defun parinfer--prepare ()
@@ -903,8 +917,7 @@ If there's any change, display a confirm message in minibuffer."
   (interactive)
   (call-interactively 'yank)
   (parinfer--setq-text-modified t)
-  (parinfer-indent-buffer)
-  (message "%s" parinfer--text-modified))
+  (parinfer-indent-buffer))
 
 (defun parinfer-kill-region ()
   "Replacement in 'parinfer-mode' for 'kill-region' command."

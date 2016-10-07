@@ -264,7 +264,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
    "Parinfer Smart TAB indicator."
    :group 'parinfer-ext)
 
-(defun parinfer-smart-tab:clean-skip-this-command-p ()
+(defun parinfer-smart-tab:clean-not-skip-this-command-p ()
   (and (symbolp this-command)
        (not (eq this-command 'parinfer-smart-tab:dwim-right-or-complete))
        (not (eq this-command 'parinfer-smart-tab:dwim-right))
@@ -275,7 +275,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
 (defun parinfer-smart-tab:clean-indicator-pre ()
   (interactive)
   (when (and parinfer-smart-tab:indicator-line
-             (parinfer-smart-tab:clean-skip-this-command-p))
+             (parinfer-smart-tab:clean-not-skip-this-command-p))
     (save-excursion
       (parinfer--goto-line parinfer-smart-tab:indicator-line)
       (remove-text-properties
@@ -286,7 +286,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
 (defun parinfer-smart-tab:clean-indicator ()
   (interactive)
   (when (and parinfer-smart-tab:indicator-line
-             (parinfer-smart-tab:clean-skip-this-command-p))
+             (parinfer-smart-tab:clean-not-skip-this-command-p))
     (if (and (eq (line-number-at-pos) parinfer-smart-tab:indicator-line))
         (save-excursion
           (end-of-line)
@@ -335,10 +335,13 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
                          (region-end)
                          distance)
          (push-mark mark t t)
+         (setq parinfer--x-after-shift
+               (+ parinfer--x-after-shift distance))
          (setq deactivate-mark nil))))))
 
 (defun parinfer-smart-tab:active-line-region ()
   "Auto adjust region so that the shift can work properly."
+  (setq parinfer--x-after-shift (- (point) (line-beginning-position)))
   (let* ((begin (region-beginning))
          (end (region-end))
          (new-begin (save-excursion
@@ -454,10 +457,13 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
         (if (eq (point) (line-end-position))
             (beginning-of-line)
           (forward-char))
-        (while (not (eq (face-at-point) 'parinfer-smart-tab:indicator-face))
-          (if (eq (point) (line-end-position))
-              (beginning-of-line)
-            (forward-char))))
+        (let ((forward-count 0))
+          (while (and (not (eq (face-at-point) 'parinfer-smart-tab:indicator-face))
+                      (< forward-count 300))
+            (if (eq (point) (line-end-position))
+                (beginning-of-line)
+              (forward-char))
+            (setq forward-count (1+ forward-count)))))
     (call-interactively 'forward-char)))
 
 (defun parinfer-smart-tab:backward-char ()
@@ -475,10 +481,13 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
         (if (eq (point) (line-beginning-position))
             (end-of-line)
           (backward-char))
-        (while (not (eq (face-at-point) 'parinfer-smart-tab:indicator-face))
-          (if (eq (point) (line-beginning-position))
-              (end-of-line)
-            (backward-char))))
+        (let ((backward-count 0))
+          (while (and (not (eq (face-at-point) 'parinfer-smart-tab:indicator-face))
+                      (< backward-count 300))
+            (if (eq (point) (line-beginning-position))
+                (end-of-line)
+              (backward-char))
+            (setq backward-count (1+ backward-count)))))
     (call-interactively 'backward-char)))
 
 (defun parinfer-smart-tab:dwim-right-or-complete ()
@@ -553,7 +562,9 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   :unmount
   (remove-hook 'post-command-hook 'parinfer-smart-tab:clean-indicator t)
   (remove-hook 'pre-command-hook 'parinfer-smart-tab:clean-indicator-pre t))
-  
+
+
+
 (provide 'parinfer-ext)
 ;;; parinfer-ext.el ends here
 
