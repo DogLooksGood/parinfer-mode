@@ -354,8 +354,7 @@ COMMANDS can be:
   (parinfer--switch-to 'indent
     (setq parinfer--mode 'indent)
     (setq parinfer--first-load nil)
-    (run-hook-with-args 'parinfer-switch-mode-hook 'indent)
-    (message "Parinfer: Indent Mode")))
+    (run-hook-with-args 'parinfer-switch-mode-hook 'indent)))
 
 (defun parinfer--switch-to-indent-mode ()
   "Switch to Indent Mode, this will apply indent fix on whole buffer.
@@ -387,8 +386,7 @@ Buffer text, we should see a confirm message."
     (when parinfer--delay-timer
       (parinfer--clean-up))
     (setq parinfer--mode 'paren)
-    (run-hook-with-args 'parinfer-switch-mode-hook 'paren)
-    (message "Parinfer: Paren Mode")))
+    (run-hook-with-args 'parinfer-switch-mode-hook 'paren)))
 
 (defun parinfer--in-comment-or-string-p ()
   "Return if we are in comment or string."
