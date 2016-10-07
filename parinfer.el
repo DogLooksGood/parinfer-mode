@@ -859,12 +859,13 @@ If there's any change, display a confirm message in minibuffer."
   "Replacement in command ‘parinfer-mode’ for ‘backward-delete-char’ command."
   (interactive)
   (if (eq 'paren parinfer--mode)
-      (if (string-match-p "^[[:space:]]+$"
-                          (buffer-substring-no-properties
-                           (line-beginning-position)
-                           (point)))
-          (delete-indentation)
-        (backward-delete-char 1))
+      (parinfer-run
+       (if (string-match-p "^[[:space:]]+$"
+                           (buffer-substring-no-properties
+                            (line-beginning-position)
+                            (point)))
+           (delete-indentation)
+         (backward-delete-char 1)))
     (progn
       (backward-delete-char 1)
       (if (parinfer--in-string-p)
