@@ -264,14 +264,18 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
    "Parinfer Smart TAB indicator."
    :group 'parinfer-ext)
 
+(defun parinfer-smart-tab:clean-skip-this-command-p ()
+  (and (symbolp this-command)
+       (not (eq this-command 'parinfer-smart-tab:dwim-right-or-complete))
+       (not (eq this-command 'parinfer-smart-tab:dwim-right))
+       (not (eq this-command 'parinfer-smart-tab:dwim-left))
+       (not (eq this-command 'parinfer-smart-tab:forward-char))
+       (not (eq this-command 'parinfer-smart-tab:backward-char))))
+
 (defun parinfer-smart-tab:clean-indicator-pre ()
   (interactive)
   (when (and parinfer-smart-tab:indicator-line
-             (symbolp this-command)
-             (not (eq this-command 'parinfer-smart-tab:dwim-right))
-             (not (eq this-command 'parinfer-smart-tab:dwim-left))
-             (not (eq this-command 'parinfer-smart-tab:forward-char))
-             (not (eq this-command 'parinfer-smart-tab:backward-char)))
+             (parinfer-smart-tab:clean-skip-this-command-p))
     (save-excursion
       (parinfer--goto-line parinfer-smart-tab:indicator-line)
       (remove-text-properties
@@ -282,11 +286,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
 (defun parinfer-smart-tab:clean-indicator ()
   (interactive)
   (when (and parinfer-smart-tab:indicator-line
-             (symbolp this-command)
-             (not (eq this-command 'parinfer-smart-tab:dwim-right))
-             (not (eq this-command 'parinfer-smart-tab:dwim-left))
-             (not (eq this-command 'parinfer-smart-tab:forward-char))
-             (not (eq this-command 'parinfer-smart-tab:backward-char)))
+             (parinfer-smart-tab:clean-skip-this-command-p))
     (if (and (eq (line-number-at-pos) parinfer-smart-tab:indicator-line))
         (save-excursion
           (end-of-line)
@@ -480,6 +480,26 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
               (end-of-line)
             (backward-char))))
     (call-interactively 'backward-char)))
+
+(defun parinfer-smart-tab:dwim-right-or-complete ()
+  (interactive)
+  (cond
+   ((region-active-p)
+    (call-interactively 'parinfer-smart-tab:shift-right))
+   
+   ((parinfer--empty-line-p)
+    (parinfer-smart-tab:forward-char))
+
+   ((and (bound-and-true-p company-mode)
+         (looking-at "\\_>"))
+    (company-complete-common))
+
+   (t
+    (progn
+      (call-interactively 'set-mark-command)
+      (activate-mark)
+      (call-interactively 'parinfer-smart-tab:shift-right)
+      (deactivate-mark)))))
 
 (defun parinfer-smart-tab:dwim-right ()
   (interactive)
