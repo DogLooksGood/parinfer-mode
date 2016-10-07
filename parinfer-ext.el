@@ -30,6 +30,7 @@
 ;;; Code:
 
 (require 'parinfer)
+(require 'font-lock)
 
 (defgroup parinfer-ext
   nil
