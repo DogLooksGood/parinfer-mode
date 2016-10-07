@@ -400,8 +400,7 @@ Buffer text, we should see a confirm message."
 
 (defun parinfer--in-string-p ()
   "Return if we are in string."
-  (let ((f (get-text-property (point) 'face)))
-    (nth 3 (syntax-ppss))))
+  (nth 3 (syntax-ppss)))
 
 (defun parinfer--goto-line (n)
   "Goto the beginning of line N."
@@ -512,6 +511,19 @@ POS is the position we want to call parinfer."
        ((eq 'indent parinfer--mode) (parinfer-indent))
        (t "nothing")))))
 
+(defun parinfer--exist-nonstandard-string-p (start end)
+  "Return if there exist nonstandard string between START and END.
+
+The nonstandard string is the string with nonstandard prefix."
+  (save-excursion
+    (goto-char start)
+    (let ((exist nil))
+      (while (and (not exist)
+                  (< (point) end)
+                  (search-forward-regexp "[^ \\\\(\\[{#]\"" nil t))
+        (when (parinfer--in-string-p)
+          (setq exist (point))))
+      exist)))
 
 (defun parinfer--should-disable-p ()
   "Should parinfer disabled at this moment."
@@ -693,10 +705,14 @@ CONTEXT is the context for parinfer execution."
 
 (defun parinfer--execute-instantly (context)
   "Execute parinfer instantly with context CONTEXT."
-  (let* ((opts (plist-get context :opts))
-         (text (plist-get context :text))
-         (result (parinferlib-indent-mode text opts)))
-    (parinfer--apply-result result context)))
+  (let* ((orig (plist-get context :orig))
+         (start (plist-get orig :start))
+         (end (plist-get orig :end)))
+    (unless (parinfer--exist-nonstandard-string-p start end)
+      (let* ((text (plist-get context :text))
+             (opts (plist-get context :opts))
+             (result (parinferlib-indent-mode text opts)))
+        (parinfer--apply-result result context)))))
 
 (defun parinfer--execute (context)
   "Execute parinfer with context CONTEXT."
