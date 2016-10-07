@@ -268,6 +268,8 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   (interactive)
   (when (and parinfer-smart-tab:indicator-line
              (symbolp this-command)
+             (not (eq this-command 'parinfer-smart-tab:dwim-right))
+             (not (eq this-command 'parinfer-smart-tab:dwim-left))
              (not (eq this-command 'parinfer-smart-tab:forward-char))
              (not (eq this-command 'parinfer-smart-tab:backward-char)))
     (save-excursion
@@ -281,6 +283,8 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   (interactive)
   (when (and parinfer-smart-tab:indicator-line
              (symbolp this-command)
+             (not (eq this-command 'parinfer-smart-tab:dwim-right))
+             (not (eq this-command 'parinfer-smart-tab:dwim-left))
              (not (eq this-command 'parinfer-smart-tab:forward-char))
              (not (eq this-command 'parinfer-smart-tab:backward-char)))
     (if (and (eq (line-number-at-pos) parinfer-smart-tab:indicator-line))
@@ -476,6 +480,38 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
               (end-of-line)
             (backward-char))))
     (call-interactively 'backward-char)))
+
+(defun parinfer-smart-tab:dwim-right ()
+  (interactive)
+  (cond
+   ((region-active-p)
+    (call-interactively 'parinfer-smart-tab:shift-right))
+   
+   ((parinfer--empty-line-p)
+    (parinfer-smart-tab:forward-char))
+
+   (t
+    (progn
+      (call-interactively 'set-mark-command)
+      (activate-mark)
+      (call-interactively 'parinfer-smart-tab:shift-right)
+      (deactivate-mark)))))
+
+(defun parinfer-smart-tab:dwim-left ()
+  (interactive)
+  (cond
+   ((region-active-p)
+    (call-interactively 'parinfer-smart-tab:shift-left))
+   
+   ((parinfer--empty-line-p)
+    (parinfer-smart-tab:backward-char))
+
+   (t
+    (progn
+      (call-interactively 'set-mark-command)
+      (activate-mark)
+      (call-interactively 'parinfer-smart-tab:shift-left)
+      (deactivate-mark)))))
 
 (parinfer-define-extension smart-tab
   "Smart forward-char & backward-char."
