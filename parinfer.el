@@ -5,7 +5,7 @@
 ;; Author: Shi Tianshu
 ;; Homepage: https://github.com/DogLooksGood/parinfer-mode
 ;; Version: 0.2.0
-;; Package-Requires: ((dash "2.13.0") (aggressive-indent "1.8.1") (cl-lib "0.5"))
+;; Package-Requires: ((dash "2.13.0") (cl-lib "0.5"))
 ;; Keywords: Parinfer
 
 ;; This file is not part of GNU Emacs.
@@ -62,7 +62,6 @@
 (require 'dash)
 (require 'parinferlib)
 (require 'mode-local)
-(require 'aggressive-indent)
 (require 'ediff)
 
 ;; -----------------------------------------------------------------------------
@@ -259,6 +258,19 @@ CLAUSES are the codes for lifecycle.
 ;; -----------------------------------------------------------------------------
 ;; Helpers
 ;; -----------------------------------------------------------------------------
+
+(defun parinfer--reindent-sexp ()
+  "Reindent current sexp."
+  (interactive)
+  (when (not (parinfer--in-comment-or-string-p))
+    (let ((p (point-marker)))
+      (set-marker-insertion-type p t)
+      (indent-region
+       (save-excursion
+         (beginning-of-defun 1) (point))
+       (save-excursion
+         (end-of-defun 1) (point)))
+      (goto-char p))))
 
 (defun parinfer--unfinished-string-p ()
   (save-excursion
@@ -480,11 +492,6 @@ Buffer text, we should see a confirm message."
   "Get the cursor-x which is need by parinferlib computation."
   (abs (- (line-beginning-position) (point))))
 
-(defun parinfer--reindent-sexp ()
-  "Call aggressive-indent."
-  (when (not (parinfer--in-comment-or-string-p))
-    (aggressive-indent-indent-defun)))
-
 (defun parinfer--invoke-parinfer-instantly (&optional pos)
   "Call Parinfer at POS immediately."
   (if (and pos (not (eq pos (point))))
@@ -636,20 +643,11 @@ This will finish delay processing immediately."
               (+ parinfer--x-after-shift distance))
         (setq deactivate-mark nil)))))
 
-(defun parinfer--disable-aggressive-indent-mode ()
-  (when (bound-and-true-p aggressive-indent-mode)
-    (message "parinfer-mode disabled aggressive-indent-mode for compatibility reason.")
-    (aggressive-indent-mode -1)))
-
 (defun parinfer-mode-enable ()
   "Enable 'parinfer-mode'."
-  (parinfer--disable-aggressive-indent-mode)
-  ;; Always use whitespace for indentation.
   (setq-mode-local parinfer-mode indent-tabs-mode nil)
   (require 'parinfer-ext)
   (setq parinfer--last-line-number (line-number-at-pos (point)))
-  (add-hook 'aggressive-indent-mode-hook
-            'parinfer--disable-aggressive-indent-mode t t)
   (add-hook 'post-command-hook 'parinfer--invoke-parinfer-when-necessary t t)
   (add-hook 'post-command-hook 'parinfer--update-text-modified t t)
   (add-hook 'activate-mark-hook 'parinfer--regin-mode-enable t t)
@@ -660,7 +658,6 @@ This will finish delay processing immediately."
 
 (defun parinfer-mode-disable ()
   "Disable 'parinfer-mode'."
-  (remove-hook 'aggressive-indent-mode-hook 'parinfer--disable-aggressive-indent-mode t)
   (remove-hook 'activate-mark-hook 'parinfer--regin-mode-enable t)
   (remove-hook 'post-command-hook 'parinfer--update-text-modified t)
   (remove-hook 'deactivate-mark-hook 'parinfer--region-mode-disable t)
