@@ -826,7 +826,7 @@ If there's any change, display a confirm message in minibuffer."
     (if (not success)
         (progn
           (message (concat "Pairs unmatched, swith to Paren mode. "
-                           "When pair fiexed, You can switch to indent mode."))
+                           "When pair fixed, You can switch to indent mode."))
           nil)
       (if (and changed-lines
                (not (string= text (plist-get result :text))))
