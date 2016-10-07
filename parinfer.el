@@ -668,6 +668,9 @@ This will finish delay processing immediately."
     (beginning-of-line)
     (parinfer-indent-instantly)
     (when parinfer--x-after-shift
+      (if (> parinfer--x-after-shift
+             (- (line-end-position) (line-beginning-position)))
+          (end-of-line))                            
       (forward-char parinfer--x-after-shift))
     (setq parinfer--region-shifted nil)
     (setq parinfer--x-after-shift nil))
