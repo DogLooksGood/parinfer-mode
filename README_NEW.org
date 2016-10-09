@@ -1,7 +1,14 @@
 #+TITLE: Parinfer Mode
 #+AUTHOR: DogLooksGood
 
-* What is Parinfer?
+* Table of contents
+- [[#what-is-parinfer][What Is Parinfer]]
+- [[#installation][Installation]]
+- [[#indent-and-paren-modes][Indent And Paren Modes]]
+- [[#credits][Credits]]
+- [[#license][License]]
+
+* What Is Parinfer
 *Parinfer* is a proof-of-concept editor mode for Lisp programming languages. 
 It will infer some changes to keep Parens and Indentation inline with one another.
 Parinfer consists of two modes:
@@ -30,8 +37,8 @@ Add following code to your ~.emacs~ or ~init.el~.
       (add-hook 'emacs-lisp-mode-hook #'parinfer-mode)))
 #+END_SRC
 
-* Toggle Ident/Paren Mode.
-Use ~parinfer-toggle-mode~ command.
+* Indent And Paren Modes.
+Toggle *Indent Mode* and *Paren Mode* with command ~parinfer-toggle-mode~.
 
 Whenever you switch to *Indent Mode*, parinfer-mode will correct all parens of current buffer.
 
