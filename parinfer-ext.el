@@ -68,31 +68,31 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   (font-lock-flush))
 
 ;; -----------------------------------------------------------------------------
-;; company
+;; defaults
 ;; -----------------------------------------------------------------------------
 
-(defun parinfer-company:cancel (&ignored)
+(defun parinfer-defaults:company-cancel (&ignored)
   "Invoke when company cancelled, ignore IGNORED."
   (parinfer-indent))
 
-(defun parinfer-company:finish (&ignored)
+(defun parinfer-defaults:company-finish (&ignored)
   "Invoke when company finished, ignore IGNORED. "
   (parinfer--reindent-sexp))
 
-(parinfer-define-extension company
-  "Compatibility fix for company-mode."
+(parinfer-define-extension defaults
+  "Basic compatibility fix."
   :indent
   (when (bound-and-true-p company-mode)
     (add-hook 'company-completion-cancelled-hook
-              'parinfer-company:cancel t t)
+              'parinfer-defaults:company-cancel t t)
     (remove-hook 'company-completion-finished-hook
-                 'parinfer-company:finish t))
+                 'parinfer-defaults:company-finish t))
   :paren
   (when (bound-and-true-p company-mode)
     (add-hook 'company-completion-finished-hook
-              'parinfer-company:finish t t)
+              'parinfer-defaults:company-finish t t)
     (remove-hook 'company-completion-cancelled-hook
-                 'parinfer-company:cancel t)))
+                 'parinfer-defaults:company-cancel t)))
 
 ;; -----------------------------------------------------------------------------
 ;; lispy
@@ -562,8 +562,8 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   (add-hook 'pre-command-hook 'parinfer-smart-tab:clean-indicator-pre t t)
   (define-key parinfer-mode-map [remap forward-char] 'parinfer-smart-tab:forward-char)
   (define-key parinfer-mode-map [remap backward-char] 'parinfer-smart-tab:backward-char)
-  (define-key parinfer-region-mode-map ">" 'parinfer-smart-tab:shift-right)
-  (define-key parinfer-region-mode-map "<" 'parinfer-smart-tab:shift-left)
+  (define-key parinfer-region-mode-map [remap parinfer-shift-right] 'parinfer-smart-tab:shift-right)
+  (define-key parinfer-region-mode-map [remap parinfer-shift-left] 'parinfer-smart-tab:shift-left)
   
   :unmount
   (remove-hook 'post-command-hook 'parinfer-smart-tab:clean-indicator t)

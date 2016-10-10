@@ -1,6 +1,9 @@
 #+TITLE: Parinfer Mode
 #+AUTHOR: DogLooksGood
 
+* Demo
+[[file:images/demo.gif]]
+
 * Table of contents
 - [[#what-is-parinfer][What Is Parinfer]]
 - [[#installation][Installation]]
@@ -33,6 +36,13 @@ Add following code to your ~.emacs~ or ~init.el~.
     (("C-," . parinfer-toggle-mode))
     :init
     (progn
+      (setq parinfer-extensions
+            '(defaults       ; should be included.
+              pretty-parens  ; different paren styles for different modes.
+              evil           ; If you use Evil.
+              lispy          ; If you use Lisp. With this extension, you should install lispy and do not enable lispy-mode directly.
+              smart-tab      ; C-b & C-f jump positions and smart shift with tab & S-tab.
+              smart-yank))   ; Yank behavior depend on mode.
       (add-hook 'clojure-mode-hook #'parinfer-mode)
       (add-hook 'emacs-lisp-mode-hook #'parinfer-mode)))
 #+END_SRC
@@ -40,16 +50,15 @@ Add following code to your ~.emacs~ or ~init.el~.
 * Indent And Paren Modes.
 Toggle *Indent Mode* and *Paren Mode* with command ~parinfer-toggle-mode~.
 
+* Avoid unexpect buffer changes.
 Whenever you switch to *Indent Mode*, parinfer-mode will correct all parens of current buffer.
 
-When the first time, you switch to *Indnet Mode*, if the buffer will be modified, you will see a confirm message.
-Press ~y~ to  switch to *Indent Mode* and let parinfer-mode modify the buffer.
-Press ~n~ to stay in *Paren Mode*.
-
 After opening a file, the parinfer-mode enable *Indent Mode* if it won't make any changes. 
-Otherwise, *Paren Mode* will be enabled.
+Otherwise, *Paren Mode* will be enabled, you can switch to *Indent Mode* manually later.
 
-You can use ~parinfer-diff~ command to see how will *Indent Mode* modify the buffer with ~Ediff~.
+Alternatively, you can use ~parinfer-diff~ command to see how will *Indent Mode* modify the buffer with ~Ediff~.
+
+[[file:images/diff_demo.gif]]
 
 And there are some keybindings in Ediff:
 | Key  | Description                                               |
@@ -60,7 +69,7 @@ And there are some keybindings in Ediff:
 | ~n~  | Move to next difference.                                  |
 | ~p~  | Move to previous difference.                              |
 
-Alternatively, there's a command ~parinfer-auto-fix~ to fix wrong indentation for whole buffer. (Only works with balanced parens)
+Also, There's a command ~parinfer-auto-fix~ to fix wrong indentation for whole buffer. (Only works with balanced parens)
 
 
 * Credits
