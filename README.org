@@ -1,6 +1,10 @@
 #+TITLE: Parinfer Mode
 #+AUTHOR: DogLooksGood
 
+[[https://melpa.org/#/parinfer][file:https://melpa.org/packages/parinfer-badge.svg]] [[https://stable.melpa.org/#/parinfer][file:https://stable.melpa.org/packages/parinfer-badge.svg]]
+
+[[file:images/logo.png]]
+
 * Demo
 [[file:images/demo.gif]]
 
