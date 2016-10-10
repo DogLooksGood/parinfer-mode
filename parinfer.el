@@ -78,7 +78,7 @@ The car of it is used in parinfer indent mode, the cdr
 used in parinfer paren mode.")
 
 (defvar parinfer-extensions
-  '(company pretty-parens smart-yank)
+  '(defaults pretty-parens smart-yank)
  "Parinfer extensions, which will be enabled when run parinfer.")
 
 (defvar parinfer-mode-enable-hook nil
