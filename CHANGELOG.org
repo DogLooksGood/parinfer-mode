@@ -1,6 +1,12 @@
 #+TITLE: CHANGELOG
 #+AUTHOR: DogLooksGood
 
+* v0.4.0
+- bugfix.
+- remove ~company~ extension, instead add ~defaults~.
+- improve ~smart-tab~.
+- short document.
+
 * v0.3.2
 - bugfix.
 - ~smart-tab~ extension.
