@@ -1,3 +1,4 @@
+
 #+TITLE: Parinfer Mode
 #+AUTHOR: DogLooksGood
 
@@ -83,5 +84,6 @@ Also, There's a command ~parinfer-auto-fix~ to fix wrong indentation for whole b
 - [[https://github.com/purcell][purcell]] & [[https://github.com/syohex][syohex]] :: Advice and Tips for writing emacs plugin
 
 * License
-parinferlib.el from [[https://github.com/oakmac/parinfer-elisp][parinfer-elisp]], is licensed under [[https://github.com/oakmac/parinfer-elisp/blob/master/LICENSE.md][ISC]].
-Licensed under the GPLv3.
+parinferlib.el from [[https://github.com/oakmac/parinfer-elisp][parinfer-elisp]], is licensed under the [[https://github.com/oakmac/parinfer-elisp/blob/master/LICENSE.md][ISC]].
+
+Rest part licensed under the GPLv3.
