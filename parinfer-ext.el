@@ -190,7 +190,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
     (define-key parinfer-mode-map (kbd ">") 'special-lispy-slurp)
     (define-key parinfer-mode-map (kbd "<") 'special-lispy-barf)
     (define-key parinfer-mode-map (kbd "n") 'special-lispy-new-copy)
-    (define-key parinfer-mode-map (kbd "<space>" )'parinfer-lispy:space)))
+    (define-key parinfer-mode-map (kbd "SPC" )'parinfer-lispy:space)))
     
 
 (parinfer-define-extension lispy
