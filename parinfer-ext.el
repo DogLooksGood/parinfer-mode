@@ -42,6 +42,18 @@
 ;; Pretty Parens
 ;; -----------------------------------------------------------------------------
 
+(defun parinfer-pretty-parens:fontify-search (limit)
+  (let ((result nil)
+        (finish nil)
+        (bound (+ (point) limit)))
+    (while (not finish)
+      (if (re-search-forward "\\s)" bound t)
+          (unless (eq (char-before (1- (point))) 92)
+            (setq result (match-data)
+                  finish t))
+        (setq finish t)))
+    result))
+
 (defun parinfer-pretty-parens:refresh ()
   (if (fboundp 'font-lock-flush)
       (font-lock-flush)
@@ -57,16 +69,17 @@
    "Parinfer dim paren face."
    :group 'parinfer-ext)
 
+
 (parinfer-define-extension pretty-parens
   "Pretty parens.
 
 Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   :mount
   (require 'font-lock)
-  
+
   :paren
   (font-lock-remove-keywords
-   nil '(("[^\\\\]\\()\\|}\\|\\]\\)" 1 'parinfer-pretty-parens:dim-paren-face)))
+   nil '((parinfer-pretty-parens:fontify-search . 'parinfer-pretty-parens:dim-paren-face)))
   (when (fboundp 'rainbow-delimiters-mode)
     (rainbow-delimiters-mode-enable))
   (parinfer-pretty-parens:refresh)
@@ -75,7 +88,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   (when (bound-and-true-p rainbow-delimiters-mode)
     (rainbow-delimiters-mode-disable))
   (font-lock-add-keywords
-   nil '(("[^\\\\]\\()\\|}\\|\\]\\)" 1 'parinfer-pretty-parens:dim-paren-face)))
+   nil '((parinfer-pretty-parens:fontify-search . 'parinfer-pretty-parens:dim-paren-face)))
   (parinfer-pretty-parens:refresh))
 
 ;; -----------------------------------------------------------------------------

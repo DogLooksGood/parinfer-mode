@@ -193,7 +193,7 @@ used to match command.
   "Run BODY, then invoke parinfer.
 
 Reset delay if exists."
-  `(progn
+  `(unless (parinfer--should-disable-p)
      ,@body
      (parinfer--setq-text-modified t)
      (parinfer--invoke-parinfer)))
@@ -887,7 +887,8 @@ If there's any change, display a confirm message in minibuffer."
       (backward-delete-char 1)
       (if (parinfer--in-string-p)
           (parinfer--setq-text-modified nil)
-        (parinfer--invoke-parinfer)))))
+        (unless (parinfer--should-disable-p)
+          (parinfer--invoke-parinfer))))))
 
 (defun parinfer-backward-kill-word ()
   "Replacement in symbol 'parinfer-mode' for 'backward-kill-word' command."
@@ -944,8 +945,9 @@ This is the very special situation, since we always need
 invoke parinfer after every semicolon input."
   (interactive)
   (call-interactively 'self-insert-command)
-  (parinfer-indent)
-  (parinfer--setq-text-modified t))
+  (unless (parinfer--should-disable-p)
+    (parinfer-indent)
+    (parinfer--setq-text-modified t)))
 
 (defun parinfer-double-quote ()
   "Insert a pair of quotes, or a single quote after backslash. "
@@ -955,15 +957,10 @@ invoke parinfer after every semicolon input."
              (orig-end-is-max (eq (line-number-at-pos (point-max)) orig-end)))
         (insert "\"")
         (let ((new-end (save-excursion (parinfer--goto-next-toplevel) (line-number-at-pos))))
-          (if (or (< orig-end new-end)
-                  (and orig-end-is-max
-                       (parinfer--unfinished-string-p)))
-              (unless (string-match-p "[^\\\\]\\\\$" (buffer-substring-no-properties
-                                                      (line-beginning-position)
-                                                      (line-end-position)))
-                (backward-char 1)
-                (insert "\\")
-                (forward-char 1))
+          (unless (or (< orig-end new-end)
+                      (and orig-end-is-max
+                           (parinfer--unfinished-string-p))
+                      (parinfer--should-disable-p))
             (parinfer--invoke-parinfer))))
     (call-interactively 'self-insert-command)))
 
