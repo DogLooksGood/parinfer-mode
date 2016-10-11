@@ -1,3 +1,5 @@
+
+
 ;;; parinfer-ext.el --- Extensions of parinfer-mode
 
 ;; Copyright (c) 2016, Shi Tianshu
@@ -55,7 +57,7 @@
 Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   :paren
   (font-lock-remove-keywords
-   nil '((")\\|}\\|]" . 'parinfer-pretty-parens:dim-paren-face)))
+   nil '(("[^\\\\]\\()\\|}\\|\\]\\)" 1 'parinfer-pretty-parens:dim-paren-face)))
   (when (fboundp 'rainbow-delimiters-mode)
     (rainbow-delimiters-mode-enable))
   (font-lock-flush)
@@ -64,7 +66,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   (when (bound-and-true-p rainbow-delimiters-mode)
     (rainbow-delimiters-mode-disable))
   (font-lock-add-keywords
-   nil '((")\\|}\\|]" . 'parinfer-pretty-parens:dim-paren-face)))
+   nil '(("[^\\\\]\\()\\|}\\|\\]\\)" 1 'parinfer-pretty-parens:dim-paren-face)))
   (font-lock-flush))
 
 ;; -----------------------------------------------------------------------------
