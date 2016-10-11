@@ -262,15 +262,16 @@ CLAUSES are the codes for lifecycle.
 (defun parinfer--reindent-sexp ()
   "Reindent current sexp."
   (interactive)
-  (when (not (parinfer--in-comment-or-string-p))
-    (let ((p (point-marker)))
-      (set-marker-insertion-type p t)
-      (indent-region
-       (save-excursion
-         (beginning-of-defun 1) (point))
-       (save-excursion
-         (end-of-defun 1) (point)))
-      (goto-char p))))
+  (parinfer-silent
+   (when (not (parinfer--in-comment-or-string-p))
+     (let ((p (point-marker)))
+       (set-marker-insertion-type p t)
+       (indent-region
+        (save-excursion
+          (beginning-of-defun 1) (point))
+        (save-excursion
+          (end-of-defun 1) (point)))
+       (goto-char p)))))
 
 (defun parinfer--unfinished-string-p ()
   (save-excursion
@@ -501,11 +502,10 @@ Buffer text, we should see a confirm message."
         (parinfer--invoke-parinfer-instantly)
         (parinfer--goto-line ln)
         (forward-char x))
-     (parinfer-silent
-      (cond
-       ((eq 'paren parinfer--mode) (parinfer-paren))
-       ((eq 'indent parinfer--mode) (parinfer-indent-instantly))
-       (t "nothing")))))
+     (cond
+      ((eq 'paren parinfer--mode) (parinfer-paren))
+      ((eq 'indent parinfer--mode) (parinfer-indent-instantly))
+      (t "nothing"))))
 
 (defun parinfer--invoke-parinfer (&optional pos)
   "Supposed to be called after each content change.
@@ -515,11 +515,10 @@ POS is the position we want to call parinfer."
         (goto-char pos)
         (parinfer--invoke-parinfer)
         (goto-char current-pos))
-    (parinfer-silent
-      (cond
-       ((eq 'paren parinfer--mode) (parinfer-paren))
-       ((eq 'indent parinfer--mode) (parinfer-indent))
-       (t "nothing")))))
+    (cond
+     ((eq 'paren parinfer--mode) (parinfer-paren))
+     ((eq 'indent parinfer--mode) (parinfer-indent))
+     (t "nothing"))))
 
 (defun parinfer--exist-nonstandard-string-p (start end)
   "Return if there exist nonstandard string between START and END.
@@ -713,15 +712,25 @@ CONTEXT is the context for parinfer execution."
          (start (plist-get orig :start))
          (end (plist-get orig :end))
          (window-start-pos (plist-get orig :window-start-pos))
-         (line-number (plist-get orig :line-number)))
-    (when (and (plist-get result :success)
-               (plist-get result :changed-lines))
-        (delete-region start end)
-        (insert (plist-get result :text))
-        (parinfer--goto-line line-number)
-        (forward-char (plist-get result :cursor-x))
-        (set-window-start (selected-window) window-start-pos))
-    (parinfer--setq-text-modified nil)))
+         (line-number (plist-get orig :line-number))
+         (err (plist-get result :error)))
+    (if err
+        (let ((err-line (+ (line-number-at-pos start) (plist-get err :line-no))))
+          (message "Error:%s at line: %s column:%s"
+                   (plist-get err :message)
+                   err-line
+                   (save-excursion
+                     (parinfer--goto-line err-line)
+                     (forward-char (plist-get err :x))
+                     (current-column))))
+      (when (and (plist-get result :success)
+                 (plist-get result :changed-lines))
+          (delete-region start end)
+          (insert (plist-get result :text))
+          (parinfer--goto-line line-number)
+          (forward-char (plist-get result :cursor-x))
+          (set-window-start (selected-window) window-start-pos))
+      (parinfer--setq-text-modified nil))))
 
 (defun parinfer--execute-instantly (context)
   "Execute parinfer instantly with context CONTEXT."
