@@ -32,7 +32,6 @@
 ;;; Code:
 
 (require 'parinfer)
-(require 'font-lock)
 
 (defgroup parinfer-ext
   nil
@@ -62,6 +61,9 @@
   "Pretty parens.
 
 Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
+  :mount
+  (require 'font-lock)
+  
   :paren
   (font-lock-remove-keywords
    nil '(("[^\\\\]\\()\\|}\\|\\]\\)" 1 'parinfer-pretty-parens:dim-paren-face)))
