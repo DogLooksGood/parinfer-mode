@@ -68,37 +68,35 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   (font-lock-flush))
 
 ;; -----------------------------------------------------------------------------
-;; company
+;; defaults
 ;; -----------------------------------------------------------------------------
 
-(defun parinfer-company:cancel (&ignored)
+(defun parinfer-defaults:company-cancel (&ignored)
   "Invoke when company cancelled, ignore IGNORED."
   (parinfer-indent))
 
-(defun parinfer-company:finish (&ignored)
+(defun parinfer-defaults:company-finish (&ignored)
   "Invoke when company finished, ignore IGNORED. "
   (parinfer--reindent-sexp))
 
-(parinfer-define-extension company
-  "Compatibility fix for company-mode."
+(parinfer-define-extension defaults
+  "Basic compatibility fix."
   :indent
   (when (bound-and-true-p company-mode)
     (add-hook 'company-completion-cancelled-hook
-              'parinfer-company:cancel t t)
+              'parinfer-defaults:company-cancel t t)
     (remove-hook 'company-completion-finished-hook
-                 'parinfer-company:finish t))
+                 'parinfer-defaults:company-finish t))
   :paren
   (when (bound-and-true-p company-mode)
     (add-hook 'company-completion-finished-hook
-              'parinfer-company:finish t t)
+              'parinfer-defaults:company-finish t t)
     (remove-hook 'company-completion-cancelled-hook
-                 'parinfer-company:cancel t)))
+                 'parinfer-defaults:company-cancel t)))
 
 ;; -----------------------------------------------------------------------------
 ;; lispy
 ;; -----------------------------------------------------------------------------
-
-(defvar lispy-mode-map)
 
 (defun parinfer-lispy:space ()
   (interactive)
@@ -158,33 +156,45 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
     (call-interactively 'self-insert-command)))
 
 (defun parinfer-lispy:init ()
-  (define-key lispy-mode-map (kbd "(") 'parinfer-lispy:parens)
-  (define-key lispy-mode-map (kbd ")") 'self-insert-command)
-  (define-key lispy-mode-map (kbd "[") 'parinfer-lispy:brackets)
-  (define-key lispy-mode-map (kbd "]") 'self-insert-command)
-  (define-key lispy-mode-map (kbd "{") 'parinfer-lispy:braces)
-  (define-key lispy-mode-map (kbd "}") 'self-insert-command)
-  (define-key lispy-mode-map (kbd ";") 'parinfer-semicolon)
-  (define-key lispy-mode-map [remap lispy-kill] 'kill-line)
-  (define-key lispy-mode-map [remap lispy-tick] 'self-insert-command)
-  (define-key lispy-mode-map [remap lispy-tilde] 'self-insert-command)
-  (define-key lispy-mode-map [remap lispy-newline-and-indent-plain] 'parinfer-lispy:newline)
-  (define-key lispy-mode-map [remap lispy-quotes] 'self-insert-command)
-  (define-key lispy-mode-map [remap lispy-yank] 'parinfer-yank)
-  (define-key lispy-mode-map [remap lispy-colon] 'self-insert-command)
-  (define-key lispy-mode-map [remap lispy-hash] 'self-insert-command)
-  (define-key lispy-mode-map [remap lispy-hat] 'self-insert-command)
-  (define-key lispy-mode-map [remap lispy-delete-backward] 'parinfer-backward-delete-char)
-  (define-key lispy-mode-map [remap lispy-space] 'parinfer-lispy:space))
+  (when (package-installed-p 'lispy)
+    (require 'lispy)
+    (define-key parinfer-mode-map (kbd "(") 'parinfer-lispy:parens)
+    (define-key parinfer-mode-map (kbd "{") 'parinfer-lispy:braces)
+    (define-key parinfer-mode-map (kbd "[") 'parinfer-lispy:brackets)
+    (define-key parinfer-mode-map (kbd "d") 'special-lispy-different)
+    (define-key parinfer-mode-map (kbd "-") 'special-lispy-ace-subword)
+    (define-key parinfer-mode-map (kbd "q") 'special-lispy-ace-paren)
+    (define-key parinfer-mode-map (kbd "a") 'special-lispy-ace-symbol)
+    (define-key parinfer-mode-map (kbd "c") 'special-lispy-clone)
+    (define-key parinfer-mode-map (kbd "A") 'special-lispy-beginning-of-defun)
+    (define-key parinfer-mode-map (kbd "w") 'special-lispy-move-up)
+    (define-key parinfer-mode-map (kbd "s") 'special-lispy-move-down)
+    (define-key parinfer-mode-map (kbd "h") 'special-lispy-left)
+    (define-key parinfer-mode-map (kbd "l") 'special-lispy-right)
+    (define-key parinfer-mode-map (kbd "k") 'special-lispy-up)
+    (define-key parinfer-mode-map (kbd "j") 'special-lispy-down)
+    (define-key parinfer-mode-map (kbd "u") 'special-lispy-undo)
+    (define-key parinfer-mode-map (kbd "_") 'special-lispy-underscore)
+    (define-key parinfer-mode-map (kbd "m") 'special-lispy-mark-list)
+    (define-key parinfer-mode-map (kbd "v") 'special-lispy-view)
+    (define-key parinfer-mode-map (kbd "M-m") 'lispy-mark-symbol)
+    (define-key parinfer-mode-map (kbd "b") 'special-lispy-back)
+    (define-key parinfer-mode-map (kbd "f") 'special-lispy-flow)
+    (define-key parinfer-mode-map (kbd "f") 'special-lispy-flow)
+    (define-key parinfer-mode-map (kbd "e") 'special-lispy-eval)
+    (define-key parinfer-mode-map (kbd "o") 'special-lispy-other-mode)
+    (define-key parinfer-mode-map (kbd "y") 'special-lispy-occur)
+    (define-key parinfer-mode-map (kbd "r") 'special-lispy-raise)
+    (define-key parinfer-mode-map (kbd "C-a") 'lispy-move-beginning-of-line)
+    (define-key parinfer-mode-map (kbd "g") 'special-lispy-goto)
+    (define-key parinfer-mode-map (kbd ">") 'special-lispy-slurp)
+    (define-key parinfer-mode-map (kbd "<") 'special-lispy-barf)
+    (define-key parinfer-mode-map (kbd "n") 'special-lispy-new-copy)
+    (define-key parinfer-mode-map (kbd "SPC" )'parinfer-lispy:space)))
+    
 
 (parinfer-define-extension lispy
   "Integration with Lispy."
-
-  :indent
-  (lispy-mode 1)
-
-  :paren
-  (lispy-mode -1)
 
   :mount
   (require 'eldoc)
@@ -196,10 +206,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
       parinfer-lispy:space))
   (parinfer-strategy-add 'instantly
     '(newline))
-  (add-hook 'lispy-mode-hook #'parinfer-lispy:init)
-
-  :unmount
-  (lispy-mode -1))
+  (parinfer-lispy:init))
 
 ;; -----------------------------------------------------------------------------
 ;; Evil
@@ -309,9 +316,8 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
                                        (point)))
            (text (buffer-substring-no-properties sexp-begin begin))
            (pos-list nil))
-      (parinfer-silent
+      (progn
        (with-temp-buffer
-         (with-silent-modifications)
          (insert text)
          (newline-and-indent)
          (parinfer-indent-buffer)
@@ -405,11 +411,11 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   (save-excursion
     (unless (= 1 (line-number-at-pos))
       (forward-line -1)
-      (while (and (or (parinfer--in-comment-or-string-p)
+      (while (and (or (parinfer--comment-line-p)
                       (parinfer--empty-line-p))
                   (not (= 1 (line-number-at-pos))))
         (forward-line -1))
-      (unless (or (parinfer--in-comment-or-string-p)
+      (unless (or (parinfer--comment-line-p)
                   (parinfer--empty-line-p))
         (end-of-line)
         (let ((pos-list '(0)))
@@ -556,8 +562,8 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   (add-hook 'pre-command-hook 'parinfer-smart-tab:clean-indicator-pre t t)
   (define-key parinfer-mode-map [remap forward-char] 'parinfer-smart-tab:forward-char)
   (define-key parinfer-mode-map [remap backward-char] 'parinfer-smart-tab:backward-char)
-  (define-key parinfer-region-mode-map ">" 'parinfer-smart-tab:shift-right)
-  (define-key parinfer-region-mode-map "<" 'parinfer-smart-tab:shift-left)
+  (define-key parinfer-region-mode-map [remap parinfer-shift-right] 'parinfer-smart-tab:shift-right)
+  (define-key parinfer-region-mode-map [remap parinfer-shift-left] 'parinfer-smart-tab:shift-left)
   
   :unmount
   (remove-hook 'post-command-hook 'parinfer-smart-tab:clean-indicator t)
