@@ -193,7 +193,7 @@ used to match command.
   "Run BODY, then invoke parinfer.
 
 Reset delay if exists."
-  `(unless (parinfer--should-disable-p)
+  `(progn
      ,@body
      (parinfer--setq-text-modified t)
      (parinfer--invoke-parinfer)))
@@ -522,13 +522,6 @@ POS is the position we want to call parinfer."
      ((eq 'paren parinfer--mode) (parinfer-paren))
      ((eq 'indent parinfer--mode) (parinfer-indent))
      (t "nothing"))))
-
-(defun parinfer--should-disable-p ()
-  "Should parinfer disabled at this moment."
-  (or (bound-and-true-p multiple-cursors-mode)
-      (region-active-p)
-      (and (symbolp this-command)
-           (eq this-command 'yank))))
     
 (defun parinfer--should-skip-this-command-p ()
   "Should parinfer skip this command."
@@ -547,6 +540,10 @@ POS is the position we want to call parinfer."
   (and (eq 'indent parinfer--mode)
        parinfer--text-modified
        (not (equal parinfer--last-line-number (line-number-at-pos)))))
+
+(defun parinfer--unsafe-p ()
+  "If should prevent call parinfer absolutely."
+  (bound-and-true-p multiple-cursors-mode))
 
 (defun parinfer--clean-up ()
   "Parinfer do clean job.
@@ -578,7 +575,7 @@ This will finish delay processing immediately."
      ((not (symbolp this-command))
       nil)
 
-     ((parinfer--should-disable-p) nil)
+;;     ((region-active-p) nil)
 
      ((parinfer--should-clean-up-p)
       (parinfer--clean-up))
@@ -723,13 +720,14 @@ CONTEXT is the context for parinfer execution."
 
 (defun parinfer--execute-instantly (context)
   "Execute parinfer instantly with context CONTEXT."
-  (let* ((orig (plist-get context :orig))
-         (start (plist-get orig :start))
-         (end (plist-get orig :end)))
-    (let* ((text (plist-get context :text))
-           (opts (plist-get context :opts))
-           (result (parinferlib-indent-mode text opts)))
-      (parinfer--apply-result result context))))
+  (unless (parinfer--unsafe-p)
+    (let* ((orig (plist-get context :orig))
+           (start (plist-get orig :start))
+           (end (plist-get orig :end)))
+      (let* ((text (plist-get context :text))
+             (opts (plist-get context :opts))
+             (result (parinferlib-indent-mode text opts)))
+        (parinfer--apply-result result context)))))
 
 (defun parinfer--execute (context)
   "Execute parinfer with context CONTEXT."
@@ -887,8 +885,7 @@ If there's any change, display a confirm message in minibuffer."
       (backward-delete-char 1)
       (if (parinfer--in-string-p)
           (parinfer--setq-text-modified nil)
-        (unless (parinfer--should-disable-p)
-          (parinfer--invoke-parinfer))))))
+        (parinfer--invoke-parinfer)))))
 
 (defun parinfer-backward-kill-word ()
   "Replacement in symbol 'parinfer-mode' for 'backward-kill-word' command."
@@ -945,9 +942,8 @@ This is the very special situation, since we always need
 invoke parinfer after every semicolon input."
   (interactive)
   (call-interactively 'self-insert-command)
-  (unless (parinfer--should-disable-p)
-    (parinfer-indent)
-    (parinfer--setq-text-modified t)))
+  (parinfer-indent)
+  (parinfer--setq-text-modified t))
 
 (defun parinfer-double-quote ()
   "Insert a pair of quotes, or a single quote after backslash. "
@@ -959,8 +955,7 @@ invoke parinfer after every semicolon input."
         (let ((new-end (save-excursion (parinfer--goto-next-toplevel) (line-number-at-pos))))
           (unless (or (< orig-end new-end)
                       (and orig-end-is-max
-                           (parinfer--unfinished-string-p))
-                      (parinfer--should-disable-p))
+                           (parinfer--unfinished-string-p)))
             (parinfer--invoke-parinfer))))
     (call-interactively 'self-insert-command)))
 
