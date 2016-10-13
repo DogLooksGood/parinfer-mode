@@ -21,8 +21,7 @@
 It will infer some changes to keep Parens and Indentation inline with one another.
 Parinfer consists of two modes:
 
-- Indent Mode :: Indent Mode gives you full control of indentation, while Parinfer corrects or inserts close-parens
-where appropriate.
+- Indent Mode :: Indent Mode gives you full control of indentation, while Parinfer corrects parens.
 - Paren Mode :: Paren Mode gives you full control of parens, while Parinfer corrects indentation.
 
 To learn more about Parinfer, please take a look at its [[https://shaunlebron.github.io/parinfer/][home page]].
