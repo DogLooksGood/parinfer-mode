@@ -110,7 +110,7 @@ close-parens after it.")
 (defvar parinfer-strategy
   '((default
      self-insert-command delete-indentation kill-line
-     comment-dwim kill-word delete-char newline kill-region)
+     comment-dwim kill-word delete-char newline kill-region comment-or-uncomment-region)
     (instantly
      delete-region newline)
     (skip))
@@ -543,7 +543,8 @@ POS is the position we want to call parinfer."
 
 (defun parinfer--unsafe-p ()
   "If should prevent call parinfer absolutely."
-  (bound-and-true-p multiple-cursors-mode))
+  (and (bound-and-true-p multiple-cursors-mode)
+       (use-region-p)))
 
 (defun parinfer--clean-up ()
   "Parinfer do clean job.
@@ -570,6 +571,15 @@ This will finish delay processing immediately."
 
 (defun parinfer--invoke-parinfer-when-necessary ()
   "Invoke parinfer when necessary."
+  ;; correct parinfer-region-mode for any command.
+  (when (and (not (bound-and-true-p parinfer-region-mode))
+             (use-region-p))
+    (parinfer--region-mode-enable))
+
+  (when (and (bound-and-true-p parinfer-region-mode)
+             (not (use-region-p)))
+    (parinfer--region-mode-disable))
+  
   (when this-command
     (cond
      ((not (symbolp this-command))
@@ -635,23 +645,19 @@ This will finish delay processing immediately."
   (setq parinfer--last-line-number (line-number-at-pos (point)))
   (add-hook 'post-command-hook 'parinfer--invoke-parinfer-when-necessary t t)
   (add-hook 'post-command-hook 'parinfer--update-text-modified t t)
-  (add-hook 'activate-mark-hook 'parinfer--regin-mode-enable t t)
-  (add-hook 'deactivate-mark-hook 'parinfer--region-mode-disable t t)
   (parinfer--extension-lifecycle :mount)
   (parinfer--init)
   (run-hooks 'parinfer-mode-enable-hook))
 
 (defun parinfer-mode-disable ()
   "Disable 'parinfer-mode'."
-  (remove-hook 'activate-mark-hook 'parinfer--regin-mode-enable t)
   (remove-hook 'post-command-hook 'parinfer--update-text-modified t)
-  (remove-hook 'deactivate-mark-hook 'parinfer--region-mode-disable t)
   (remove-hook 'post-command-hook 'parinfer--invoke-parinfer-when-necessary t)
   (parinfer--extension-lifecycle :unmount)
   (parinfer--region-mode-disable)
   (run-hooks 'parinfer-mode-disable-hook))
 
-(defun parinfer--regin-mode-enable ()
+(defun parinfer--region-mode-enable ()
   "Run when region activated."
   (parinfer-region-mode 1))
 
@@ -923,6 +929,12 @@ If there's any change, display a confirm message in minibuffer."
   (parinfer--setq-text-modified t)
   (parinfer-indent-buffer))
 
+(defun parinfer-mouse-drag-region ()
+  "Should do clean up if it is needed."
+  (interactive)
+  (parinfer-do)
+  (call-interactively 'mouse-drag-region))
+
 (defun parinfer-kill-region ()
   "Replacement in 'parinfer-mode' for 'kill-region' command."
   (interactive)
@@ -958,12 +970,6 @@ invoke parinfer after every semicolon input."
                            (parinfer--unfinished-string-p)))
             (parinfer--invoke-parinfer))))
     (call-interactively 'self-insert-command)))
-
-(defun parinfer-comment-dwim ()
-  "Replacement in 'parinfer-mode' for 'comment-dwim' command."
-  (interactive)
-  (parinfer-run
-   (call-interactively 'comment-dwim)))
 
 (defun parinfer-delete-indentation ()
   "Replacement in 'parinfer-mode' for 'delete-indentation' command."
@@ -1018,6 +1024,7 @@ Use this to browse and apply the changes."
   (let ((map (make-sparse-keymap)))
     (define-key map [remap backward-delete-char-untabify] 'parinfer-backward-delete-char)
     (define-key map [remap delete-backward-char] 'parinfer-backward-delete-char)
+    (define-key map [remap mouse-drag-region] 'parinfer-mouse-drag-region)
     (define-key map ";" 'parinfer-semicolon)
     (define-key map "\"" 'parinfer-double-quote)
     (define-key map [remap yank] 'parinfer-yank)
@@ -1027,7 +1034,7 @@ Use this to browse and apply the changes."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "<tab>") 'parinfer-shift-right)
     (define-key map (kbd "S-<tab>") 'parinfer-shift-left)
-    (define-key map (kbd "TAB" 'parinfer-shift-right))
+    (define-key map (kbd "TAB") 'parinfer-shift-right)
     (define-key map (kbd "<backtab>") 'parinfer-shift-left)
     (define-key map (kbd "<backspace>") 'parinfer-region-delete-region)
     (define-key map [remap parinfer-toggle-mode] 'parinfer-region-mode-switch-mode)

@@ -1,5 +1,3 @@
-
-
 ;;; parinfer-ext.el --- Extensions of parinfer-mode
 
 ;; Copyright (c) 2016, Shi Tianshu
