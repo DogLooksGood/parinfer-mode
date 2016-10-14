@@ -15,6 +15,7 @@
 - [[#indent-and-paren-modes][Indent And Paren Modes]]
 - [[#credits][Credits]]
 - [[#license][License]]
+- [[#contribution][Contribution]]
 
 * What Is Parinfer
 *Parinfer* is a proof-of-concept editor mode for Lisp programming languages. 
@@ -75,12 +76,14 @@ And there are some keybindings in Ediff:
 
 Also, There's a command ~parinfer-auto-fix~ to fix wrong indentation for whole buffer. (Only works with balanced parens)
 
-
 * Credits
 - [[https://github.com/shaunlebron][shaunlebron]] :: Create [[https://shaunlebron.github.io/parinfer/][Parinfer]].
 - [[https://github.com/oakmac][oakmac]] :: Bring Parinfer to Emacs with [[https://github.com/oakmac/parinfer-elisp][parinfer-elisp]].
 - [[https://github.com/tumashu][tumashu]] :: Help me a lot in writing this plugin.
 - [[https://github.com/purcell][purcell]] & [[https://github.com/syohex][syohex]] :: Advice and Tips for writing emacs plugin
+
+* Contribution
+Please open an issue if there's any bug or suggestion, and PR is welcomed!
 
 * License
 parinferlib.el from [[https://github.com/oakmac/parinfer-elisp][parinfer-elisp]], is licensed under the [[https://github.com/oakmac/parinfer-elisp/blob/master/LICENSE.md][ISC]].
