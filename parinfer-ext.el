@@ -642,11 +642,32 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
       (parinfer--invoke-parinfer-when-necessary)
     (parinfer-one:invoke-when-necessary)))
 
+(defun parinfer-one:backward-delete-char ()
+  "Replacement in command ‘parinfer-mode’ for ‘backward-delete-char’ command."
+  (interactive)
+  (if (eq 'paren parinfer--mode)
+      (parinfer-run
+       (if (string-match-p "^[[:space:]]+$"
+                           (buffer-substring-no-properties
+                            (line-beginning-position)
+                            (point)))
+           (delete-indentation)
+         (backward-delete-char 1)))
+    (progn
+      (backward-delete-char 1)
+      (when (parinfer--in-string-p)
+        (parinfer--setq-text-modified nil)))))
+
 (defun parinfer-one:invoke-when-necessary ()
   (when (symbolp this-command)
     (let ((key (this-command-keys))
           (after (plist-get parinfer-one:context :char-after))
           (before (plist-get parinfer-one:context :char-before)))
+      ;; (message "%s, %s, %s, %s"
+      ;;          (eq this-command 'parinfer-backward-delete-char)
+      ;;          (not (parinfer-one:beginning-p))
+      ;;          (not (plist-get parinfer-one:context :beginning))
+      ;;          (not (-contains-p parinfer-one:paren-chars before)))
       (if (eq this-command 'self-insert-command)
           (cond
 
@@ -689,7 +710,8 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
           (parinfer-one:paren))
 
          ((and before
-               (eq this-command 'parinfer-backward-delete-char)
+               (eq this-command 'parinfer-one:backward-delete-char)
+               (not (parinfer-one:beginning-p))
                (not (plist-get parinfer-one:context :beginning))
                (not (-contains-p parinfer-one:paren-chars before)))
           (parinfer-one:paren))
@@ -699,6 +721,9 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
 (parinfer-define-extension one
   "Auto switch paren mode."
   :mount
+  (parinfer-strategy-add 'default 'parinfer-one:backward-delete-char)
+  (define-key parinfer-mode-map [remap backward-delete-char-untabify] 'parinfer-one:backward-delete-char)
+  (define-key parinfer-mode-map [remap delete-backward-char] 'parinfer-one:backward-delete-char)
   (add-hook 'post-command-hook 'parinfer-one:invoke-when-necessary-auto t t)
   (add-hook 'pre-command-hook 'parinfer-one:update-context t t)
   (remove-hook 'post-command-hook 'parinfer--invoke-parinfer-when-necessary t)
