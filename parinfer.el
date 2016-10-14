@@ -537,7 +537,7 @@ POS is the position we want to call parinfer."
 
 (defun parinfer--should-clean-up-p ()
   "Should parinfer do clean job."
-  (and (eq 'indent parinfer--mode)
+  (and (eq parinfer--mode 'indent)
        parinfer--text-modified
        (not (equal parinfer--last-line-number (line-number-at-pos)))))
 
@@ -554,9 +554,9 @@ This will finish delay processing immediately."
     (cancel-timer parinfer--delay-timer)
     (setq parinfer--delay-timer nil))
   (parinfer--invoke-parinfer-instantly
-       (save-excursion
-         (parinfer--goto-line parinfer--last-line-number)
-         (line-beginning-position))))
+   (save-excursion
+     (parinfer--goto-line parinfer--last-line-number)
+     (line-beginning-position))))
 
 (defun parinfer--comment-line-p ()
   (save-excursion
@@ -584,8 +584,6 @@ This will finish delay processing immediately."
     (cond
      ((not (symbolp this-command))
       nil)
-
-;;     ((region-active-p) nil)
 
      ((parinfer--should-clean-up-p)
       (parinfer--clean-up))
@@ -932,7 +930,8 @@ If there's any change, display a confirm message in minibuffer."
 (defun parinfer-mouse-drag-region ()
   "Should do clean up if it is needed."
   (interactive)
-  (parinfer-do)
+  (when parinfer--delay-timer
+    (parinfer--clean-up))
   (call-interactively 'mouse-drag-region))
 
 (defun parinfer-kill-region ()
