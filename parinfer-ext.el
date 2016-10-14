@@ -594,14 +594,158 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   (remove-hook 'pre-command-hook 'parinfer-smart-tab:clean-indicator-pre t))
 
 
+;; -----------------------------------------------------------------------------
+;; One
+;; -----------------------------------------------------------------------------
+
+(defvar parinfer-one:context nil
+  "The context for current command.")
+
+(defvar parinfer-one:indent-trigger-keys '("(" ")" "[" "]" "{" "}"))
+
+(defun parinfer-one:open-paren-char-p (char)
+  (string-match-p "\\s(" char))
+
+(defun parinfer-one:close-paren-char-p (char)
+  (string-match-p "\\s)" char))
+
+(defconst parinfer-one:paren-chars '(40 91 123 41 93 125))
+
+(defun parinfer-one:beginning-p ()
+  (let ((p (point)))
+    (save-excursion
+      (back-to-indentation)
+      (<= p (point)))))
+
+(make-variable-buffer-local 'parinfer-one:context)
+
+(defun parinfer-one:update-context ()
+  (setq parinfer-one:context
+        (list :word-at-point (word-at-point)
+              :char-before (char-before)
+              :empty-line (parinfer--empty-line-p)
+              :beginning (parinfer-one:beginning-p)
+              :char-after (char-after))))
+
+(defun parinfer-one:get-close-paren (key)
+  (cond
+   ((string= key "(") ")")
+   ((string= key "[") "]")
+   ((string= key "{") "}")))
+
+(defun parinfer-one:paren ()
+  (unless parinfer--delay-timer
+    (parinfer-paren)))
+
+(defun parinfer-one:invoke-when-necessary-auto ()
+  (if (eq parinfer--mode 'paren)
+      (parinfer--invoke-parinfer-when-necessary)
+    (parinfer-one:invoke-when-necessary)))
+
+(defun parinfer-one:backward-delete-char ()
+  "Replacement in command ‘parinfer-mode’ for ‘backward-delete-char’ command."
+  (interactive)
+  (if (eq 'paren parinfer--mode)
+      (parinfer-run
+       (if (string-match-p "^[[:space:]]+$"
+                           (buffer-substring-no-properties
+                            (line-beginning-position)
+                            (point)))
+           (delete-indentation)
+         (backward-delete-char 1)))
+    (progn
+      (backward-delete-char 1)
+      (when (parinfer--in-string-p)
+        (parinfer--setq-text-modified nil)))))
+
+(defun parinfer-one:invoke-when-necessary ()
+  (when (and (not (bound-and-true-p parinfer-region-mode))
+             (use-region-p))
+    (parinfer--region-mode-enable))
+  (when (and (bound-and-true-p parinfer-region-mode)
+             (not (use-region-p)))
+    (parinfer--region-mode-disable))
+  (when (symbolp this-command)
+    (let ((key (this-command-keys))
+          (after (plist-get parinfer-one:context :char-after))
+          (before (plist-get parinfer-one:context :char-before)))
+      ;; (message "%s, %s, %s, %s"
+      ;;          (eq this-command 'parinfer-backward-delete-char)
+      ;;          (not (parinfer-one:beginning-p))
+      ;;          (not (plist-get parinfer-one:context :beginning))
+      ;;          (not (-contains-p parinfer-one:paren-chars before)))
+      (if (eq this-command 'self-insert-command)
+          (cond
+
+           ((-contains-p parinfer-one:indent-trigger-keys key)
+            (progn
+              (parinfer--invoke-parinfer-when-necessary)))
+
+           ((and (string= key " ")
+                 (plist-get parinfer-one:context :beginning))
+            (parinfer--invoke-parinfer-when-necessary))
+
+           ((plist-get parinfer-one:context :empty-line)
+            (parinfer--invoke-parinfer-when-necessary))
+
+           (t (parinfer-one:paren)))
+        (cond
+         ((and after
+               (eq this-command 'delete-char)
+               (not (-contains-p parinfer-one:paren-chars after)))
+          (parinfer-one:paren))
+
+         ((and (eq this-command 'newline)
+               (not (parinfer--empty-line-p)))
+          (progn
+            (parinfer-one:paren)
+            (parinfer--invoke-parinfer-when-necessary)))
+
+         ((eq this-command 'parinfer-region-delete-region)
+          (progn
+            (parinfer--invoke-parinfer-when-necessary)
+            (parinfer-one:paren)))
+
+         ((string-prefix-p "backward-kill-" (symbol-name this-command))
+          (progn
+            (parinfer--invoke-parinfer-when-necessary)
+            (parinfer-one:paren)))
+
+         ((eq this-command 'kill-region)
+          (parinfer--invoke-parinfer-when-necessary)
+          (parinfer-one:paren))
+
+         ((and before
+               (eq this-command 'parinfer-one:backward-delete-char)
+               (not (parinfer-one:beginning-p))
+               (not (plist-get parinfer-one:context :beginning))
+               (not (-contains-p parinfer-one:paren-chars before)))
+          (parinfer-one:paren))
+
+         (t (parinfer--invoke-parinfer-when-necessary)))))))
+
+(parinfer-define-extension one
+  "Auto switch paren mode."
+  :mount
+  (parinfer-strategy-add 'default 'parinfer-one:backward-delete-char)
+  (define-key parinfer-mode-map [remap backward-delete-char-untabify] 'parinfer-one:backward-delete-char)
+  (define-key parinfer-mode-map [remap delete-backward-char] 'parinfer-one:backward-delete-char)
+  (add-hook 'post-command-hook 'parinfer-one:invoke-when-necessary-auto t t)
+  (add-hook 'pre-command-hook 'parinfer-one:update-context t t)
+  (remove-hook 'post-command-hook 'parinfer--invoke-parinfer-when-necessary t)
+
+  :unmount
+  (remove-hook 'post-command-hook 'parinfer-one:invoke-when-necessary-auto t)
+  (remove-hook 'pre-command-hook 'parinfer-one:update-context t))
+  
 
 (provide 'parinfer-ext)
 ;;; parinfer-ext.el ends here
 
 
 
-          
-          
 
 
-          
+
+
+
