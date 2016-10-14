@@ -669,11 +669,6 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
     (let ((key (this-command-keys))
           (after (plist-get parinfer-one:context :char-after))
           (before (plist-get parinfer-one:context :char-before)))
-      ;; (message "%s, %s, %s, %s"
-      ;;          (eq this-command 'parinfer-backward-delete-char)
-      ;;          (not (parinfer-one:beginning-p))
-      ;;          (not (plist-get parinfer-one:context :beginning))
-      ;;          (not (-contains-p parinfer-one:paren-chars before)))
       (if (eq this-command 'self-insert-command)
           (cond
 
@@ -681,7 +676,8 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
             (progn
               (parinfer--invoke-parinfer-when-necessary)))
 
-           ((and (string= key " ")
+           ((and (stringp key)
+                 (string= key " ")
                  (plist-get parinfer-one:context :beginning))
             (parinfer--invoke-parinfer-when-necessary))
 
