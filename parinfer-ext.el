@@ -659,6 +659,12 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
         (parinfer--setq-text-modified nil)))))
 
 (defun parinfer-one:invoke-when-necessary ()
+  (when (and (not (bound-and-true-p parinfer-region-mode))
+             (use-region-p))
+    (parinfer--region-mode-enable))
+  (when (and (bound-and-true-p parinfer-region-mode)
+             (not (use-region-p)))
+    (parinfer--region-mode-disable))
   (when (symbolp this-command)
     (let ((key (this-command-keys))
           (after (plist-get parinfer-one:context :char-after))
