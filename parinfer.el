@@ -70,6 +70,9 @@
 (defvar parinfer-debug nil
   "Enable parinfer debug when set to t.")
 
+(defvar parinfer-auto-switch-indent-mode nil
+  "Auto switch back to Indent Mode after insert ).")
+
 (defvar parinfer-lighters
   '(" Parinfer:Indent" . " Parinfer:Paren")
   "Parinfer lighters in mode line.
@@ -543,8 +546,8 @@ POS is the position we want to call parinfer."
 
 (defun parinfer--unsafe-p ()
   "If should prevent call parinfer absolutely."
-  (and (bound-and-true-p multiple-cursors-mode)
-       (use-region-p)))
+  (or (bound-and-true-p multiple-cursors-mode)
+      (use-region-p)))
 
 (defun parinfer--clean-up ()
   "Parinfer do clean job.
@@ -865,7 +868,11 @@ If there's any change, display a confirm message in minibuffer."
 
 (defun parinfer-paren ()
   "Do parinfer paren  on current & previous top level S-exp."
-  (ignore-errors (parinfer--reindent-sexp)))
+  (when (and (ignore-errors (parinfer--reindent-sexp))
+             parinfer-auto-switch-indent-mode
+             (string-match-p "\\s)" (this-command-keys))
+             (not parinfer--first-load))
+    (parinfer--switch-to-indent-mode-1)))
 
 (defun parinfer-ediff-quit ()
   "Quit ‘parinfer-diff’ directly, without confirm."
