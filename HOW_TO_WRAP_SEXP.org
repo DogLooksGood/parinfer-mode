@@ -8,7 +8,6 @@ For example, I have the code like this:
          name))
 #+END_SRC
 
-*CASE ONE*
 I want:
 #+BEGIN_SRC clojure
   (defn greetings [name]
@@ -30,11 +29,11 @@ I'm trying to combine Indent Mode & Paren Mode into One Mode.
 IMO, the strategy will be:
 
 - Rule 1 :: When inserting before an open parens, insert close parens and call Paren Mode.
-- Rule 2 :: When cursor is between two open parens (~(<cursor>(~) and do delete, delete the corresponding close parens and call Paren Mode.
+- Rule 2 :: When cursor is between two open parens (~(<cursor>(~) and backspace is pressed, delete the corresponding close parens and call Paren Mode.
 - Rule 3 :: When modifying indentation, call Indent Mode.
 - Rule 4 :: When Insert/Delete parens(except Rule 1 & 2), call Ident Mode.
 - Rule 5 :: Otherwise, call Paren Mode.
 
 This is a demo, this feature is WIP, very experimental.
-You can try by add ~one~, to ~parinfer-extensions~.
+You can try by add ~one~ to ~parinfer-extensions~.
 [[file:images/one_demo.gif]]
