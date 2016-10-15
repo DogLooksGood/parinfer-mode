@@ -671,7 +671,16 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
           (before (plist-get parinfer-one:context :char-before)))
       (if (eq this-command 'self-insert-command)
           (cond
-
+           ((and (stringp key)
+                 after
+                 (parinfer-one:open-paren-char-p key)
+                 (parinfer-one:open-paren-char-p (char-to-string after)))
+            (progn
+              (save-excursion
+                (forward-sexp)
+                (insert (parinfer-one:get-close-paren key)))
+              (parinfer-one:paren)))
+           
            ((-contains-p parinfer-one:indent-trigger-keys key)
             (progn
               (parinfer--invoke-parinfer-when-necessary)))
@@ -689,7 +698,18 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
          ((and after
                (eq this-command 'delete-char)
                (not (-contains-p parinfer-one:paren-chars after)))
-          (parinfer-one:paren))
+          ((parinfer-one:paren)))
+
+         ((and (eq this-command 'parinfer-one:backward-delete-char)
+               after
+               (parinfer-one:open-paren-char-p (char-to-string after))
+               (parinfer-one:open-paren-char-p (char-to-string before))
+               (not (plist-get parinfer-one:context :beginning)))
+          (progn
+            (save-excursion
+              (while (and (not (eq (point) (point-max))) (forward-sexp)))
+              (delete-char 1))
+            (parinfer-one:paren)))
 
          ((and (eq this-command 'newline)
                (not (parinfer--empty-line-p)))
@@ -708,8 +728,9 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
             (parinfer-one:paren)))
 
          ((eq this-command 'kill-region)
-          (parinfer--invoke-parinfer-when-necessary)
-          (parinfer-one:paren))
+          (progn
+            (parinfer--invoke-parinfer-when-necessary)
+            (parinfer-one:paren)))
 
          ((and before
                (eq this-command 'parinfer-one:backward-delete-char)
