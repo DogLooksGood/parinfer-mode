@@ -175,10 +175,12 @@ used to match command.
 ;; Macros
 ;; -----------------------------------------------------------------------------
 
+;; (defmacro parinfer-silent (&rest body)
+;;   "Local set function `message' to `format', then execute BODY."
+;;   `(cl-letf (((symbol-function 'message) #'format))
+;;      ,@body))
 (defmacro parinfer-silent (&rest body)
-  "Local set function `message' to `format', then execute BODY."
-  `(cl-letf (((symbol-function 'message) #'format))
-     ,@body))
+  `(progn ,@body))
 
 (defmacro parinfer-paren-run (&rest body)
   "Run BODY in paren mode.  Keep S-sexp in correct indentation."
@@ -278,6 +280,15 @@ CLAUSES are the codes for lifecycle.
         (save-excursion
           (end-of-defun 1) (point)))
        (goto-char p)))))
+
+(defun parinfer--paren-balanced-p ()
+  "Return if current sexp is parens-balanced."
+  (save-excursion
+    (parinfer--goto-current-toplevel)
+    (let ((old-point (point)))
+      (ignore-errors (forward-sexp))
+      (unless (eq old-point (point))
+        (eq (point) (line-end-position))))))
 
 (defun parinfer--unfinished-string-p ()
   (save-excursion
@@ -868,9 +879,10 @@ If there's any change, display a confirm message in minibuffer."
 
 (defun parinfer-paren ()
   "Do parinfer paren  on current & previous top level S-exp."
+  (message "%s" (parinfer--paren-balanced-p))
   (when (and (ignore-errors (parinfer--reindent-sexp))
              parinfer-auto-switch-indent-mode
-             (string-match-p "\\s)" (this-command-keys))
+             (parinfer--paren-balanced-p)
              (not parinfer--first-load))
     (parinfer--switch-to-indent-mode-1)))
 
