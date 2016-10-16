@@ -877,7 +877,6 @@ If there's any change, display a confirm message in minibuffer."
 
 (defun parinfer-paren ()
   "Do parinfer paren  on current & previous top level S-exp."
-  (message "%s" (parinfer--paren-balanced-p))
   (when (and (ignore-errors (parinfer--reindent-sexp))
              parinfer-auto-switch-indent-mode
              (parinfer--paren-balanced-p)
