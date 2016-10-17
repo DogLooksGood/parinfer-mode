@@ -931,6 +931,12 @@ If there's any change, display a confirm message in minibuffer."
   (parinfer-run
    (call-interactively 'kill-line)))
 
+(defun parinfer-raise-sexp ()
+  "Raise sexp and Indent code."
+  (interactive)
+  (call-interactively 'raise-sexp)
+  (parinfer--reindent-sexp))
+
 (defun parinfer-region-delete-region ()
   (interactive)
   (call-interactively 'delete-region)
