@@ -707,7 +707,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
                (not (plist-get parinfer-one:context :beginning)))
           (progn
             (save-excursion
-              (while (and (not (eq (point) (point-max))) (forward-sexp)))
+              (ignore-errors (while t (forward-sexp)))
               (delete-char 1))
             (parinfer-one:paren)))
 
