@@ -933,8 +933,9 @@ If there's any change, display a confirm message in minibuffer."
 
 (defun parinfer-region-delete-region ()
   (interactive)
-  (parinfer-do
-   (call-interactively 'delete-region)))
+  (call-interactively 'delete-region)
+  (deactivate-mark t)
+  (parinfer-run))
 
 (defun parinfer-yank ()
   "Replacement in 'parinfer-mode' for 'yank' command."
