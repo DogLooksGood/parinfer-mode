@@ -698,7 +698,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
          ((and after
                (eq this-command 'delete-char)
                (not (-contains-p parinfer-one:paren-chars after)))
-          ((parinfer-one:paren)))
+          (parinfer-one:paren))
 
          ((and (eq this-command 'parinfer-one:backward-delete-char)
                after
