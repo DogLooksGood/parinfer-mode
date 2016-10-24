@@ -13,6 +13,7 @@
 - [[#what-is-parinfer][What Is Parinfer]]
 - [[#installation][Installation]]
 - [[#indent-and-paren-modes][Indent And Paren Modes]]
+- [[#configurations][Configurations]]
 - [[#credits][Credits]]
 - [[#license][License]]
 - [[#contribution][Contribution]]
@@ -52,10 +53,10 @@ Add following code to your ~.emacs~ or ~init.el~.
       (add-hook 'emacs-lisp-mode-hook #'parinfer-mode)))
 #+END_SRC
 
-* Indent And Paren Modes.
+* Indent And Paren Modes
 Toggle *Indent Mode* and *Paren Mode* with command ~parinfer-toggle-mode~.
 
-* Avoid unexpect buffer changes.
+** Avoid unexpect buffer changes.
 Whenever you switch to *Indent Mode*, parinfer-mode will correct all parens of current buffer.
 
 After opening a file, the parinfer-mode enable *Indent Mode* if it won't make any changes. 
@@ -75,6 +76,57 @@ And there are some keybindings in Ediff:
 | ~p~  | Move to previous difference.                              |
 
 Also, There's a command ~parinfer-auto-fix~ to fix wrong indentation for whole buffer. (Only works with balanced parens)
+
+* Configurations
+** parinfer-auto-switch-indent-mode
+#+BEGIN_SRC emacs-lisp
+  (setq parinfer-auto-switch-indent-mode nil)  ;; default
+#+END_SRC
+
+~t~ for enable, Parinfer will auto switch to *Indent Mode* whenever parens are balance in *Paren Mode*.
+
+** parinfer-auto-switch-indent-mode-when-closing
+#+BEGIN_SRC emacs-lisp
+  (setq parinfer-auto-switch-indent-mode-when-closing nil)  ;; default
+#+END_SRC
+
+~t~ for enable, Parinfer will auto switch to *Indent Mode* after insert a close parens(~(~, ~[~, ~{~) and parens are balanced in *Paren Mode*.
+
+** parinfer-delay-invoke-threshold
+#+BEGIN_SRC emacs-lisp
+  (setq parinfer-delay-invoke-threshold 6000)  ;; default
+#+END_SRC
+
+When the length of text for processing is longer than this, Parinfer will process text after a idle delay instead of process immediately.
+
+** parinfer-delay-invoke-idle
+#+BEGIN_SRC emacs-lisp
+  (setq parinfer-delay-invoke-idle 0.3)  ;; default
+#+END_SRC
+
+The idle seconds before Parinfer processing text on large sexp.
+
+** parinfer-extensions 
+#+BEGIN_SRC emacs-lisp
+  (setq parinfer-extensions '(defaults pretty-parens smart-yank))
+#+END_SRC
+
+The extensions that will be enabled. The list could contain followings:
+
+| Extension     | Function                                                                              |
+|---------------+---------------------------------------------------------------------------------------|
+| defaults      | Should be enabled, basic compatibility                                                |
+| pretty-parens | Use dim style for *Indent Mode*, rainbow delimiters for *Paren Mode*                  |
+| smart-yank    | Yank will preserve indentation in *Indent Mode*, will preserve parens in *Paren Mode* |
+| smart-tab     | ~C-f~ & ~C-b~ on empty line will goto next/previous import indentation.               |
+| lispy         | Integration with Lispy.                                                               |
+| evil          | Integration with Evil.                                                                |
+| one           | Experimental on fuzz *Indent Mode* and *Paren Mode*. Not recommanded.                 |
+
+** parinfer-lighters
+#+BEGIN_SRC emacs-lisp
+  (setq parinfer-lighters '(" Parinfer:Indent" . "Parinfer:Paren"))
+#+END_SRC
 
 * Credits
 - [[https://github.com/shaunlebron][shaunlebron]] :: Create [[https://shaunlebron.github.io/parinfer/][Parinfer]].
