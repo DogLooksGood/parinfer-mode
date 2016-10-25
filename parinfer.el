@@ -730,11 +730,13 @@ CONTEXT is the context for parinfer execution."
                      (current-column))))
       (when (and (plist-get result :success)
                  (plist-get result :changed-lines))
-          (delete-region start end)
+          (save-excursion
+            (delete-region start end))
           (insert (plist-get result :text))
           (parinfer--goto-line line-number)
           (forward-char (plist-get result :cursor-x))
-          (set-window-start (selected-window) window-start-pos))
+          (save-excursion
+            (set-window-start (selected-window) window-start-pos)))
       (parinfer--setq-text-modified nil))))
 
 (defun parinfer--execute-instantly (context)
@@ -819,8 +821,9 @@ Use this to remove tab indentation of your code."
                changed-lines)
       (cl-loop for l in changed-lines do
                (parinfer--goto-line (1+ (plist-get l :line-no)))
-               (delete-region (line-beginning-position)
-                              (line-end-position))
+               (save-excursion
+                 (delete-region (line-beginning-position)
+                                (line-end-position)))
                (insert (plist-get l :line)))
       (parinfer--goto-line (1+ cursor-line))
       (forward-char (plist-get result :cursor-x))
