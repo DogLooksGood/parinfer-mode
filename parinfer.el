@@ -769,7 +769,7 @@ CONTEXT is the context for parinfer execution."
            (and parinfer-auto-switch-indent-mode-when-closing
                 (let ((keys (this-command-keys)))
                   (and (stringp keys)
-                       (-contains? '(")" "]" "}") keys)))))))
+                       (string-match-p "\\s)" keys)))))))
 
 ;; -----------------------------------------------------------------------------
 ;; Parinfer commands
