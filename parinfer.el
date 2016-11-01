@@ -4,7 +4,7 @@
 
 ;; Author: Shi Tianshu
 ;; Homepage: https://github.com/DogLooksGood/parinfer-mode
-;; Version: 0.4.4
+;; Version: 0.4.5
 ;; Package-Requires: ((dash "2.13.0") (cl-lib "0.5"))
 ;; Keywords: Parinfer
 
@@ -451,13 +451,20 @@ Buffer text, we should see a confirm message."
 (defun parinfer--goto-current-toplevel ()
   "Goto the beginning of current toplevel sexp."
   (back-to-indentation)
-  (while (and (not (eq (point) (point-min)))
-              (or (parinfer--in-comment-or-string-p)
-                  (parinfer--empty-line-p)
-                  (not (eq (point) (line-beginning-position)))
-                  (not (parinfer--toplevel-line-p))))
-    (forward-line -1)
-    (back-to-indentation)))
+  (let ((prev-pos (point-max)))
+    (while (and (not (eq (point) (point-min)))
+                (not (eq (point) prev-pos))
+                (or (parinfer--in-comment-or-string-p)
+                    (parinfer--empty-line-p)
+                    (not (eq (point) (line-beginning-position)))
+                    (not (parinfer--toplevel-line-p))))
+      (setq prev-pos (point))
+      (forward-line -1)
+      (back-to-indentation))
+    ;; when insert parens after some whitespaces at first line,
+    ;; we need consider the beginning of buffer as the begin of processing range.
+    (when (eq prev-pos (point))
+      (beginning-of-line))))
 
 (defun parinfer--toplevel-line-p ()
   (string-match-p "^[({\\[#`]" (buffer-substring-no-properties
