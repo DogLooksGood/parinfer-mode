@@ -175,6 +175,15 @@ used to match command.
 (make-variable-buffer-local 'parinfer--x-after-shift)
 
 ;; -----------------------------------------------------------------------------
+;; Alias
+;; -----------------------------------------------------------------------------
+
+(defalias 'parinfer-save-excursion
+  (if (fboundp 'save-mark-and-excursion)
+      'save-mark-and-excursion
+    'save-excursion))
+
+;; -----------------------------------------------------------------------------
 ;; Macros
 ;; -----------------------------------------------------------------------------
 
@@ -276,15 +285,15 @@ CLAUSES are the codes for lifecycle.
      (let ((p (point-marker)))
        (set-marker-insertion-type p t)
        (indent-region
-        (save-mark-and-excursion
+        (parinfer-save-excursion
           (beginning-of-defun 1) (point))
-        (save-mark-and-excursion
+        (parinfer-save-excursion
           (end-of-defun 1) (point)))
        (goto-char p)))))
 
 (defun parinfer--paren-balanced-p ()
   "Return if current sexp is parens-balanced."
-  (save-mark-and-excursion
+  (parinfer-save-excursion
     (parinfer--goto-current-toplevel)
     (let ((old-point (point)))
       (ignore-errors (forward-sexp))
@@ -292,7 +301,7 @@ CLAUSES are the codes for lifecycle.
         (eq (point) (line-end-position))))))
 
 (defun parinfer--unfinished-string-p ()
-  (save-mark-and-excursion
+  (parinfer-save-excursion
     (goto-char (point-max))
     (parinfer--in-string-p)))
 
@@ -572,16 +581,16 @@ This will finish delay processing immediately."
     (cancel-timer parinfer--delay-timer)
     (setq parinfer--delay-timer nil))
   (parinfer--invoke-parinfer-instantly
-   (save-mark-and-excursion
+   (parinfer-save-excursion
      (parinfer--goto-line parinfer--last-line-number)
      (line-beginning-position))))
 
 (defun parinfer--comment-line-p ()
-  (save-mark-and-excursion
+  (parinfer-save-excursion
     (back-to-indentation)
     (let ((f (get-text-property (point) 'face)))
       (and (string-match-p "^;+.*$" (buffer-substring-no-properties (point) (line-end-position)))
-           (save-mark-and-excursion
+           (parinfer-save-excursion
              (end-of-line)
              (or (nth 4 (syntax-ppss))
                  (eq f 'font-lock-comment-face)
@@ -630,7 +639,7 @@ This will finish delay processing immediately."
   (setq parinfer--x-after-shift (- (point) (line-beginning-position)))
   (let* ((begin (region-beginning))
          (end (region-end))
-         (new-begin (save-mark-and-excursion
+         (new-begin (parinfer-save-excursion
                       (goto-char begin)
                       (line-beginning-position))))
     (goto-char new-begin)
@@ -645,7 +654,7 @@ This will finish delay processing immediately."
     (when (not parinfer--region-shifted)
       (parinfer--active-line-region))
     (let ((mark (mark)))
-      (save-mark-and-excursion
+      (parinfer-save-excursion
         (indent-rigidly (region-beginning)
                         (region-end)
                         distance)
@@ -696,8 +705,8 @@ This will finish delay processing immediately."
 (defun parinfer--prepare ()
   "Prepare input arguments for parinferlib."
   (let* ((window-start-pos (window-start))
-         (start (save-mark-and-excursion (parinfer--goto-previous-toplevel) (point)))
-         (end (save-mark-and-excursion (parinfer--goto-next-toplevel) (point)))
+         (start (parinfer-save-excursion (parinfer--goto-previous-toplevel) (point)))
+         (end (parinfer-save-excursion (parinfer--goto-next-toplevel) (point)))
          (text (buffer-substring-no-properties start end))
          (line-number (line-number-at-pos))
          (cursor-line (- line-number (line-number-at-pos start)))
@@ -727,7 +736,7 @@ CONTEXT is the context for parinfer execution."
           (message "Parinfer error:%s at line: %s column:%s"
                    (plist-get err :message)
                    err-line
-                   (save-mark-and-excursion
+                   (parinfer-save-excursion
                      (parinfer--goto-line err-line)
                      (forward-char (plist-get err :x))
                      (current-column))))
@@ -736,7 +745,7 @@ CONTEXT is the context for parinfer execution."
                    changed-lines)
           (cl-loop for l in changed-lines do
                    (parinfer--goto-line (+ (line-number-at-pos start) (plist-get l :line-no)))
-                   (save-mark-and-excursion
+                   (parinfer-save-excursion
                      (delete-region (line-beginning-position)
                                     (line-end-position)))
                    (insert (plist-get l :line)))
@@ -826,7 +835,7 @@ Use this to remove tab indentation of your code."
                changed-lines)
       (cl-loop for l in changed-lines do
                (parinfer--goto-line (1+ (plist-get l :line-no)))
-               (save-mark-and-excursion
+               (parinfer-save-excursion
                  (delete-region (line-beginning-position)
                                 (line-end-position)))
                (insert (plist-get l :line)))
@@ -1002,10 +1011,10 @@ invoke parinfer after every semicolon input."
   "Insert a pair of quotes, or a single quote after backslash. "
   (interactive)
   (if (parinfer--in-string-p)
-      (let* ((orig-end (save-mark-and-excursion (parinfer--goto-next-toplevel) (line-number-at-pos)))
+      (let* ((orig-end (parinfer-save-excursion (parinfer--goto-next-toplevel) (line-number-at-pos)))
              (orig-end-is-max (eq (line-number-at-pos (point-max)) orig-end)))
         (insert "\"")
-        (let ((new-end (save-mark-and-excursion (parinfer--goto-next-toplevel) (line-number-at-pos))))
+        (let ((new-end (parinfer-save-excursion (parinfer--goto-next-toplevel) (line-number-at-pos))))
           (unless (or (< orig-end new-end)
                       (and orig-end-is-max
                            (parinfer--unfinished-string-p)))
