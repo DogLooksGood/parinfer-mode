@@ -305,7 +305,9 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
        (not (eq this-command 'parinfer-smart-tab:dwim-right))
        (not (eq this-command 'parinfer-smart-tab:dwim-left))
        (not (eq this-command 'parinfer-smart-tab:forward-char))
-       (not (eq this-command 'parinfer-smart-tab:backward-char))))
+       (not (eq this-command 'parinfer-smart-tab:backward-char))
+       (not (eq this-command 'parinfer-smart-tab:forward-char-with-indicator))
+       (not (eq this-command 'parinfer-smart-tab:backward-char-with-indicator))))
 
 (defun parinfer-smart-tab:clean-indicator-pre ()
   (interactive)
@@ -478,6 +480,50 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
 
 (defun parinfer-smart-tab:forward-char ()
   (interactive)
+  (if (and (not (parinfer--in-comment-or-string-p))
+           (parinfer--empty-line-p))
+      (progn
+        (when parinfer--delay-timer
+          (parinfer--clean-up))
+        (let ((pos-list (parinfer-smart-tab:find-possible-positions))
+              (current-x (- (point) (line-beginning-position))))
+          (if (>= current-x (-max pos-list))
+              (progn
+                (beginning-of-line)
+                (delete-region (point) (line-end-position)))
+            (progn
+              (beginning-of-line)
+              (let ((next-x (-last-item (-filter (lambda (x) (> x current-x)) pos-list))))
+                (cl-loop for i from 1 to next-x do
+                         (insert " ")))))
+         (setq parinfer-smart-tab:indicator-line (line-number-at-pos))))
+    (call-interactively 'forward-char)))
+
+(defun parinfer-smart-tab:backward-char ()
+  (interactive)
+  (if (and (not (parinfer--in-comment-or-string-p))
+           (parinfer--empty-line-p))
+      (progn
+        (when parinfer--delay-timer
+          (parinfer--clean-up))
+        (let ((pos-list (parinfer-smart-tab:find-possible-positions))
+              (current-x (- (point) (line-beginning-position))))
+          (if (<= current-x (-min pos-list))
+              (progn
+                (beginning-of-line)
+                (let ((next-x (-max pos-list)))
+                  (cl-loop for i from 1 to next-x do
+                           (insert " "))))
+            (progn
+              (beginning-of-line)
+              (let ((next-x (-first-item (-filter (lambda (x) (< x current-x)) pos-list))))
+                (cl-loop for i from 1 to next-x do
+                         (insert " ")))))
+          (setq parinfer-smart-tab:indicator-line (line-number-at-pos))))
+    (call-interactively 'backward-char)))
+
+(defun parinfer-smart-tab:forward-char-with-indicator ()
+  (interactive)
   (when (and (not (parinfer--in-comment-or-string-p))
              (parinfer--empty-line-p)
              (not parinfer-smart-tab:indicator-line))
@@ -500,7 +546,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
             (setq forward-count (1+ forward-count)))))
     (call-interactively 'forward-char)))
 
-(defun parinfer-smart-tab:backward-char ()
+(defun parinfer-smart-tab:backward-char-with-indicator ()
   (interactive)
   (when (and (not (parinfer--in-comment-or-string-p))
              (parinfer--empty-line-p)
