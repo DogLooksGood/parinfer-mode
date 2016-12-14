@@ -90,8 +90,7 @@ Also, There's a command ~parinfer-auto-fix~ to fix wrong indentation for whole b
   (setq parinfer-auto-switch-indent-mode-when-closing nil)  ;; default
 #+END_SRC
 
-~t~ for enable, Parinfer will auto switch to *Indent Mode* after insert a close parens(~(~, ~[~, ~{~) and parens are balanced in *Paren Mode*.
-
+~t~ for enable, Parinfer will auto switch to *Indent Mode* when the inserted close parens (~)~, ~]~, ~}~) balance the parens of current sexp.
 ** parinfer-delay-invoke-threshold
 #+BEGIN_SRC emacs-lisp
   (setq parinfer-delay-invoke-threshold 6000)  ;; default
