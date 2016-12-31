@@ -47,10 +47,14 @@ Add following code to your ~.emacs~ or ~init.el~.
               pretty-parens  ; different paren styles for different modes.
               evil           ; If you use Evil.
               lispy          ; If you use Lispy. With this extension, you should install Lispy and do not enable lispy-mode directly.
+              paredit        ; Introduce some paredit commands.
               smart-tab      ; C-b & C-f jump positions and smart shift with tab & S-tab.
               smart-yank))   ; Yank behavior depend on mode.
       (add-hook 'clojure-mode-hook #'parinfer-mode)
-      (add-hook 'emacs-lisp-mode-hook #'parinfer-mode)))
+      (add-hook 'emacs-lisp-mode-hook #'parinfer-mode)
+      (add-hook 'common-lisp-mode-hook #'parinfer-mode)
+      (add-hook 'scheme-mode-hook #'parinfer-mode)
+      (add-hook 'lisp-mode-hook #'parinfer-mode)))
 #+END_SRC
 
 * Indent And Paren Modes
@@ -118,6 +122,7 @@ The extensions that will be enabled. The list could contain followings:
 | pretty-parens | Use dim style for *Indent Mode*, rainbow delimiters for *Paren Mode*                  |
 | smart-yank    | Yank will preserve indentation in *Indent Mode*, will preserve parens in *Paren Mode* |
 | smart-tab     | ~C-f~ & ~C-b~ on empty line will goto next/previous import indentation.               |
+| paredit       | Introduce some paredit commands from paredit-mode.                                    |
 | lispy         | Integration with Lispy.                                                               |
 | evil          | Integration with Evil.                                                                |
 | one           | Experimental on fuzz *Indent Mode* and *Paren Mode*. Not recommanded.                 |

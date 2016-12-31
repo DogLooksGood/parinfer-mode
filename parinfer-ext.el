@@ -118,6 +118,32 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
                  'parinfer-defaults:company-cancel t)))
 
 ;; -----------------------------------------------------------------------------
+;; paredit
+;; -----------------------------------------------------------------------------
+
+(defun parinfer-paredit:init ()
+  (if (package-installed-p 'paredit)
+      (progn
+        (require 'paredit)
+        (bind-key "C-{" 'paredit-backward-barf-sexp parinfer-mode-map)
+        (bind-key "C-}" 'paredit-forward-barf-sexp parinfer-mode-map)
+        (bind-key "C-(" 'paredit-backward-slurp-sexp parinfer-mode-map)
+        (bind-key "C-)" 'paredit-forward-slurp-sexp parinfer-mode-map)
+        (bind-key "M-r" 'paredit-raise-sexp parinfer-mode-map)
+        (bind-key "M-j" 'paredit-join-sexps parinfer-mode-map)
+        (bind-key "M-s" 'paredit-splice-sexp parinfer-mode-map)
+        (bind-key "M-S" 'paredit-split-sexp parinfer-mode-map))
+    (message "Parinfer extension paredit: It seems Paredit is not installed!")))
+
+(parinfer-define-extension paredit
+  "Introduce some paredit commands from paredit-mode."
+
+  :mount
+  (parinfer-strategy-add 'default
+    '("paredit-"))
+  (parinfer-paredit:init))
+
+;; -----------------------------------------------------------------------------
 ;; lispy
 ;; -----------------------------------------------------------------------------
 
@@ -179,44 +205,45 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
     (call-interactively 'self-insert-command)))
 
 (defun parinfer-lispy:init ()
-  (when (package-installed-p 'lispy)
-    (require 'lispy)
-    (define-key parinfer-mode-map (kbd "(") 'parinfer-lispy:parens)
-    (define-key parinfer-mode-map (kbd "{") 'parinfer-lispy:braces)
-    (define-key parinfer-mode-map (kbd "[") 'parinfer-lispy:brackets)
-    (define-key parinfer-mode-map (kbd "d") 'special-lispy-different)
-    (define-key parinfer-mode-map (kbd "-") 'special-lispy-ace-subword)
-    (define-key parinfer-mode-map (kbd "q") 'special-lispy-ace-paren)
-    (define-key parinfer-mode-map (kbd "a") 'special-lispy-ace-symbol)
-    (define-key parinfer-mode-map (kbd "c") 'special-lispy-clone)
-    (define-key parinfer-mode-map (kbd "A") 'special-lispy-beginning-of-defun)
-    (define-key parinfer-mode-map (kbd "w") 'special-lispy-move-up)
-    (define-key parinfer-mode-map (kbd "s") 'special-lispy-move-down)
-    (define-key parinfer-mode-map (kbd "h") 'special-lispy-left)
-    (define-key parinfer-mode-map (kbd "l") 'special-lispy-right)
-    (define-key parinfer-mode-map (kbd "k") 'special-lispy-up)
-    (define-key parinfer-mode-map (kbd "j") 'special-lispy-down)
-    (define-key parinfer-mode-map (kbd "u") 'special-lispy-undo)
-    (define-key parinfer-mode-map (kbd "_") 'special-lispy-underscore)
-    (define-key parinfer-mode-map (kbd "m") 'special-lispy-mark-list)
-    (define-key parinfer-mode-map (kbd "v") 'special-lispy-view)
-    (define-key parinfer-mode-map (kbd "M-m") 'lispy-mark-symbol)
-    (define-key parinfer-mode-map (kbd "b") 'special-lispy-back)
-    (define-key parinfer-mode-map (kbd "f") 'special-lispy-flow)
-    (define-key parinfer-mode-map (kbd "f") 'special-lispy-flow)
-    (define-key parinfer-mode-map (kbd "e") 'special-lispy-eval)
-    (define-key parinfer-mode-map (kbd "o") 'special-lispy-other-mode)
-    (define-key parinfer-mode-map (kbd "O") 'special-lispy-oneline)
-    (define-key parinfer-mode-map (kbd "M") 'special-lispy-alt-multiline)
-    (define-key parinfer-mode-map (kbd "y") 'special-lispy-occur)
-    (define-key parinfer-mode-map (kbd "r") 'special-lispy-raise)
-    (define-key parinfer-mode-map (kbd "C-a") 'lispy-move-beginning-of-line)
-    (define-key parinfer-mode-map (kbd "g") 'special-lispy-goto)
-    (define-key parinfer-mode-map (kbd ">") 'special-lispy-slurp)
-    (define-key parinfer-mode-map (kbd "<") 'special-lispy-barf)
-    (define-key parinfer-mode-map (kbd "n") 'special-lispy-new-copy)
-    (define-key parinfer-mode-map (kbd "SPC" )'parinfer-lispy:space)))
-    
+  (if (package-installed-p 'lispy)
+      (progn
+        (require 'lispy)
+        (define-key parinfer-mode-map (kbd "(") 'parinfer-lispy:parens)
+        (define-key parinfer-mode-map (kbd "{") 'parinfer-lispy:braces)
+        (define-key parinfer-mode-map (kbd "[") 'parinfer-lispy:brackets)
+        (define-key parinfer-mode-map (kbd "d") 'special-lispy-different)
+        (define-key parinfer-mode-map (kbd "-") 'special-lispy-ace-subword)
+        (define-key parinfer-mode-map (kbd "q") 'special-lispy-ace-paren)
+        (define-key parinfer-mode-map (kbd "a") 'special-lispy-ace-symbol)
+        (define-key parinfer-mode-map (kbd "c") 'special-lispy-clone)
+        (define-key parinfer-mode-map (kbd "A") 'special-lispy-beginning-of-defun)
+        (define-key parinfer-mode-map (kbd "w") 'special-lispy-move-up)
+        (define-key parinfer-mode-map (kbd "s") 'special-lispy-move-down)
+        (define-key parinfer-mode-map (kbd "h") 'special-lispy-left)
+        (define-key parinfer-mode-map (kbd "l") 'special-lispy-right)
+        (define-key parinfer-mode-map (kbd "k") 'special-lispy-up)
+        (define-key parinfer-mode-map (kbd "j") 'special-lispy-down)
+        (define-key parinfer-mode-map (kbd "u") 'special-lispy-undo)
+        (define-key parinfer-mode-map (kbd "_") 'special-lispy-underscore)
+        (define-key parinfer-mode-map (kbd "m") 'special-lispy-mark-list)
+        (define-key parinfer-mode-map (kbd "v") 'special-lispy-view)
+        (define-key parinfer-mode-map (kbd "M-m") 'lispy-mark-symbol)
+        (define-key parinfer-mode-map (kbd "b") 'special-lispy-back)
+        (define-key parinfer-mode-map (kbd "f") 'special-lispy-flow)
+        (define-key parinfer-mode-map (kbd "f") 'special-lispy-flow)
+        (define-key parinfer-mode-map (kbd "e") 'special-lispy-eval)
+        (define-key parinfer-mode-map (kbd "o") 'special-lispy-other-mode)
+        (define-key parinfer-mode-map (kbd "O") 'special-lispy-oneline)
+        (define-key parinfer-mode-map (kbd "M") 'special-lispy-alt-multiline)
+        (define-key parinfer-mode-map (kbd "y") 'special-lispy-occur)
+        (define-key parinfer-mode-map (kbd "r") 'special-lispy-raise)
+        (define-key parinfer-mode-map (kbd "C-a") 'lispy-move-beginning-of-line)
+        (define-key parinfer-mode-map (kbd "g") 'special-lispy-goto)
+        (define-key parinfer-mode-map (kbd ">") 'special-lispy-slurp)
+        (define-key parinfer-mode-map (kbd "<") 'special-lispy-barf)
+        (define-key parinfer-mode-map (kbd "n") 'special-lispy-new-copy)
+        (define-key parinfer-mode-map (kbd "SPC" )'parinfer-lispy:space))
+    (message "Parinfer extension lispy: It seems Lispy is not installed!")))
 
 (parinfer-define-extension lispy
   "Integration with Lispy."
