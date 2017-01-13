@@ -4,7 +4,7 @@
 
 ;; Author: Shi Tianshu
 ;; Homepage: https://github.com/DogLooksGood/parinfer-mode
-;; Version: 0.4.6
+;; Version: 0.4.7
 ;; Package-Requires: ((dash "2.13.0") (cl-lib "0.5"))
 ;; Keywords: Parinfer
 
@@ -97,6 +97,9 @@ used in parinfer paren mode.")
   "Call after parinfer mode switch between Indent Mode & Paren Mode.
 
 One argument for hook function, MODE present for the mode will be used.")
+
+(defvar parinfer-after-execute-hook nil
+  "Call after parinfer executed.")
 
 (defvar parinfer-preview-cursor-scope nil
   "Set it to t will show cursor scop in Indent Mode.
@@ -762,7 +765,8 @@ CONTEXT is the context for parinfer execution."
       (let* ((text (plist-get context :text))
              (opts (plist-get context :opts))
              (result (parinferlib-indent-mode text opts)))
-        (parinfer--apply-result result context)))))
+        (parinfer--apply-result result context)
+        (run-hooks 'parinfer-after-execute-hook)))))
 
 (defun parinfer--execute (context)
   "Execute parinfer with context CONTEXT."
