@@ -397,7 +397,7 @@ COMMANDS can be:
     (parinfer--setq-text-modified t)))
 
 (defun parinfer--switch-to-indent-mode-1 ()
-  "Swith to indent mode auxiliary function."
+  "Switch to indent mode auxiliary function."
   (parinfer--switch-to 'indent
     (setq parinfer--mode 'indent)
     (setq parinfer--first-load nil)
@@ -862,8 +862,8 @@ If There's no change, switch to Indent Mode."
          (changed-lines (plist-get result :changed-lines)))
     (if (not success)
         (progn
-          (message (concat "Parinfer: Pairs unmatched, swith to Paren mode. "
-                           "When pair fiexed, You can switch to indent mode."))
+          (message (concat "Parinfer: Pairs unmatched, switch to Paren mode. "
+                           "When pair fixed, You can switch to indent mode."))
           nil)
       (if (and changed-lines
                (not (string= text (plist-get result :text))))
@@ -890,7 +890,7 @@ If there's any change, display a confirm message in minibuffer."
          (changed-lines (plist-get result :changed-lines)))
     (if (not success)
         (progn
-          (message (concat "Pairs unmatched, swith to Paren mode. "
+          (message (concat "Pairs unmatched, switch to Paren mode. "
                            "When pair fixed, You can switch to indent mode."))
           nil)
       (if (and changed-lines
