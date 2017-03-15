@@ -4,7 +4,7 @@
 
 ;; Author: Shi Tianshu
 ;; Homepage: https://github.com/DogLooksGood/parinfer-mode
-;; Version: 0.4.7
+;; Version: 0.4.8
 ;; Package-Requires: ((dash "2.13.0") (cl-lib "0.5"))
 ;; Keywords: Parinfer
 
@@ -181,10 +181,9 @@ used to match command.
 ;; Alias
 ;; -----------------------------------------------------------------------------
 
-(defalias 'parinfer-save-excursion
-  (if (fboundp 'save-mark-and-excursion)
-      'save-mark-and-excursion
-    'save-excursion))
+(if (fboundp 'save-mark-and-excursion)
+    (defalias 'parinfer-save-excursion 'save-mark-and-excursion)
+  (defalias 'parinfer-save-excursion 'save-excursion))
 
 ;; -----------------------------------------------------------------------------
 ;; Macros
