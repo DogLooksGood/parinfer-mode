@@ -125,14 +125,14 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   (if (package-installed-p 'paredit)
       (progn
         (require 'paredit)
-        (bind-key "C-{" 'paredit-backward-barf-sexp parinfer-mode-map)
-        (bind-key "C-}" 'paredit-forward-barf-sexp parinfer-mode-map)
-        (bind-key "C-(" 'paredit-backward-slurp-sexp parinfer-mode-map)
-        (bind-key "C-)" 'paredit-forward-slurp-sexp parinfer-mode-map)
-        (bind-key "M-r" 'paredit-raise-sexp parinfer-mode-map)
-        (bind-key "M-j" 'paredit-join-sexps parinfer-mode-map)
-        (bind-key "M-s" 'paredit-splice-sexp parinfer-mode-map)
-        (bind-key "M-S" 'paredit-split-sexp parinfer-mode-map))
+        (define-key parinfer-mode-map (kbd "C-{") 'paredit-backward-barf-sexp)
+        (define-key parinfer-mode-map (kbd "C-}") 'paredit-forward-barf-sexp)
+        (define-key parinfer-mode-map (kbd "C-(") 'paredit-backward-slurp-sexp)
+        (define-key parinfer-mode-map (kbd "C-)") 'paredit-forward-slurp-sexp)
+        (define-key parinfer-mode-map (kbd "M-r") 'paredit-raise-sexp)
+        (define-key parinfer-mode-map (kbd "M-j") 'paredit-join-sexp)
+        (define-key parinfer-mode-map (kbd "M-s") 'paredit-splice-sexp)
+        (define-key parinfer-mode-map (kbd "M-S") 'paredit-split-sexp))
     (message "Parinfer extension paredit: It seems Paredit is not installed!")))
 
 (parinfer-define-extension paredit
