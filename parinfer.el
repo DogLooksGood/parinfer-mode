@@ -4,7 +4,7 @@
 
 ;; Author: Shi Tianshu
 ;; Homepage: https://github.com/DogLooksGood/parinfer-mode
-;; Version: 0.4.9
+;; Version: 0.4.10
 ;; Package-Requires: ((dash "2.13.0") (cl-lib "0.5"))
 ;; Keywords: Parinfer
 
@@ -962,6 +962,12 @@ If there's any change, display a confirm message in minibuffer."
   (parinfer-run
    (call-interactively 'kill-line)))
 
+(defun parinfer-delete-indentation ()
+  "Replacement in 'parinfer-mode' for 'delete-indentation' command."
+  (interactive)
+  (parinfer-paren-run
+   (call-interactively 'delete-indentation)))
+
 (defun parinfer-raise-sexp ()
   "Raise sexp and Indent code."
   (interactive)
@@ -1078,6 +1084,7 @@ Use this to browse and apply the changes."
     (define-key map [remap backward-delete-char-untabify] 'parinfer-backward-delete-char)
     (define-key map [remap delete-backward-char] 'parinfer-backward-delete-char)
     (define-key map [remap mouse-drag-region] 'parinfer-mouse-drag-region)
+    (define-key map [remap delete-indentation] 'parinfer-delete-indentation)
     (define-key map ";" 'parinfer-semicolon)
     (define-key map "\"" 'parinfer-double-quote)
     (define-key map [remap yank] 'parinfer-yank)
