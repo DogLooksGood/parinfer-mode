@@ -130,7 +130,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
         (define-key parinfer-mode-map (kbd "C-(") 'paredit-backward-slurp-sexp)
         (define-key parinfer-mode-map (kbd "C-)") 'paredit-forward-slurp-sexp)
         (define-key parinfer-mode-map (kbd "M-r") 'paredit-raise-sexp)
-        (define-key parinfer-mode-map (kbd "M-j") 'paredit-join-sexp)
+        (define-key parinfer-mode-map (kbd "M-j") 'paredit-join-sexps)
         (define-key parinfer-mode-map (kbd "M-s") 'paredit-splice-sexp)
         (define-key parinfer-mode-map (kbd "M-S") 'paredit-split-sexp))
     (message "Parinfer extension paredit: It seems Paredit is not installed!")))
