@@ -974,11 +974,13 @@ If there's any change, display a confirm message in minibuffer."
   (call-interactively 'raise-sexp)
   (parinfer--reindent-sexp))
 
-(defun parinfer-region-delete-region ()
-  (interactive)
-  (call-interactively 'delete-region)
-  (deactivate-mark t)
-  (parinfer-run))
+ (defun parinfer-region-delete-region ()
+    (interactive)
+    (if (region-active-p)
+        (call-interactively 'delete-region)
+      (call-interactively 'parinfer-backward-delete-char))
+    (deactivate-mark t)
+    (parinfer-run))
 
 (defun parinfer-yank ()
   "Replacement in 'parinfer-mode' for 'yank' command."
