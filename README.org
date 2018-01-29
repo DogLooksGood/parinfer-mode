@@ -1,4 +1,3 @@
-
 #+TITLE: Parinfer Mode
 #+AUTHOR: DogLooksGood
 
@@ -6,6 +5,8 @@
 
 [[file:images/logo.png]]
 
+* About Smart Mode
+Currently this project is rewriting for providing smart mode on branch `v3`.
 * Demo
 [[file:images/demo.gif]]
 
@@ -19,7 +20,7 @@
 - [[#contribution][Contribution]]
 
 * What Is Parinfer
-*Parinfer* is a proof-of-concept editor mode for Lisp programming languages. 
+*Parinfer* is a proof-of-concept editor mode for Lisp programming languages.
 It will infer some changes to keep Parens and Indentation inline with one another.
 Parinfer consists of two modes:
 
@@ -63,7 +64,7 @@ Toggle *Indent Mode* and *Paren Mode* with command ~parinfer-toggle-mode~.
 ** Avoid unexpect buffer changes.
 Whenever you switch to *Indent Mode*, parinfer-mode will correct all parens of current buffer.
 
-After opening a file, the parinfer-mode enable *Indent Mode* if it won't make any changes. 
+After opening a file, the parinfer-mode enable *Indent Mode* if it won't make any changes.
 Otherwise, *Paren Mode* will be enabled, you can switch to *Indent Mode* manually later.
 
 Alternatively, you can use ~parinfer-diff~ command to see how will *Indent Mode* modify the buffer with ~Ediff~.
@@ -109,7 +110,7 @@ When the length of text for processing is longer than this, Parinfer will proces
 
 The idle seconds before Parinfer processing text on large sexp.
 
-** parinfer-extensions 
+** parinfer-extensions
 #+BEGIN_SRC emacs-lisp
   (setq parinfer-extensions '(defaults pretty-parens smart-yank))
 #+END_SRC
