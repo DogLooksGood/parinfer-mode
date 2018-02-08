@@ -122,7 +122,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
 ;; -----------------------------------------------------------------------------
 
 (defun parinfer-paredit:init ()
-  (if (package-installed-p 'paredit)
+  (if (fboundp 'paredit-mode)
       (progn
         (require 'paredit)
         (define-key parinfer-mode-map (kbd "C-{") 'paredit-backward-barf-sexp)
