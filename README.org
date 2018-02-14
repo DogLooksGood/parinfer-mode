@@ -6,7 +6,7 @@
 [[file:images/logo.png]]
 
 * About Smart Mode
-Currently this project is rewriting for providing smart mode on branch `v3`.
+Currently this project is rewriting for providing smart mode on branch `smart`.
 * Demo
 [[file:images/demo.gif]]
 
