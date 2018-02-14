@@ -6,7 +6,22 @@
 [[file:images/logo.png]]
 
 * About Smart Mode
-Currently this project is rewriting for providing smart mode on branch `v3`.
+Currently this project is rewriting for providing smart mode on branch `smart`.
+It's under development and  highly experimental, should be used for testing only.
+
+*Smart Mode* combines *Indent Mode* and *Paren Mode* since parinfer v3.0.
+`parinfer-smart.el` provide `Smart Mode` implementation.
+This is *NOT* compatible with the old `parinfer-mode`.
+
+If you want to have a try:
+#+BEGIN_SRC emacs-lisp
+  (require 'parinfer-smart)
+
+  ;; M-x parinfer-mode<RET>
+#+END_SRC
+
+** Performance
+`parinfer-smart` is much faster than the old version, with `byte-compile`, it can process 1.7k lines in 40ms on my MBP2015.
 * Demo
 [[file:images/demo.gif]]
 
