@@ -43,6 +43,8 @@
 (defconst parinfer--error-quote-danger "Quotes must balanced inside comment blocks.")
 (defconst parinfer--error-unclosed-quote "String is missing a closing quote.")
 (defconst parinfer--error-unclosed-paren "Unclosed open-paren.")
+(defconst parinfer--error-unmatched-close-paren "Unmatched close-paren.")
+(defconst parinfer--error-leading-close-paren "Line cannot lead with a close-paren.")
 
 ;; -----------------------------------------------------------------------------
 ;; VARIABLES
@@ -127,6 +129,15 @@ All text after `parinfer--edit-begin' and before this position will be preserved
 (defvar-local parinfer--process-line-end nil)
 
 (defvar-local parinfer--from-comment nil)
+
+;; -----------------------------------------------------------------------------
+;; CUSTOMIZE
+;; -----------------------------------------------------------------------------
+
+(defcustom parinfer-preview-cursor-scope t
+  "Allow temporary leading closer?"
+  :type 'boolean
+  :group 'parinfer)
 
 ;; -----------------------------------------------------------------------------
 ;; UTILITIES
@@ -255,7 +266,10 @@ these whitespaces will be marked delete."
 
 (defun parinfer--remove-line-begin-closer ()
   (let ((found nil))
-    (while (parinfer--closer-p (char-after))
+    (while (and (parinfer--closer-p (char-after))
+                (or (not parinfer-preview-cursor-scope)
+                    (< (point) parinfer--edit-end)
+                    (> (point) parinfer--cursor-line-end)))
       (push (cons (point) -1)
             parinfer--op-stack)
       (forward-char)
@@ -267,14 +281,19 @@ these whitespaces will be marked delete."
 If this is a comment only line or empty-line, set `parinfer--empty-line' t."
   (setq parinfer--empty-line nil)
   (back-to-indentation)
-  (parinfer--remove-line-begin-closer)
-  (let ((end (line-end-position)))
-    (while (and (< (point) end)
-                (equal parinfer--whitespace (char-after)))
-      (forward-char))
-    (when (or (equal (char-after) parinfer--semicolon)
+  (let ((found (parinfer--remove-line-begin-closer)))
+    (let ((end (line-end-position)))
+      (while (and (< (point) end)
+                  (equal parinfer--whitespace (char-after)))
+        (forward-char))
+      (if (or (equal (char-after) parinfer--semicolon)
               (= (point) end))
-      (setq parinfer--empty-line t))))
+          (setq parinfer--empty-line t)
+        (when found
+          (parinfer--add-error-overlay
+           (line-beginning-position)
+           (save-excursion (back-to-indentation) (point)))
+          (error parinfer--error-leading-close-paren))))))
 
 ;; -----------------------------------------------------------------------------
 ;; EXECUTORS
@@ -335,7 +354,8 @@ If this is a comment only line or empty-line, set `parinfer--empty-line' t."
                      ch)
               (setq parinfer--lock-end (1- (point)))
             (setq parinfer--process-indent nil))
-        (setq parinfer--process-indent nil))))
+        (progn (setq parinfer--process-indent nil)
+               (setq parinfer--lock-end nil)))))
 
    ((and (not parinfer--scope-end)
          (> pos (or parinfer--lock-end parinfer--lock-begin)))
@@ -411,8 +431,7 @@ If this is a comment only line or empty-line, set `parinfer--empty-line' t."
               parinfer--in-string)
     (push (cons (point) ch)
           parinfer--paren-stack)
-    (parinfer--handle-indent (point) ch)
-    ))
+    (parinfer--handle-indent (point) ch)))
 
 (defun parinfer--on-end-line ()
   (if parinfer--in-comment
@@ -440,7 +459,12 @@ If this is a comment only line or empty-line, set `parinfer--empty-line' t."
                  (<= parinfer--lock-begin pos parinfer--lock-end))
             (progn (when (>= pos parinfer--trail)
                      (setq parinfer--trail (1+ pos)))
-                   (pop parinfer--opener-stack))
+                   (if (equal (parinfer--opener-to-closer opener-ch)
+                              ch)
+                       (pop parinfer--opener-stack)
+                     (progn
+                       (parinfer--add-error-overlay pos)
+                       (error parinfer--error-unmatched-close-paren))))
           (if (= (parinfer--opener-to-closer opener-ch) ch)
               (if (>= pos parinfer--trail)
                   (if (> indent-x x)
@@ -606,7 +630,8 @@ If this is a comment only line or empty-line, set `parinfer--empty-line' t."
                    (lisp-indent-line)
                    (forward-line)))))
     (parinfer--initial-states)
-    (setq parinfer--edit-begin nil)
+    (setq parinfer--edit-begin 0
+          parinfer--edit-end 0)
     (parinfer--process-change)
     (setq parinfer--reindent-position nil)))
 
@@ -706,7 +731,8 @@ If this is a comment only line or empty-line, set `parinfer--empty-line' t."
 
 (defface parinfer--error-face
   '((((supports :underline (:style wave)))
-     (:underline (:style wave :color "gray"))))
+     (:underline (:style wave :color "red")
+                 :foreground "red")))
   "Face for parinfer error."
   :group 'parinfer)
 
