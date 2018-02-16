@@ -4,7 +4,6 @@
 (require 'cl-lib)
 (require 'paredit)
 
-
 ;; -----------------------------------------------------------------------------
 ;; DEVELOPMENT
 ;; -----------------------------------------------------------------------------
@@ -63,13 +62,6 @@
 (defvar-local parinfer--in-comment nil
   "If we are in comment.")
 
-(defvar-local parinfer--in-char nil
-  "If we are after a backslash.
-This mean, the current position is a character.")
-
-(defvar-local parinfer--next-indent nil
-  "The x of next indentation.")
-
 (defvar-local parinfer--trail nil
   "The position of the last trail.")
 
@@ -80,9 +72,9 @@ This mean, the current position is a character.")
   "Save the paren of current line.
 Element struct: (point . ch)")
 
-(defvar-local parinfer--line-indents nil
-  "Stack of indent of each line.
-Element struct: ((line-begin-point . line-end-point) . delta)")
+(defvar-local parinfer--scope-paren-stack nil)
+
+(defvar-local parinfer--process-indent nil)
 
 (defvar-local parinfer--opener-stack nil
   "Save opener that come from `parinfer--paren-stack'.")
@@ -109,28 +101,19 @@ All text after `parinfer--edit-begin' and before this position will be preserved
 
 (defvar-local parinfer--lock-line-begin nil)
 
-(defvar-local parinfer--lock-line-count nil)
+(defvar-local parinfer--lock-line-end nil)
+
+(defvar-local parinfer--cursor-line-end nil)
 
 (defvar-local parinfer--lock-paren-stack nil
   "")
 
 (defvar-local parinfer--buffer-will-change nil)
 
-(defvar-local parinfer--scope-begin nil
-  "The beginning of the sexp where the cursor in.")
+(defvar-local parinfer--scope-end nil)
 
-(defvar-local parinfer--scope-end nil
-  "The end of the sexp where the cursor in.")
-
-(defvar-local parinfer--at-indent nil
-  "If we are at the beginning of code.
-Set to t when we at the indentation position. and set to nil when we meet non-closer char.")
-
-;; (defvar-local parinfer--delta nil
-;;   "The x that cursor moved before/after buffer changed.")
-
-(defvar-local parinfer--prev-x nil
-  "The x before text changed.")
+(defvar-local parinfer--scope-end-line nil
+  "The end line of the sexp where the cursor in.")
 
 (defvar-local parinfer--processing nil
   "A flag indicate parinfer mode is processing buffer.")
@@ -143,9 +126,7 @@ Set to t when we at the indentation position. and set to nil when we meet non-cl
 
 (defvar-local parinfer--process-line-end nil)
 
-(defvar-local parinfer--before-change-comment-state nil)
-
-(defvar-local parinfer--comment-switch nil)
+(defvar-local parinfer--from-comment nil)
 
 ;; -----------------------------------------------------------------------------
 ;; UTILITIES
@@ -173,8 +154,14 @@ Set to t when we at the indentation position. and set to nil when we meet non-cl
 ;; -----------------------------------------------------------------------------
 
 (defun parinfer--handle-indent-delta-p ()
-  (and (not (region-active-p))
+  (and (not parinfer--from-comment)
+       (not (region-active-p))
        (not (nth 4 (syntax-ppss)))))
+
+(defun parinfer--in-comment-p ()
+  (save-excursion
+    (when (< (point) (line-end-position)) (forward-char))
+    (nth 4 (syntax-ppss))))
 
 (defun parinfer--skip-p ()
   (or
@@ -213,14 +200,16 @@ Set to t when we at the indentation position. and set to nil when we meet non-cl
   (not parinfer--in-string))
 
 (defun parinfer--in-edit-p ()
-  (<= parinfer--edit-begin (point) parinfer--edit-end))
+  (and parinfer--edit-begin
+       (<= parinfer--edit-begin (point) parinfer--edit-end)))
 
 (defun parinfer--in-lock-p ()
-  (or (and (not parinfer--lock-end)
-           (> (point) parinfer--lock-begin))
-      (and parinfer--lock-end
-           (<= (point) parinfer--lock-end)
-           (> (point) parinfer--lock-begin))))
+  (and parinfer--lock-begin
+       (or (and (not parinfer--lock-end)
+                (> (point) parinfer--lock-begin))
+           (and parinfer--lock-end
+                (<= (point) parinfer--lock-end)
+                (> (point) parinfer--lock-begin)))))
 
 ;; -----------------------------------------------------------------------------
 ;; NAVIGATIONS
@@ -291,33 +280,9 @@ If this is a comment only line or empty-line, set `parinfer--empty-line' t."
 ;; EXECUTORS
 ;; -----------------------------------------------------------------------------
 
-(defun parinfer--indent-range (begin end delta)
-  "Indent lines from begin to end, skip the line at begin, include the line at end."
-  (save-excursion
-    (let ((begin-line (line-number-at-pos begin))
-          (end-line (line-number-at-pos end)))
-      ;; (parinfer--log "indent form %d to %d"
-      ;;                begin-line
-      ;;                end-line)
-      (parinfer--goto-line begin-line)
-      (cl-loop for i from begin-line to (1- end-line) do
-               (forward-line)
-               (let ((begin (line-beginning-position))
-                     (end (line-end-position)))
-                 (push (cons (cons begin end) delta)
-                       parinfer--line-indents))))))
-
 (defun parinfer--execute-op-1 (op)
   (let ((pos (car op))
         (val (cdr op)))
-    ;; (parinfer--log "val %s line %d x %d"
-    ;;                val
-    ;;                (save-excursion
-    ;;                  (goto-char pos)
-    ;;                  (line-number-at-pos))
-    ;;                (save-excursion
-    ;;                  (goto-char pos)
-    ;;                  (- (point) (line-beginning-position))))
     (if (> val 0)
         (progn
           (goto-char (min pos (point-max)))
@@ -345,30 +310,74 @@ If this is a comment only line or empty-line, set `parinfer--empty-line' t."
 ;; PROCESSING
 ;; -----------------------------------------------------------------------------
 
+(defun parinfer--handle-indent (pos ch)
+  (cond
+   ((not parinfer--lock-begin))
+
+   ((not parinfer--process-indent))
+
+   ((parinfer--closer-p ch)
+    (when (and (not parinfer--scope-end)
+               (> pos (or parinfer--lock-end parinfer--lock-begin)))
+      (if parinfer--scope-paren-stack
+          (pop parinfer--scope-paren-stack)
+        (setq parinfer--scope-end pos))))
+
+   ((< pos parinfer--lock-begin))
+
+   ((and (< pos parinfer--cursor-line-end)
+         (or (not parinfer--lock-end)
+             ;; Lock will never be line end.
+             (< parinfer--lock-end (1- parinfer--cursor-line-end))))
+    (save-excursion
+      (if (ignore-errors (forward-sexp) t)
+          (if (equal (parinfer--closer-to-opener (char-before))
+                     ch)
+              (setq parinfer--lock-end (1- (point)))
+            (setq parinfer--process-indent nil))
+        (setq parinfer--process-indent nil))))
+
+   ((and (not parinfer--scope-end)
+         (> pos (or parinfer--lock-end parinfer--lock-begin)))
+    (push (cons pos ch) parinfer--scope-paren-stack)))
+
+
+    ;; (parinfer--log "[parinfer--process-indent]%s - b: %s e: %s se: %s"
+    ;;              parinfer--process-indent
+    ;;              parinfer--lock-begin
+    ;;              parinfer--lock-end
+    ;;              parinfer--scope-end)
+    )
+
+
 (defun parinfer--initial-states ()
   ;; (parinfer--log "[parinfer--initial-states]")
-  (setq parinfer--in-char nil
-        parinfer--in-comment nil
-        parinfer--in-string nil
-        parinfer--quote-danger nil
-        parinfer--scope-begin nil
-        parinfer--scope-end nil
-        parinfer--edit-begin (line-beginning-position)
-        parinfer--edit-end (if (region-active-p)
-                               (line-beginning-position)
-                             (point))
-        parinfer--lock-begin (point)
-        parinfer--lock-end nil
-        parinfer--lock-line-count nil
-        parinfer--lock-line-begin nil
-        parinfer--paren-stack nil
-        parinfer--opener-stack nil
-        parinfer--trail nil
-        parinfer--op-stack nil
-        parinfer--line-indents nil
-        parinfer--reindent-position nil
-        parinfer--prev-x nil)
-  ;; (parinfer--log "prev-x: %s delta: %s" parinfer--prev-x parinfer--delta)
+  (let ((in-comment (parinfer--in-comment-p)))
+    (setq parinfer--in-comment nil
+          parinfer--in-string nil
+          parinfer--quote-danger nil
+
+          parinfer--edit-begin (if in-comment
+                                   nil
+                                 (line-beginning-position))
+
+          parinfer--edit-end (if (region-active-p)
+                                 (line-beginning-position)
+                               (point))
+          parinfer--lock-begin (point)
+          parinfer--lock-end nil
+          parinfer--lock-line-end nil
+          parinfer--lock-line-begin (line-number-at-pos parinfer--lock-begin)
+          parinfer--cursor-line-end (line-end-position)
+          parinfer--paren-stack nil
+          parinfer--scope-paren-stack nil
+          parinfer--scope-end-line nil
+          parinfer--opener-stack nil
+          parinfer--process-indent t
+          parinfer--scope-end nil
+          parinfer--trail nil
+          parinfer--op-stack nil
+          parinfer--reindent-position nil))
   )
 
 (defun parinfer--process-code-end ()
@@ -401,7 +410,9 @@ If this is a comment only line or empty-line, set `parinfer--empty-line' t."
   (unless (or parinfer--in-comment
               parinfer--in-string)
     (push (cons (point) ch)
-          parinfer--paren-stack)))
+          parinfer--paren-stack)
+    (parinfer--handle-indent (point) ch)
+    ))
 
 (defun parinfer--on-end-line ()
   (if parinfer--in-comment
@@ -412,13 +423,6 @@ If this is a comment only line or empty-line, set `parinfer--empty-line' t."
         (setq parinfer--in-comment nil))
     (unless parinfer--in-string
       (parinfer--process-code-end))))
-
-(defun parinfer--get-line-indent (pos)
-  (while (> pos (cdaar parinfer--line-indents))
-    (pop parinfer--line-indents))
-  (when (and parinfer--line-indents
-             (>= pos (caaar parinfer--line-indents)))
-    (cdar parinfer--line-indents)))
 
 (defun parinfer--process-closer (indent-x pos ch)
   "Process the closer paren, according to following rules:
@@ -453,60 +457,16 @@ If this is a comment only line or empty-line, set `parinfer--empty-line' t."
   (unless (ignore-errors (forward-sexp) t)
     (forward-char)))
 
-(defun parinfer--process-indent-delta ()
-  (save-excursion
-    (let ((stack ())
-          (line-end (line-end-position))
-          (last-paren nil)
-          (paren-match t))
-      (skip-syntax-forward "^(^)" line-end)
-      (while (and paren-match
-                  (not (= (point) line-end)))
-        (let ((ch (char-after)))
-          (if (parinfer--opener-p ch)
-              (push (cons (point) ch) stack)
-            (if (equal (parinfer--closer-to-opener ch) (cdar stack))
-                (progn (pop stack)
-                       (setq last-paren (point)))
-              (setq paren-match nil))))
-        (forward-char)
-        (skip-syntax-forward "^(^)" line-end))
-      ;; (unless stack
-      ;;   (setq parinfer--lock-end last-paren))
-      (cond
-       ((not paren-match))
-
-       ((not stack)
-        (setq parinfer--lock-end last-paren))
-
-       (t
-        (setq parinfer--lock-begin (caar stack))
-        (while (and (char-after)
-                    stack)
-          (forward-char)
-          (skip-syntax-forward "^(^)")
-          (when-let* ((ch (char-after)))
-            (if (parinfer--opener-p ch)
-                (push (cons (point) ch) stack)
-              (if (equal (parinfer--closer-to-opener ch) (cdar stack))
-                  (progn (pop stack))
-                (setq paren-match nil)))))
-        (when paren-match
-          (setq parinfer--lock-end (point))
-          (setq parinfer--lock-line-begin (line-number-at-pos parinfer--lock-begin))
-          (setq parinfer--lock-line-count
-                (1- (count-lines parinfer--lock-begin parinfer--lock-end))))))
-      )))
-
 (defun parinfer--apply-indent-delta ()
-  (when (and parinfer--lock-line-count
+  (when (and parinfer--lock-line-end
+             parinfer--process-indent
              (not (= (line-beginning-position) (line-end-position))))
     ;; (parinfer--log "[parinfer--apply-indent-delta]from: %s line: %s"
-    ;;                parinfer--lock-begin
+    ;;                parinfer--lock-line-begin
     ;;                parinfer--lock-line-count)
     (save-excursion
       (parinfer--goto-line parinfer--lock-line-begin)
-      (cl-loop for i from 1 to parinfer--lock-line-count do
+      (cl-loop for i from (1+ parinfer--lock-line-begin) to parinfer--lock-line-end do
                (forward-line)
                (lisp-indent-line)))))
 
@@ -527,7 +487,8 @@ If this is a comment only line or empty-line, set `parinfer--empty-line' t."
 
 (defun parinfer--insert-trail-paren (indent-x)
   (when parinfer--trail
-    (unless (and parinfer--lock-end
+    (unless (and parinfer--lock-begin
+                 parinfer--lock-end
                  (<= parinfer--lock-begin parinfer--trail parinfer--lock-end))
       (goto-char parinfer--trail)
       (let ((break nil))
@@ -620,56 +581,50 @@ If this is a comment only line or empty-line, set `parinfer--empty-line' t."
         (error parinfer--error-unclosed-quote))
       (parinfer--process-paren-stack 0)
       (parinfer--insert-trail-paren 0)
+      ;; set lock-end scope-end
+      (when parinfer--lock-end
+        (setq parinfer--lock-line-end (line-number-at-pos parinfer--lock-end)))
+      (when parinfer--scope-end
+        (setq parinfer--scope-end-line (line-number-at-pos parinfer--scope-end)))
       (parinfer--execute-op-stack)
       nil)))
-
-(defun parinfer--remove-trail-spaces ()
-  (save-excursion
-    (goto-char parinfer--edit-end)
-    (when (parinfer--closer-p (char-after))
-      (while (and
-              (< parinfer--edit-begin (point))
-              (equal (char-before)
-                     parinfer--whitespace))
-        (delete-char -1)))))
 
 (defun parinfer--process-move ()
   ;; (parinfer--log "[parinfer--process-move]")
   (setq parinfer--processing t)
   (when (and parinfer--reindent-position
+             parinfer--edit-begin
              (not (<= parinfer--edit-begin (point) parinfer--edit-end)))
     (save-excursion
       (goto-char parinfer--reindent-position)
-      (parinfer--remove-trail-spaces)
       (unless (save-excursion (back-to-indentation) (= (point) (line-end-position)))
         ;; the first line need to reindent too.
         ;; lisp-indent-line will always indent to the correct indentation,
         ;; according to the outer sexp, not previous line.
-        (lisp-indent-line)
-        (forward-line)
-        (when parinfer--lock-line-count (forward-line parinfer--lock-line-count))
-        (while (and (< (point) (point-max))
-                    (or
-                     (save-excursion (back-to-indentation) (= (point) (line-end-position)))
-                     (not (= (progn (back-to-indentation) (point))
-                             (progn (lisp-indent-line) (point))))))
-          ;; (parinfer--log "[parinfer--process-move]indent ln: %s" (line-number-at-pos))
-          (forward-line))))))
+        (when parinfer--scope-end-line
+          (cl-loop for i from parinfer--lock-line-begin to parinfer--scope-end-line do
+                   (lisp-indent-line)
+                   (forward-line)))))
+    (parinfer--initial-states)
+    (setq parinfer--edit-begin nil)
+    (parinfer--process-change)
+    (setq parinfer--reindent-position nil)))
 
 (defun parinfer--process-change ()
   ;; (setq parinfer--process-serial (1+ parinfer--process-serial))
   (parinfer--remove-error-overlay)
   (parinfer--initial-states)
   (let ((handle-indent-delta (parinfer--handle-indent-delta-p)))
-    (when handle-indent-delta
-      (parinfer--process-indent-delta))
-    (parinfer--process-buffer-with-perf-hack)
+
+    (parinfer--process-buffer)
     (when handle-indent-delta
       (parinfer--apply-indent-delta))
     ;; allow reindent
     (setq parinfer--buffer-will-change nil)
     (when handle-indent-delta
-      (setq parinfer--reindent-position (point)))))
+      (setq parinfer--reindent-position (point))
+      ;; (parinfer--log "reindent-pos: %s scope-end-line:%s" (point) parinfer--scope-end-line)
+      )))
 
 (defun parinfer--post-command-hook ()
   (condition-case ex
@@ -686,9 +641,9 @@ If this is a comment only line or empty-line, set `parinfer--empty-line' t."
   (unless (or parinfer--processing
               parinfer--buffer-will-change
               (parinfer--skip-p))
-    (setq parinfer--prev-x (- (point) (line-beginning-position))
-          parinfer--processing t
-          parinfer--buffer-will-change t)))
+    (setq parinfer--processing t
+          parinfer--buffer-will-change t
+          parinfer--from-comment (parinfer--in-comment-p))))
 
 (defun parinfer-mode-enable ()
   (interactive)
