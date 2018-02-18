@@ -8,6 +8,7 @@
 ;; DEVELOPMENT
 ;; -----------------------------------------------------------------------------
 
+
 (defvar-local parinfer--process-serial 0)
 
 (defun parinfer--log (s &rest args)
@@ -719,11 +720,28 @@ If this is a comment only line or empty-line, set `parinfer--empty-line' t."
     (setq parinfer--buffer-will-change nil)
     (setq parinfer--reindent-position (point))))
 
+
+;; -----------------------------------------------------------------------------
+;; UNDO
+;; -----------------------------------------------------------------------------
+
+(defun parinfer--handle-special-command ()
+  (when (or (equal this-command 'undo)
+            (equal this-command 'undo-tree-undo)
+            (equal this-command 'undo-tree-redo)
+            (equal this-command 'yank)
+            (equal this-command 'yank-pop))
+    (setq parinfer--reindent-position (point)
+          parinfer--edit-begin (line-beginning-position))))
+
+
 ;; -----------------------------------------------------------------------------
 ;; HOOK FUNCTIONS
 ;; -----------------------------------------------------------------------------
 
+
 (defun parinfer--post-command-hook ()
+  (parinfer--handle-special-command)
   (condition-case ex
       (unless (parinfer--skip-p)
         (if parinfer--buffer-will-change
