@@ -185,6 +185,8 @@ All text after `parinfer--edit-begin' and before this position will be preserved
 
 (defun parinfer--skip-p ()
   (or
+   (and (bound-and-true-p yas-minor-mode)
+        (yas-active-snippets))
    (bound-and-true-p multiple-cursors-mode)
    (bound-and-true-p cua-mode)
    (seq-contains parinfer--ignore-commands this-command)))
