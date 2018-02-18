@@ -402,3 +402,42 @@
  [(insert "[")]
  (parinfer--str "(foo [{:a 1"
                 "       :b 2}])"))
+
+;; -----------------------------------------------------------------------------
+
+(parinfer--test
+ "case33"
+ (parinfer--str "(aaaaaaa {:a 1"
+                "          :b 2}"
+                "         foo)")
+ (cons 0 8)
+ [(backward-delete-char 3)]
+ (parinfer--str "(aaaa {:a 1"
+                "       :b 2}"
+                "         foo)"))
+
+;; -----------------------------------------------------------------------------
+
+(parinfer--test
+ "case34"
+ (parinfer--str "(aaaaaaa {:a 1"
+                "          :b 2}"
+                "         foo)")
+ (cons 0 8)
+ [(backward-delete-char 3)
+  (next-line)]
+ (parinfer--str "(aaaa {:a 1"
+                "       :b 2}"
+                "      foo)"))
+
+;; -----------------------------------------------------------------------------
+
+(parinfer--test
+ "case35"
+ (parinfer--str "(foo)"
+                "  ")
+ (cons 1 2)
+ [(insert "bar")
+  (right-char)]
+ (parinfer--str "(foo"
+                "  bar)"))

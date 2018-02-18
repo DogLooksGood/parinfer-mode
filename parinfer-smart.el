@@ -261,9 +261,13 @@ these whitespaces will be marked delete."
   ;;            (equal (char-before) parinfer--whitespace))
   ;;   (backward-char))
   (let ((before-paren nil)
-        (in-code nil))
+        (in-code nil)
+        (indent-pos (save-excursion
+                      (back-to-indentation)
+                      (point))))
     (while (and (not in-code)
-                (not (parinfer--in-edit-p)))
+                (not (parinfer--in-edit-p))
+                (> (point) indent-pos))
       (let ((ch (char-before)))
         (cond
          ((equal ch parinfer--whitespace)
@@ -797,7 +801,8 @@ If this is a comment only line or empty-line, set `parinfer--empty-line' t."
         (bound (+ (point) limit)))
     (while (not finish)
       (if (re-search-forward "\\s)" bound t)
-          (when (and (= 0 (string-match-p "\\s)* *\\(?:;.*\\)?$" (buffer-substring-no-properties (point) (line-end-position))))
+          (when (and (= 0 (string-match-p "\\s)* *\\(?:;.*\\)?$"
+                                          (buffer-substring-no-properties (point) (line-end-position))))
                      (not (eq (char-before (1- (point))) parinfer--backslash)))
             (setq result (match-data)
                   finish t))
