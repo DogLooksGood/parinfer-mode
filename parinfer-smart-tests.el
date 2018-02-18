@@ -441,3 +441,12 @@
   (right-char)]
  (parinfer--str "(foo"
                 "  bar)"))
+
+;; -----------------------------------------------------------------------------
+
+(parinfer--test
+ "case36"
+ (parinfer--str "(foo [])")
+ (cons 0 6)
+ [(insert ")")]
+ (parinfer--str "(foo [])"))

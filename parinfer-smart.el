@@ -269,11 +269,12 @@ these whitespaces will be marked delete."
                       (back-to-indentation)
                       (point))))
     (while (and (not in-code)
-                (not (parinfer--in-edit-p))
+                ;; (not (parinfer--in-edit-p))
                 (> (point) indent-pos))
       (let ((ch (char-before)))
         (cond
-         ((equal ch parinfer--whitespace)
+         ((and (equal ch parinfer--whitespace)
+               (not (parinfer--in-edit-p)))
           (when before-paren
             (push (cons (1- (point)) -1) parinfer--op-stack))
           (backward-char))
