@@ -11,7 +11,8 @@
 (defconst parinfer--test-modify-buffer-commands
   [newline-and-indent insert delete-char backward-delete-char
                       backward-kill-word kill-word
-                      kill-line parinfer-shift-left parinfer-shift-right])
+                      kill-line parinfer-shift-left parinfer-shift-right
+                      delete-indentation])
 
 (defun parinfer--test-execute-command (c)
   (when (seq-contains parinfer--test-modify-buffer-commands (car c))
@@ -302,3 +303,102 @@
  (cons 0 5)
  [(insert "[")]
  (parinfer--str "(() a[])"))
+
+;; -----------------------------------------------------------------------------
+
+(parinfer--test
+ "case25"
+ (parinfer--str "(foo {:a 1"
+                "      :b 2})")
+ (cons 0 5)
+ [(newline-and-indent)]
+ (parinfer--str "(foo"
+                " {:a 1"
+                "  :b 2})"))
+
+;; -----------------------------------------------------------------------------
+
+(parinfer--test
+ "case26"
+ (parinfer--str "(foo)"
+                "{:a 1"
+                " :b 2}")
+ (cons 1 0)
+ [(backward-delete-char 1)
+  (backward-delete-char 1)
+  (insert " ")]
+ (parinfer--str "(foo {:a 1"
+                "      :b 2})"))
+
+;; -----------------------------------------------------------------------------
+
+(parinfer--test
+ "case27"
+ (parinfer--str "(foo"
+                " {:a 1"
+                "  :b 2})")
+ (cons 1 1)
+ [(delete-indentation)]
+ (parinfer--str "(foo {:a 1"
+                "      :b 2})"))
+
+;; -----------------------------------------------------------------------------
+
+(parinfer--test
+ "case28"
+ (parinfer--str "(foo"
+                "  (bar)"
+                "  (baz))")
+ (cons 2 2)
+ [(insert "                 ")
+  (previous-line)]
+ (parinfer--str "(foo"
+                "  (bar"
+                "   (baz)))"))
+
+;; -----------------------------------------------------------------------------
+
+(parinfer--test
+ "case29"
+ (parinfer--str "(foo"
+                "  (bar"
+                "   (baz)))")
+ (cons 2 2)
+ [(backward-delete-char 1)
+  (previous-line)]
+ (parinfer--str "(foo"
+                "  (bar)"
+                "  (baz))"))
+
+;; -----------------------------------------------------------------------------
+
+(parinfer--test
+ "case30"
+ (parinfer--str "{:a 1"
+                " :b 2}")
+ (cons 0 1)
+ [(insert "(")]
+ (parinfer--str "{(:a 1)"
+                " :b 2}"))
+
+;; -----------------------------------------------------------------------------
+
+(parinfer--test
+ "case31"
+ (parinfer--str "{:a 1"
+                " :b 2}")
+ (cons 0 0)
+ [(insert "(")]
+ (parinfer--str "({:a 1"
+                "  :b 2})"))
+
+;; -----------------------------------------------------------------------------
+
+(parinfer--test
+ "case32"
+ (parinfer--str "(foo {:a 1"
+                "      :b 2})")
+ (cons 0 5)
+ [(insert "[")]
+ (parinfer--str "(foo [{:a 1"
+                "       :b 2}])"))
