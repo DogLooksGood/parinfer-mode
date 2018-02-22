@@ -28,8 +28,9 @@
     (goto-char (point-min))
     (forward-line (car pos))
     (forward-char (cdr pos))
-    (mapc #'parinfer--test-execute-command
-          commands)
+    (let ((debug-on-error t))
+      (mapc #'parinfer--test-execute-command
+            commands))
     (if err
         (if (equal err parinfer--last-error)
             (message "%s success!" id)
@@ -473,5 +474,17 @@
  [(backward-delete-char 1)]
  (parinfer--str "(a)"
                 "b  ;;c"))
+
+;; -----------------------------------------------------------------------------
+
+(parinfer--test
+ "case39"
+ (parinfer--str "(foo"
+                " (bar))")
+ (cons 1 1)
+ [(insert ";")
+  (backward-delete-char 1)]
+ (parinfer--str "(foo"
+                " (bar))"))
 
 ;; -----------------------------------------------------------------------------

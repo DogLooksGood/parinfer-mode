@@ -739,7 +739,8 @@ If this is a comment only line or empty-line, set `parinfer--empty-line' t."
             (equal this-command 'yank)
             (equal this-command 'yank-pop))
     (setq parinfer--reindent-position (point)
-          parinfer--edit-begin (line-beginning-position))))
+          parinfer--edit-begin (line-beginning-position)
+          parinfer--edit-end (point))))
 
 
 ;; -----------------------------------------------------------------------------
