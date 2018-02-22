@@ -533,6 +533,8 @@ If this is a comment only line or empty-line, set `parinfer--empty-line' t."
               (if (>= pos parinfer--trail)
                   (if (and (> indent-x x)
                            (not (and parinfer--buffer-will-change
+                                     parinfer--edit-begin
+                                     parinfer--edit-end
                                      (< parinfer--edit-begin pos parinfer--edit-end))))
                       (push (cons pos -1) parinfer--op-stack)
                     (progn (pop parinfer--opener-stack)
