@@ -904,7 +904,9 @@ Check the followings:
           (funcall mm)
           (parinfer--initial-states)
           (condition-case ex
-              (parinfer--process-buffer)
+              (if parinfer-partial-process
+                  (parinfer--process-buffer-with-perf-hack)
+                (parinfer--process-buffer))
             (error
              (setq err (concat "Can't enable parinfer due to error: " (cadr ex)))))
           (unless (string-equal (buffer-substring-no-properties (point-min) (point-max))
