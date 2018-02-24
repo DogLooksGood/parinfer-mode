@@ -488,3 +488,44 @@
                 " (bar))"))
 
 ;; -----------------------------------------------------------------------------
+
+(parinfer--test
+ "case40"
+ (parinfer--str "(foo"
+                "")
+ (cons 1 0)
+ [(insert "    bar")
+  (right-char)]
+ (parinfer--str "(foo"
+                " bar)"))
+
+;; -----------------------------------------------------------------------------
+;; Do barf by insert close paren.
+;; Testing for re-indent.
+
+(parinfer--test
+ "case41"
+ (parinfer--str "(foo"
+                " bar"
+                " baz)")
+ (cons 0 4)
+ [(insert ")")
+  (next-line)]
+ (parinfer--str "(foo)"
+                "bar"
+                "baz"))
+
+
+;; -----------------------------------------------------------------------------
+;; Don't align code if we are do comment line,
+;; so that we can uncomment later.
+
+(parinfer--test
+ "case42"
+ (parinfer--str "(foo"
+                " bar)")
+ (cons 0 0)
+ [(insert ";")
+  (next-line)]
+ (parinfer--str ";(foo"
+                " bar"))
