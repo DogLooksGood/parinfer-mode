@@ -725,8 +725,10 @@ If this is a comment only line or empty-line, set `parinfer--empty-line' t."
       (parinfer--apply-indent-delta))
     ;; allow reindent
     (setq parinfer--buffer-will-change nil)
-    (setq parinfer--reindent-position (point))))
-
+    (setq parinfer--reindent-position (point))
+    (unless parinfer--scope-end
+      (setq parinfer--scope-end parinfer--edit-end
+            parinfer--scope-end-line (line-number-at-pos)))))
 
 ;; -----------------------------------------------------------------------------
 ;; UNDO
@@ -1021,7 +1023,7 @@ return (begin . end)."
 ;;;###autoload
 (define-minor-mode parinfer-mode
   "Parinfer mode."
-  nil "Parinfer" parinfer-mode-map
+  nil " Parinfer" parinfer-mode-map
   (if parinfer-mode
       (parinfer-mode-enable)
     (parinfer-mode-disable)))
