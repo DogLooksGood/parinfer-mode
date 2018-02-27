@@ -1032,12 +1032,6 @@ invoke parinfer after every semicolon input."
             (parinfer--invoke-parinfer))))
     (call-interactively 'self-insert-command)))
 
-(defun parinfer-delete-indentation ()
-  "Replacement in 'parinfer-mode' for 'delete-indentation' command."
-  (interactive)
-  (parinfer-paren-run
-   (call-interactively 'delete-indentation)))
-
 (defun parinfer-toggle-mode ()
   "Switch parinfer mode between Indent Mode and Paren Mode."
   (interactive)
