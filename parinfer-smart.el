@@ -972,8 +972,7 @@ return (begin . end)."
                     (line-end-position)
                     distance)))
 
-(defun parinfer-shift-right (count)
-  (interactive "p")
+(defun parinfer--fix-selection-and-indent (count)
   (let ((begin (save-mark-and-excursion
                  (goto-char (region-beginning))
                  (line-number-at-pos)))
@@ -982,6 +981,10 @@ return (begin . end)."
                (when (= (point) (line-beginning-position))
                  (backward-char))
                (line-number-at-pos))))
+    (parinfer--goto-line begin)
+    (set-mark-command nil)
+    (parinfer--goto-line end)
+    (goto-char (line-end-position))
     (parinfer--shift-text count)
     (parinfer--goto-line begin)
     (set-mark-command nil)
@@ -989,22 +992,13 @@ return (begin . end)."
     (goto-char (line-end-position))
     (setq deactivate-mark nil)))
 
+(defun parinfer-shift-right (count)
+  (interactive "p")
+  (parinfer--fix-selection-and-indent count))
+
 (defun parinfer-shift-left (count)
   (interactive "p")
-  (let ((begin (save-mark-and-excursion
-                 (goto-char (region-beginning))
-                 (line-number-at-pos)))
-        (end (save-mark-and-excursion
-               (goto-char (region-end))
-               (when (= (point) (line-beginning-position))
-                 (backward-char))
-               (line-number-at-pos))))
-    (parinfer--shift-text (- count))
-    (parinfer--goto-line begin)
-    (set-mark-command nil)
-    (parinfer--goto-line end)
-    (goto-char (line-end-position))
-    (setq deactivate-mark nil)))
+  (parinfer--fix-selection-and-indent (- count)))
 
 (defvar parinfer-mode-map
   (let ((map (make-sparse-keymap)))

@@ -529,3 +529,22 @@
   (next-line)]
  (parinfer--str ";(foo"
                 " bar"))
+
+;; -----------------------------------------------------------------------------
+;; Test shift text
+
+(parinfer--test
+ "case43"
+ (parinfer--str "(foo)"
+                "bar"
+                "baz"
+                "abc")
+ (cons 1 2)
+ [(call-interactively #'set-mark-command)
+  (next-line)
+  (parinfer-shift-right 1)
+  (call-interactively #'set-mark-command)]
+ (parinfer--str "(foo"
+                " bar"
+                " baz)"
+                "abc"))
