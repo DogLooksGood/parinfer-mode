@@ -188,6 +188,7 @@ All text after `parinfer--edit-begin' and before this position will be preserved
    (and (bound-and-true-p yas-minor-mode)
         (yas-active-snippets))
    (bound-and-true-p multiple-cursors-mode)
+   (company-explicit-action-p)
    (bound-and-true-p cua-mode)
    (seq-contains parinfer--ignore-commands this-command)))
 
