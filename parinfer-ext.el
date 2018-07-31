@@ -205,7 +205,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
     (call-interactively 'self-insert-command)))
 
 (defun parinfer-lispy:init ()
-  (if (fboundp 'lispy)
+  (if (fboundp 'lispy-mode)
       (progn
         (define-key parinfer-mode-map (kbd "(") 'parinfer-lispy:parens)
         (define-key parinfer-mode-map (kbd "{") 'parinfer-lispy:braces)
