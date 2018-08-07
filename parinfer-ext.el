@@ -246,7 +246,6 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
 
 (parinfer-define-extension lispy
   "Integration with Lispy."
-
   :mount
   (require 'eldoc)
   (eldoc-add-command-completions "lispy-" "parinfer-")
@@ -306,6 +305,8 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
 (parinfer-define-extension smart-yank
   "Yank depend on current mode."
   :mount
+  (if (fboundp 'evil-define-key)
+      (evil-define-key 'normal parinfer-mode-map [remap evil-paste-after] 'parinfer-smart-yank:yank))
   (define-key parinfer-mode-map [remap yank] 'parinfer-smart-yank:yank))
 
 ;; -----------------------------------------------------------------------------
@@ -354,7 +355,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
         (save-excursion
           (end-of-line)
           (while (eq (char-before) 32)
-            (backward-delete-char 1)))              
+            (backward-delete-char 1)))
       (save-excursion
         (parinfer--goto-line parinfer-smart-tab:indicator-line)
         (when (parinfer--empty-line-p)
@@ -485,7 +486,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
             (delete-indentation)
             (backward-char))
           (end-of-line)
-          (while (eq 32 (char-before)) 
+          (while (eq 32 (char-before))
             (backward-delete-char 1))
           (-distinct pos-list))))))
 
@@ -664,7 +665,12 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   (define-key parinfer-mode-map [remap backward-char] 'parinfer-smart-tab:backward-char)
   (define-key parinfer-region-mode-map [remap parinfer-shift-right] 'parinfer-smart-tab:shift-right)
   (define-key parinfer-region-mode-map [remap parinfer-shift-left] 'parinfer-smart-tab:shift-left)
-  
+  (if (fboundp 'evil-define-key)
+      (evil-define-key 'normal parinfer-mode-map [remap evil-forward-char] 'parinfer-smart-tab:forward-char)
+    (evil-define-key 'normal parinfer-mode-map [remap evil-backward-char] 'parinfer-smart-tab:backward-char)
+    (evil-define-key 'insert parinfer-region-mode-map [remap evil-shift-right-line] 'parinfer-smart-tab:shift-right)
+    (evil-define-key 'insert parinfer-region-mode-map [remap evil-shift-left-line] 'parinfer-smart-tab:shift-left))
+
   :unmount
   (remove-hook 'post-command-hook 'parinfer-smart-tab:clean-indicator t)
   (remove-hook 'pre-command-hook 'parinfer-smart-tab:clean-indicator-pre t))
@@ -756,7 +762,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
                 (forward-sexp)
                 (insert (parinfer-one:get-close-paren key)))
               (parinfer-one:paren)))
-           
+
            ((-contains-p parinfer-one:indent-trigger-keys key)
             (progn
               (parinfer--invoke-parinfer-when-necessary)))
@@ -830,15 +836,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   :unmount
   (remove-hook 'post-command-hook 'parinfer-one:invoke-when-necessary-auto t)
   (remove-hook 'pre-command-hook 'parinfer-one:update-context t))
-  
+
 
 (provide 'parinfer-ext)
 ;;; parinfer-ext.el ends here
-
-
-
-
-
-
-
-
