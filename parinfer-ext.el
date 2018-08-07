@@ -305,8 +305,8 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
 (parinfer-define-extension smart-yank
   "Yank depend on current mode."
   :mount
-  (if (fboundp 'evil-define-key)
-      (evil-define-key 'normal parinfer-mode-map [remap evil-paste-after] 'parinfer-smart-yank:yank))
+  ;; (if (fboundp 'evil-define-key)
+  ;;     (evil-define-key 'normal parinfer-mode-map [remap evil-paste-before] 'parinfer-smart-yank:yank))
   (define-key parinfer-mode-map [remap yank] 'parinfer-smart-yank:yank))
 
 ;; -----------------------------------------------------------------------------
