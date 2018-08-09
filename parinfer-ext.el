@@ -272,7 +272,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
       evil-delete-line evil-delete-char evil-delete-backward-char evil-substitute
       evil-change-whole-line evil-force-normal-state evil-normal-state evil-open-below
       evil-shift-left evil-shift-right evil-previous-line evil-next-line evil-forward-char
-      evil-shift-right-line evil-shift-left-line
+      evil-shift-right-line evil-shift-left-line evil-exit-visual-state
       evil-backward-char evil-normal-state))
   (parinfer-strategy-add 'skip
     '(evil-forward-word evil-forward-word-begin evil-backward-word-begin
