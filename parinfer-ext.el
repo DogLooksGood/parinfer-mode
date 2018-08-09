@@ -273,7 +273,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
       evil-change-whole-line evil-force-normal-state evil-normal-state evil-open-below
       evil-shift-left evil-shift-right evil-previous-line evil-next-line evil-forward-char
       evil-shift-right-line evil-shift-left-line
-      evil-backward-char))
+      evil-backward-char evil-normal-state))
   (parinfer-strategy-add 'skip
     '(evil-forward-word evil-forward-word-begin evil-backward-word-begin
       evil-backward-end evil-scroll-page-down evil-scroll-up)))
@@ -668,8 +668,8 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   (define-key parinfer-region-mode-map [remap parinfer-shift-left] 'parinfer-smart-tab:shift-left)
   (if (fboundp 'evil-define-key)
       (progn (evil-define-key 'normal parinfer-mode-map [remap evil-forward-char] 'parinfer-smart-tab:forward-char)
-    (evil-define-key 'normal parinfer-mode-map [remap evil-backward-char] 'parinfer-smart-tab:backward-char)
-    (evil-define-key 'insert parinfer-region-mode-map [remap evil-shift-right-line] 'parinfer-smart-tab:shift-right)
+             (evil-define-key 'normal parinfer-mode-map [remap evil-backward-char] 'parinfer-smart-tab:backward-char)
+             (evil-define-key 'insert parinfer-region-mode-map [remap evil-shift-right-line] 'parinfer-smart-tab:shift-right)
              (evil-define-key 'insert parinfer-region-mode-map [remap evil-shift-left-line] 'parinfer-smart-tab:shift-left)))
 
   :unmount
