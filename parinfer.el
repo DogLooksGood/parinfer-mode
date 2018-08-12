@@ -118,8 +118,8 @@ close-parens after it.")
 
 (defvar parinfer-strategy
   '((default
-     self-insert-command delete-indentation kill-line
-     comment-dwim kill-word delete-char newline kill-region comment-or-uncomment-region newline-and-indent)
+      self-insert-command delete-indentation kill-line comment-line
+      comment-dwim kill-word delete-char newline kill-region comment-or-uncomment-region newline-and-indent)
     (instantly
      delete-region newline)
     (skip))
