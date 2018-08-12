@@ -667,9 +667,7 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   (define-key parinfer-region-mode-map [remap parinfer-shift-right] 'parinfer-smart-tab:shift-right)
   (define-key parinfer-region-mode-map [remap parinfer-shift-left] 'parinfer-smart-tab:shift-left)
   (if (fboundp 'evil-define-key)
-      (progn (evil-define-key 'normal parinfer-mode-map [remap evil-forward-char] 'parinfer-smart-tab:forward-char)
-             (evil-define-key 'normal parinfer-mode-map [remap evil-backward-char] 'parinfer-smart-tab:backward-char)
-             (evil-define-key 'insert parinfer-region-mode-map [remap evil-shift-right-line] 'parinfer-smart-tab:shift-right)
+      (progn (evil-define-key 'insert parinfer-region-mode-map [remap evil-shift-right-line] 'parinfer-smart-tab:shift-right)
              (evil-define-key 'insert parinfer-region-mode-map [remap evil-shift-left-line] 'parinfer-smart-tab:shift-left)))
 
   :unmount
