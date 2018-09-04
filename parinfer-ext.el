@@ -71,7 +71,6 @@
 
 (parinfer-define-extension pretty-parens
   "Pretty parens.
-
 Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   :mount
   (require 'font-lock)
@@ -257,9 +256,6 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   (eldoc-add-command-completions "lispy-" "parinfer-")
   (parinfer-strategy-add 'default
     '(parinfer-lispy:parens
-      lispy-parens
-      lispy-braces
-      lispy-brackets
       parinfer-lispy:braces
       parinfer-lispy:brackets
       parinfer-lispy:space))
@@ -280,10 +276,11 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
     '(evil-delete evil-change evil-change-line evil-paste-before evil-paste-after
       evil-delete-line evil-delete-char evil-delete-backward-char evil-substitute
       evil-change-whole-line evil-force-normal-state evil-normal-state evil-open-below
-      evil-shift-left evil-shift-right evil-previous-line evil-next-line
-      evil-shift-right-line evil-shift-left-line evil-exit-visual-state evil-normal-state))
+      evil-shift-left evil-shift-right evil-shift-right-line evil-shift-left-line
+      evil-exit-visual-state evil-normal-state))
   (parinfer-strategy-add 'skip
-    '(evil-forward-word evil-forward-word-begin evil-backward-word-begin
+    '(evil-previous-line evil-forward-char evil-backward-char evil-next-line
+      evil-forward-word evil-forward-word-begin evil-backward-word-begin
       evil-backward-end evil-scroll-page-down evil-scroll-up)))
 
 ;; -----------------------------------------------------------------------------
@@ -314,8 +311,6 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
 (parinfer-define-extension smart-yank
   "Yank depend on current mode."
   :mount
-  ;; (if (fboundp 'evil-define-key)
-  ;;     (evil-define-key 'normal parinfer-mode-map [remap evil-paste-before] 'parinfer-smart-yank:yank))
   (define-key parinfer-mode-map [remap yank] 'parinfer-smart-yank:yank))
 
 ;; -----------------------------------------------------------------------------
