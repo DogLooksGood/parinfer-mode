@@ -71,6 +71,7 @@
 
 (parinfer-define-extension pretty-parens
   "Pretty parens.
+
 Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   :mount
   (require 'font-lock)
