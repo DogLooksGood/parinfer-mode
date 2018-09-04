@@ -271,13 +271,13 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
   "Integration with Evil."
   :mount
   (parinfer-strategy-add 'default
-    'evil-delete-char)
+    'evil-delete-char evil-shift-left evil-shift-right evil-shift-right-line
+      evil-shift-left-line)
   (parinfer-strategy-add 'instantly
     '(evil-delete evil-change evil-change-line evil-paste-before evil-paste-after
       evil-delete-line evil-delete-char evil-delete-backward-char evil-substitute
-      evil-change-whole-line evil-force-normal-state evil-normal-state evil-open-below
-      evil-shift-left evil-shift-right evil-shift-right-line evil-shift-left-line
-      evil-exit-visual-state evil-normal-state))
+      evil-change-whole-line evil-force-normal-state evil-normal-state
+       evil-exit-visual-state))
   (parinfer-strategy-add 'skip
     '(evil-previous-line evil-forward-char evil-backward-char evil-next-line
       evil-forward-word evil-forward-word-begin evil-backward-word-begin
