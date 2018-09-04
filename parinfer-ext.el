@@ -206,11 +206,11 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
 (defun parinfer-lispy:init ()
   (if (fboundp 'lispy-mode)
       (progn
+        (mapc (lambda (x) (lispy-define-key parinfer-mode-map (format "%d" x) 'digit-argument)
+                      (number-sequence 0 9)))
         (define-key parinfer-mode-map (kbd "(") 'parinfer-lispy:parens)
         (define-key parinfer-mode-map (kbd "{") 'parinfer-lispy:braces)
         (define-key parinfer-mode-map (kbd "[") 'parinfer-lispy:brackets)
-        (mapc (lambda (x) (lispy-define-key parinfer-mode-map (format "%d" x) 'digit-argument))
-              (number-sequence 0 9))
         (define-key parinfer-mode-map (kbd "d") 'special-lispy-different)
         (define-key parinfer-mode-map (kbd "-") 'special-lispy-ace-subword)
         (define-key parinfer-mode-map (kbd "q") 'special-lispy-ace-paren)
