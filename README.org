@@ -134,7 +134,7 @@ The extensions that will be enabled. The list could contain followings:
 #+END_SRC
 
 * Troubleshooting
-If Parinfer seems to be indenting incorrectly, ensure `indent-tabs-mode` is set to `nil`. While Parinfer's theoretical model is able to correctly handle indentation with tabs, `parinfer-mode` can currently only handle indentation using spaces.
+If Parinfer seems to be indenting incorrectly, ensure ~indent-tabs-mode~ is set to ~nil~ via ~(setq-default indent-tabs-mode nil)~. While Parinfer's theoretical model is able to correctly handle indentation with tabs, ~parinfer-mode~ can currently only handle indentation using spaces.
 
 * Credits
 - [[https://github.com/shaunlebron][shaunlebron]] :: Create [[https://shaunlebron.github.io/parinfer/][Parinfer]].
