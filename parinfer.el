@@ -181,9 +181,10 @@ used to match command.
 ;; Alias
 ;; -----------------------------------------------------------------------------
 
-(if (fboundp 'save-mark-and-excursion)
-    (defalias 'parinfer-save-excursion 'save-mark-and-excursion)
-  (defalias 'parinfer-save-excursion 'save-excursion))
+(eval-when-compile
+  (if (fboundp 'save-mark-and-excursion)
+      (defalias 'parinfer-save-excursion 'save-mark-and-excursion)
+    (defalias 'parinfer-save-excursion 'save-excursion)))
 
 ;; -----------------------------------------------------------------------------
 ;; Macros
