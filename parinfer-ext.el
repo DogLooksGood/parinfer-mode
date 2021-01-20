@@ -524,11 +524,10 @@ Use rainbow-delimiters for Paren Mode, and dim-style parens for Indent Mode."
                 (beginning-of-line)
                 (delete-region (point) (line-end-position)))
             (progn
-              (beginning-of-line)
               (let ((next-x (-last-item (-filter (lambda (x) (> x current-x)) pos-list))))
-                (cl-loop for i from 1 to next-x do
+                (cl-loop for i from (1+ current-x) to next-x do
                          (insert " ")))))
-         (setq parinfer-smart-tab:indicator-line (line-number-at-pos))))
+          (setq parinfer-smart-tab:indicator-line (line-number-at-pos))))
     (call-interactively 'forward-char)))
 
 (defun parinfer-smart-tab:backward-char ()
