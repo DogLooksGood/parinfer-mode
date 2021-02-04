@@ -5,8 +5,12 @@
 
 [[file:images/logo.png]]
 
-* About Smart Mode
-Currently this project is rewriting for providing smart mode on branch `smart`.
+* Deprecated 
+
+This project is no longer maintained.I have no success for a fast enough implementation in Emacs Lisp. 
+
+Fortunately, there's a [[https://github.com/justinbarclay/parinfer-rust-mode][parinfer-rust-mode]]!
+
 * Demo
 [[file:images/demo.gif]]
 
